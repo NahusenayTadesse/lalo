@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1771419301488,
+      "tag": "0000_harsh_scarlet_witch",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1771870164711,
+      "tag": "0001_lying_lizard",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1772464082710,
+      "tag": "0002_quiet_newton_destine",
+      "breakpoints": true
+    }
+  ]
+}
