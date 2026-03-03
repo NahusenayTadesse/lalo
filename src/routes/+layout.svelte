@@ -31,7 +31,7 @@
 	// This initializes the class and puts it into Svelte's context
 	setCart();
 
-	let { children } = $props();
+	let { data, children } = $props();
 
 	// async function requestNotificationPermission() {
 	// 	if (!('Notification' in window)) return;
@@ -79,7 +79,7 @@
 {/if}
 
 {#if !page.url.pathname.startsWith('/dashboard')}
-	<Header />
+	<Header data={data?.user?.name ?? ''} />
 	{@render children()}
 
 	<Footer />

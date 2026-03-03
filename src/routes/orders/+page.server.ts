@@ -53,8 +53,7 @@ TRIM(
 			status: orders.status
 		})
 		.from(orders)
-		.leftJoin(customers, eq(orders.customerId, customers.id))
-		.where(eq(customers.id, customerId?.value));
+		.leftJoin(customers, eq(orders.customerId, customers.id));
 
 	const allItems = await db
 		.select({

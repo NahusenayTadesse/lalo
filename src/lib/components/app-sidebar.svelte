@@ -106,7 +106,8 @@
 		<Sidebar.Group>
 			<Sidebar.GroupLabel>
 				<div class="flex flex-row items-center justify-center gap-4">
-					<h4 class="text-center text-[30px]! text-primary">Amy Bakes</h4>
+					<img src="/logo.webp" class=" h-16 w-16" alt="Logo" />
+					<h4 class="text-center text-[16px]! text-primary">Lalo Bakery</h4>
 				</div></Sidebar.GroupLabel
 			>
 			<Sidebar.GroupContent class="my-4">
@@ -135,7 +136,7 @@
 	</Sidebar.Content>
 	<Sidebar.Footer class="flex flex-row bg-white dark:bg-black">
 		<Sidebar.GroupLabel>
-			Powered By <a href="https://pulsedata.com" target="_blank" class="ml-1">Leora Digitals</a>
+			Powered By <a href="https://nahusenaytadesse.vercel.app" target="_blank" class="ml-1">NT</a>
 		</Sidebar.GroupLabel>
 	</Sidebar.Footer>
 </Sidebar.Root>

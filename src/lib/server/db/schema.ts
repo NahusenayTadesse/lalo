@@ -1,4 +1,4 @@
-import { mysqlTable, int, varchar, mysqlEnum, decimal } from 'drizzle-orm/mysql-core';
+import { mysqlTable, int, varchar, mysqlEnum, decimal, text } from 'drizzle-orm/mysql-core';
 import { secureFields, user } from './auth.schema';
 
 export const paymentMethods = mysqlTable('payment_methods', {
@@ -123,6 +123,28 @@ export const productSuppliers = mysqlTable('product_suppliers', {
 	email: varchar('email', { length: 100 }),
 	description: varchar('description', { length: 255 }),
 	...secureFields
+});
+
+export const recipes = mysqlTable('recipes', {
+	id: int('id').primaryKey().autoincrement(),
+	title: varchar('title', { length: 255 }).notNull(),
+	description: text('description'),
+	instructions: text('instructions').notNull(), // Can store markdown or JSON steps
+	prepTime: int('prep_time'), // in minutes
+	cookTime: int('cook_time'), // in minutes
+	...secureFields
+});
+
+export const ingredients = mysqlTable('ingredients', {
+	id: int('id').primaryKey().autoincrement()
+});
+
+// Join table for Recipes and Ingredients
+export const recipeIngredients = mysqlTable('recipe_ingredients', {
+	id: int('id').primaryKey().autoincrement(),
+	recipeId: int('recipe_id').references(() => recipes.id),
+	name: varchar('name', { length: 255 }).notNull().unique(),
+	amount: varchar('amount', { length: 100 })
 });
 
 export * from './auth.schema';

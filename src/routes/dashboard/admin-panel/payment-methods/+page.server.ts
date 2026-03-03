@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 
 import { paymentMethod as schema, editPaymentMethod as editSchema } from './schema';
 import { db } from '$lib/server/db';
-import { paymentMethods, user } from '$lib/server/db/schema/';
+import { paymentMethods, user } from '$lib/server/db/schema';
 import type { Actions } from './$types';
 import type { PageServerLoad } from './$types.js';
 

@@ -14,8 +14,10 @@
 	import { Eye, EyeOff } from '@lucide/svelte';
 	import Errors from '$lib/formComponents/Errors.svelte';
 
-	let { data, action = '?/signup' }: { data: SuperValidated<Infer<SignupSchema>>; action: string } =
-		$props();
+	let {
+		data,
+		action = '?/signup'
+	}: { data: SuperValidated<Infer<SignupSchema>>; action?: string } = $props();
 
 	const { form, errors, delayed, enhance, allErrors, message } = superForm(data, {});
 
@@ -44,7 +46,7 @@
 		<Card.Description>Enter your email below to login to your account</Card.Description>
 	</Card.Header>
 	<Card.Content>
-		<form method="POST" {action} use:enhance>
+		<form method="POST" id="main" {action} use:enhance>
 			<Errors allErrors={$allErrors} />
 
 			<div class="grid gap-4">

@@ -61,7 +61,7 @@
 
 	$form.name = data.singleUser?.name;
 	$form.description = data.singleUser?.description || '';
-	$form.permissions = data.permissionList.map((item) => String(item.id)) || [];
+	// $form.permissions = data.permissionList.map((item) => String(item.id)) || [];
 </script>
 
 <svelte:head>
@@ -144,14 +144,5 @@
 		data={data?.userList}
 		columns={userColumns}
 		fileName="{data?.singleUser.name} Users List"
-	/>
-{/if}
-{#if data?.permissionList?.length}
-	<h3>Permissions on this Role</h3>
-
-	<DataTable
-		data={data?.permissionList}
-		{columns}
-		fileName="{data?.singleUser.name} Permissions List"
 	/>
 {/if}

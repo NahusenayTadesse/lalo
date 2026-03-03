@@ -1,2 +1,0 @@
-ALTER TABLE `user` ADD `role_id` int;--> statement-breakpoint
-ALTER TABLE `user` ADD CONSTRAINT `user_role_id_roles_id_fk` FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE set null ON UPDATE no action;

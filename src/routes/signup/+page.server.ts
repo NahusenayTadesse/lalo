@@ -10,11 +10,20 @@ import { eq, and, sql } from 'drizzle-orm';
 
 import { db } from '$lib/server/db';
 import { APIError } from 'better-auth';
-import { orders, orderItems, products, customers } from '$lib/server/db/schema';
+import { orders, orderItems, roles, user, products, customers } from '$lib/server/db/schema';
 
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
-		return redirect(302, '/');
+		const roleName = await db
+			.select({ name: roles.name })
+			.from(user)
+			.leftJoin(roles, eq(user.roleId, roles.id))
+			.where(eq(user.id, event.locals.user.id))
+			.then((rows) => rows[0]);
+
+		if (roleName.name === 'Admin') {
+			return redirect(302, '/dashboard');
+		} else return redirect(302, '/');
 	}
 	const form = await superValidate(zod4(add));
 
@@ -49,7 +58,12 @@ export const actions: Actions = {
 						callbackURL: '/auth/verification-success'
 					}
 				});
-
+				await tx
+					.update(user)
+					.set({
+						roleId: 2
+					})
+					.where(eq(user.id, newCustomer?.user.id));
 				await tx.insert(customers).values({ email, name, phone, userId: newCustomer?.user.id });
 			});
 

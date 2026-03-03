@@ -28,7 +28,7 @@
 			</div>
 
 			<div class="rounded-xl bg-white p-2 shadow-sm ring-1 ring-slate-200">
-				<Gallery images={data?.images} title={data?.product?.name} />
+				<Gallery images={data?.images} title={data?.product?.productName} />
 			</div>
 		</div>
 	{/if}

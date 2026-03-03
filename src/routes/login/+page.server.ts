@@ -7,14 +7,19 @@ import { loginSchema } from '$lib/ZodSchema';
 import { redirect } from 'sveltekit-flash-message/server';
 import { auth } from '$lib/server/auth';
 
-export const load: PageServerLoad = async (event) => {
-	if (event.locals.user) {
-		return redirect(302, '/dashboard');
+export const load: PageServerLoad = async ({ locals, parent }) => {
+	if (locals.user) {
+		const roleName = await parent().roleName;
+
+		if (parent.roleName === 'Admin') {
+			return redirect(302, '/dashboard');
+		} else return redirect(302, '/');
 	}
 	const form = await superValidate(zod4(loginSchema));
 
 	return { form };
 };
+import { APIError } from 'better-auth';
 
 export const actions: Actions = {
 	login: async (event) => {
@@ -34,29 +39,57 @@ export const actions: Actions = {
 
 		const { email, password } = form.data;
 
-		const result = await auth.api.signInEmail({
-			body: {
-				email,
-				password,
-				callbackURL: '/auth/verification-success'
-			}
-		});
+		try {
+			const result = await auth.api.signInEmail({
+				body: {
+					email,
+					password,
+					callbackURL: '/auth/verification-success'
+				}
+			});
 
-		if (!result.user) {
-			setError(form, 'email', 'Invalid email or password');
-			setError(form, 'password', 'Invalid email or password');
+			if (!result.user) {
+				setError(form, 'email', 'Invalid email or password');
+				setError(form, 'password', 'Invalid email or password');
+				return message(
+					form,
+					{
+						type: 'error',
+						text: 'An error occurred while logging in'
+					},
+					{
+						status: 500
+					}
+				);
+			}
+
+			return message(form, {
+				type: 'success',
+				text: 'Sign Up Successful!'
+			});
+		} catch (error) {
+			if (error instanceof APIError) {
+				return message(
+					form,
+					{
+						type: 'error',
+						text: error?.message
+					},
+					{
+						status: 500
+					}
+				);
+			}
 			return message(
 				form,
 				{
 					type: 'error',
-					text: 'An error occurred while logging in'
+					text: 'Registration Failed'
 				},
 				{
 					status: 500
 				}
 			);
 		}
-
-		redirect('/dashboard', { type: 'success', message: 'Login Successful!' }, event.cookies);
 	}
 };

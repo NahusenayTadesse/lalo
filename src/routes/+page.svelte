@@ -11,6 +11,7 @@
 	import * as Carousel from '$lib/components/ui/carousel/index.js';
 	import Hero from '$lib/components/hero.svelte';
 	import About from '$lib/components/about.svelte';
+	import Accordion from '$lib/components/accordion.svelte';
 </script>
 
 <Hero />
@@ -42,3 +43,5 @@
 		<Carousel.Next />
 	</Carousel.Root>
 </main>
+
+<Accordion />

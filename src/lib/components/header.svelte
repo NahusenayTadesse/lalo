@@ -2,7 +2,10 @@
 	import { SearchIcon, MenuIcon, XIcon } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
+	import AvatarSettings from './AvatarSettings.svelte';
 	let mobileMenuOpen = $state(false);
+
+	let { data } = $props();
 
 	const navLinks = [
 		{ label: 'Home', href: '/' },
@@ -36,22 +39,19 @@
 					</a>
 				{/each}
 			</nav>
-
-			<!-- Search and Auth -->
-			<div class="hidden items-center gap-4 md:flex">
-				<div class="relative w-64">
-					<Input type="text" placeholder="Search products..." class="pr-4 pl-10" />
-					<SearchIcon
-						class="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-					/>
+			{#if data === ''}
+				<!-- Search and Auth -->
+				<div class="hidden items-center gap-4 md:flex">
+					<Button variant="ghost" size="sm">
+						<a href="/login" class="text-sm">Sign In</a>
+					</Button>
+					<Button size="sm">
+						<a href="/signup" class="text-sm">Sign Up</a>
+					</Button>
 				</div>
-				<Button variant="ghost" size="sm">
-					<a href="/login" class="text-sm">Sign In</a>
-				</Button>
-				<Button size="sm">
-					<a href="/signup" class="text-sm">Sign Up</a>
-				</Button>
-			</div>
+			{:else}
+				<AvatarSettings {data} />
+			{/if}
 
 			<!-- Mobile Menu Button -->
 			<button class="p-2 md:hidden" onclick={() => (mobileMenuOpen = !mobileMenuOpen)}>

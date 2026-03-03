@@ -17,7 +17,7 @@
 			<Avatar.Fallback
 				class="flex items-center justify-center  rounded-full border-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 font-medium text-white dark:from-indigo-800 dark:via-purple-700 dark:to-pink-800"
 			>
-				{data?.[0].toUpperCase()}
+				{data?.[0]?.toUpperCase() ?? 'N'}
 			</Avatar.Fallback>
 		</Avatar.Root>
 	</DropdownMenu.Trigger>

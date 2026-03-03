@@ -50,6 +50,11 @@ CREATE TABLE `discounts` (
 	CONSTRAINT `discounts_name_unique` UNIQUE(`name`)
 );
 --> statement-breakpoint
+CREATE TABLE `ingredients` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	CONSTRAINT `ingredients_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
 CREATE TABLE `order_items` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`order_id` int,
@@ -128,6 +133,13 @@ CREATE TABLE `product_categories` (
 	CONSTRAINT `product_categories_name_unique` UNIQUE(`name`)
 );
 --> statement-breakpoint
+CREATE TABLE `product_images` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`product_id` int,
+	`image_url` varchar(255) NOT NULL,
+	CONSTRAINT `product_images_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
 CREATE TABLE `product_suppliers` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`name` varchar(50) NOT NULL,
@@ -147,6 +159,7 @@ CREATE TABLE `product_suppliers` (
 CREATE TABLE `products` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`name` varchar(50) NOT NULL,
+	`featured_image` varchar(255),
 	`description` varchar(255),
 	`category_id` int,
 	`quantity` int NOT NULL DEFAULT 0,
@@ -162,6 +175,32 @@ CREATE TABLE `products` (
 	`deleted_at` datetime,
 	`deleted_by` varchar(255),
 	CONSTRAINT `products_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `recipe_ingredients` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`recipe_id` int,
+	`name` varchar(255) NOT NULL,
+	`amount` varchar(100),
+	CONSTRAINT `recipe_ingredients_id` PRIMARY KEY(`id`),
+	CONSTRAINT `recipe_ingredients_name_unique` UNIQUE(`name`)
+);
+--> statement-breakpoint
+CREATE TABLE `recipes` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`title` varchar(255) NOT NULL,
+	`description` text,
+	`instructions` text NOT NULL,
+	`prep_time` int,
+	`cook_time` int,
+	`is_active` boolean NOT NULL DEFAULT true,
+	`created_by` varchar(255),
+	`updated_by` varchar(255),
+	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP(3) on update CURRENT_TIMESTAMP(3),
+	`deleted_at` datetime,
+	`deleted_by` varchar(255),
+	CONSTRAINT `recipes_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
 CREATE TABLE `transactions` (
@@ -261,6 +300,7 @@ CREATE TABLE `user` (
 	`email` varchar(255) NOT NULL,
 	`email_verified` boolean NOT NULL DEFAULT false,
 	`image` text,
+	`role_id` int,
 	`created_at` timestamp(3) NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP(3) on update CURRENT_TIMESTAMP(3),
 	CONSTRAINT `user_id` PRIMARY KEY(`id`),
@@ -311,6 +351,7 @@ ALTER TABLE `product_adjustments` ADD CONSTRAINT `product_adjustments_deleted_by
 ALTER TABLE `product_categories` ADD CONSTRAINT `product_categories_created_by_user_id_fk` FOREIGN KEY (`created_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `product_categories` ADD CONSTRAINT `product_categories_updated_by_user_id_fk` FOREIGN KEY (`updated_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `product_categories` ADD CONSTRAINT `product_categories_deleted_by_user_id_fk` FOREIGN KEY (`deleted_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `product_images` ADD CONSTRAINT `product_images_product_id_products_id_fk` FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `product_suppliers` ADD CONSTRAINT `product_suppliers_created_by_user_id_fk` FOREIGN KEY (`created_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `product_suppliers` ADD CONSTRAINT `product_suppliers_updated_by_user_id_fk` FOREIGN KEY (`updated_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `product_suppliers` ADD CONSTRAINT `product_suppliers_deleted_by_user_id_fk` FOREIGN KEY (`deleted_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
@@ -319,6 +360,10 @@ ALTER TABLE `products` ADD CONSTRAINT `products_supplier_id_product_suppliers_id
 ALTER TABLE `products` ADD CONSTRAINT `products_created_by_user_id_fk` FOREIGN KEY (`created_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `products` ADD CONSTRAINT `products_updated_by_user_id_fk` FOREIGN KEY (`updated_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `products` ADD CONSTRAINT `products_deleted_by_user_id_fk` FOREIGN KEY (`deleted_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `recipe_ingredients` ADD CONSTRAINT `recipe_ingredients_recipe_id_recipes_id_fk` FOREIGN KEY (`recipe_id`) REFERENCES `recipes`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `recipes` ADD CONSTRAINT `recipes_created_by_user_id_fk` FOREIGN KEY (`created_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `recipes` ADD CONSTRAINT `recipes_updated_by_user_id_fk` FOREIGN KEY (`updated_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `recipes` ADD CONSTRAINT `recipes_deleted_by_user_id_fk` FOREIGN KEY (`deleted_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `transactions` ADD CONSTRAINT `transactions_payment_method_id_payment_methods_id_fk` FOREIGN KEY (`payment_method_id`) REFERENCES `payment_methods`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `transactions` ADD CONSTRAINT `transactions_created_by_user_id_fk` FOREIGN KEY (`created_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `transactions` ADD CONSTRAINT `transactions_updated_by_user_id_fk` FOREIGN KEY (`updated_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
@@ -335,6 +380,7 @@ ALTER TABLE `special_permissions` ADD CONSTRAINT `special_permissions_permission
 ALTER TABLE `special_permissions` ADD CONSTRAINT `special_permissions_created_by_user_id_fk` FOREIGN KEY (`created_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `special_permissions` ADD CONSTRAINT `special_permissions_updated_by_user_id_fk` FOREIGN KEY (`updated_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `special_permissions` ADD CONSTRAINT `special_permissions_deleted_by_user_id_fk` FOREIGN KEY (`deleted_by`) REFERENCES `user`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `user` ADD CONSTRAINT `user_role_id_roles_id_fk` FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX `account_userId_idx` ON `account` (`user_id`);--> statement-breakpoint
 CREATE INDEX `session_userId_idx` ON `session` (`user_id`);--> statement-breakpoint
 CREATE INDEX `verification_identifier_idx` ON `verification` (`identifier`);
