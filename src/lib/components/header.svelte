@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ShoppingBagIcon, SearchIcon, MenuIcon, XIcon } from '@lucide/svelte';
+	import { SearchIcon, MenuIcon, XIcon } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	let mobileMenuOpen = $state(false);
@@ -14,14 +14,15 @@
 </script>
 
 <header
-	class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60"
+	class="sticky top-0 z-50 w-full border-b bg-linear-to-tr from-primary/30 via-background to-accent/10 backdrop-blur supports-backdrop-filter:bg-background/60"
 >
 	<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 		<div class="flex h-16 items-center justify-between">
 			<!-- Logo -->
 			<div class="flex shrink-0 items-center gap-2">
-				<img src="/logo.webp" class="h-16 w-16" alt="Logo" />
-				<span class="text-xl font-bold text-foreground">Lalo Bakery Solution</span>
+				<a href="/"><img src="/logo.webp" loading="lazy" class="my-2 h-16 w-20" alt="Logo" /></a>
+
+				<!-- <span class="text-xl font-bold text-foreground">Lalo Bakery Solution</span> -->
 			</div>
 
 			<!-- Desktop Navigation -->

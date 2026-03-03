@@ -8,59 +8,18 @@
 		CardContent
 	} from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Textarea } from '$lib/components/ui/textarea';
-	import { Label } from '$lib/components/ui/label';
+
 	import { IconBrandFacebook, IconBrandInstagram, IconBrandTiktok } from '@tabler/icons-svelte';
 	import { MailIcon, MessageCircleIcon, SendIcon, PhoneIcon } from '@lucide/svelte';
 
-	// Set app hook
-
-	// Form state
-	let formData = $state({
-		name: '',
-		email: '',
-		subject: '',
-		message: ''
+	import { superForm } from 'sveltekit-superforms/client';
+	import { toast } from 'svelte-sonner';
+	import InputComp from '$lib/formComponents/InputComp.svelte';
+	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	let { data } = $props();
+	const { form, errors, enhance, delayed, message } = superForm(data.form, {
+		dataType: 'json'
 	});
-
-	let isSubmitting = $state(false);
-	let errors = $state<Record<string, string>>({});
-
-	// Validation schema
-	const contactSchema = z.object({
-		name: z.string().min(2, 'Name must be at least 2 characters'),
-		email: z.string().email('Invalid email address'),
-		subject: z.string().min(3, 'Subject must be at least 3 characters'),
-		message: z.string().min(10, 'Message must be at least 10 characters')
-	});
-
-	// Handle form submission
-	// const handleSubmit = async (e: Event) => {
-	// 	e.preventDefault();
-	// 	errors = {};
-
-	// 	try {
-	// 		contactSchema.parse(formData);
-	// 		isSubmitting = true;
-
-	// 		// Simulate API call
-	// 		await new Promise((resolve) => setTimeout(resolve, 1500));
-
-	// 		toast.success("Message sent successfully! We'll get back to you soon.");
-	// 		formData = { name: '', email: '', subject: '', message: '' };
-	// 	} catch (error) {
-	// 		if (error instanceof z.ZodError) {
-	// 			error.errors.forEach((err) => {
-	// 				const path = err.path[0] as string;
-	// 				errors[path] = err.message;
-	// 			});
-	// 			toast.error('Please fix the errors in the form');
-	// 		}
-	// 	} finally {
-	// 		isSubmitting = false;
-	// 	}
-	// };
 
 	// Social links
 	const socialLinks = [
@@ -109,7 +68,7 @@
 
 <div class="min-h-dvh w-full bg-background text-foreground transition-colors">
 	<!-- Main Content -->
-	<main class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+	<main class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
 		<!-- Hero Section -->
 		<div class="mb-12 text-center">
 			<h2 class="mb-4 text-4xl font-bold sm:text-5xl">Get in Touch</h2>
@@ -130,77 +89,58 @@
 						>
 					</CardHeader>
 					<CardContent>
-						<form class="space-y-6">
+						<form class="space-y-6" action="?/contact" method="POST" use:enhance>
 							<!-- Name -->
-							<div class="space-y-2">
-								<Label for="name">Full Name</Label>
-								<Input
-									id="name"
-									type="text"
-									placeholder="Your name"
-									bind:value={formData.name}
-									disabled={isSubmitting}
-									class={errors.name ? 'border-destructive' : ''}
-								/>
-								{#if errors.name}
-									<p class="text-sm text-destructive">{errors.name}</p>
-								{/if}
-							</div>
+							<InputComp
+								{form}
+								{errors}
+								type="text"
+								name="name"
+								label="Name"
+								placeholder="Enter Your Name"
+							/>
 
-							<!-- Email -->
-							<div class="space-y-2">
-								<Label for="email">Email Address</Label>
-								<Input
-									id="email"
-									type="email"
-									placeholder="your@email.com"
-									bind:value={formData.email}
-									disabled={isSubmitting}
-									class={errors.email ? 'border-destructive' : ''}
-								/>
-								{#if errors.email}
-									<p class="text-sm text-destructive">{errors.email}</p>
-								{/if}
-							</div>
+							<InputComp
+								type="email"
+								{form}
+								{errors}
+								name="email"
+								label="Email Address"
+								placeholder="your@email.com"
+							/>
+							<InputComp
+								type="tel"
+								{form}
+								{errors}
+								name="Phone"
+								label="Phone Number"
+								placeholder="+251 901020304"
+							/>
 
-							<!-- Subject -->
-							<div class="space-y-2">
-								<Label for="subject">Subject</Label>
-								<Input
-									id="subject"
-									type="text"
-									placeholder="What is this about?"
-									bind:value={formData.subject}
-									disabled={isSubmitting}
-									class={errors.subject ? 'border-destructive' : ''}
-								/>
-								{#if errors.subject}
-									<p class="text-sm text-destructive">{errors.subject}</p>
-								{/if}
-							</div>
+							<InputComp
+								{form}
+								{errors}
+								type="text"
+								name="subject"
+								label="Subject"
+								placeholder="What is this about?"
+							/>
+
+							<InputComp
+								{form}
+								{errors}
+								type="textarea"
+								name="message"
+								label="Message"
+								placeholder="Tell us more about your inquiry..."
+							/>
 
 							<!-- Message -->
-							<div class="space-y-2">
-								<Label for="message">Message</Label>
-								<Textarea
-									id="message"
-									placeholder="Tell us more about your inquiry..."
-									bind:value={formData.message}
-									disabled={isSubmitting}
-									class={['min-h-32', errors.message && 'border-destructive']}
-								/>
-								{#if errors.message}
-									<p class="text-sm text-destructive">{errors.message}</p>
-								{/if}
-							</div>
 
 							<!-- Submit Button -->
-							<Button type="submit" class="w-full gap-2" disabled={isSubmitting} size="lg">
-								{#if isSubmitting}
-									<div
-										class="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"
-									></div>
-									Sending...
+							<Button type="submit" class="w-full gap-2">
+								{#if $delayed}
+									<LoadingBtn name="Sending" />
 								{:else}
 									<SendIcon class="h-4 w-4" />
 									Send Message
@@ -286,3 +226,14 @@
 		</div>
 	</main>
 </div>
+
+<section class="relative my-16 h-[50vh] w-full max-w-7xl justify-self-center lg:h-[90vh] lg:w-9/10">
+	<iframe
+		src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3940.6989163918774!2d38.74450221007991!3d8.999827389408697!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b8513494db273%3A0x88235dbe171c4224!2sDiplomat%20Building!5e0!3m2!1sen!2set!4v1772532021053!5m2!1sen!2set"
+		style="border:0;"
+		class="h-full w-full rounded-3xl"
+		loading="lazy"
+		referrerpolicy="no-referrer-when-downgrade"
+		title="Map"
+	></iframe>
+</section>

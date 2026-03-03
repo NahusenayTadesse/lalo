@@ -5,9 +5,8 @@
 </script>
 
 <section
-	class="relative min-h-dvh w-full overflow-hidden bg-linear-to-br from-primary/20 via-background to-accent/10"
->  
-    
+	class="relative min-h-dvh w-full overflow-hidden bg-linear-to-br from-primary/30 via-background to-accent/10"
+>
 	<!-- Decorative elements -->
 	<div class="pointer-events-none absolute inset-0 overflow-hidden">
 		<div class="absolute top-20 right-10 size-72 rounded-full bg-primary/10 blur-3xl"></div>
@@ -32,7 +31,7 @@
 			<div transition:fly={{ y: 20, duration: 600, delay: 200 }} class="flex flex-col gap-4">
 				<h1 class="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
 					<span
-						class="bg-linear-to-r from-primary via-accent to-primary bg-clip-text text-transparent"
+						class="bg-linear-to-r from-primary via-primary/40 to-primary bg-clip-text text-transparent"
 						>Lalo Bakery</span
 					>
 					<br />
@@ -55,19 +54,11 @@
 				transition:fly={{ y: 20, duration: 600, delay: 400 }}
 				class="flex flex-col justify-center gap-4 pt-4 sm:flex-row"
 			>
-				<Button
-					size="lg"
-					class="group shadow-lg-lg shadow-lg-primary/20 hover:shadow-lg-xl hover:shadow-lg-primary/30 h-12 rounded-lg px-8 text-base font-semibold transition-all duration-300 hover:scale-105"
-				>
+				<Button size="lg" href="/shop">
 					Get Started
 					<ArrowRightIcon class="ml-2 size-5 transition-transform group-hover:translate-x-1" />
 				</Button>
-				<Button
-					size="lg"
-					variant="outline"
-					class="h-12 rounded-lg border-2 px-8 text-base font-semibold transition-all duration-300 hover:bg-primary/5"
-					>Learn More</Button
-				>
+				<Button size="lg" href="/about-us" variant="outline">Learn More</Button>
 			</div>
 
 			<!-- Stats -->

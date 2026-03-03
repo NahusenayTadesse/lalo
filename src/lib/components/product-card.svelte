@@ -51,16 +51,20 @@
 >
 	<div class="relative aspect-square overflow-hidden bg-muted">
 		{#if image}
-			<img
-				src="/files/{image}"
-				alt={productName}
-				loading="lazy"
-				class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-			/>
+			<a href="/shop/single/{productId}">
+				<img
+					src="/files/{image}"
+					alt={productName}
+					loading="lazy"
+					class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+				/>
+			</a>
 		{:else}
-			<div class="flex h-full w-full items-center justify-center text-muted-foreground/40">
-				<ShoppingCartIcon class="size-12" />
-			</div>
+			<a href="/shop/single/{productId}">
+				<div class="flex h-full w-full items-center justify-center text-muted-foreground/40">
+					<ShoppingCartIcon class="size-12" />
+				</div>
+			</a>
 		{/if}
 
 		<div class="absolute inset-x-2 top-2 flex justify-between gap-2">
@@ -71,7 +75,7 @@
 			{/if}
 
 			{#if quantityInCart > 0}
-				<Badge variant="default" class="animate-in duration-200 zoom-in-50">
+				<Badge variant="default" class="animate-in zoom-in-50 duration-200">
 					{quantityInCart} in cart
 				</Badge>
 			{/if}

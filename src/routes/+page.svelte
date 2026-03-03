@@ -29,11 +29,11 @@
 		opts={{
 			align: 'start'
 		}}
-		class="w-3/4"
+		class="w-full"
 	>
 		<Carousel.Content>
 			{#each product as product (product.productId)}
-				<Carousel.Item class="w-full md:basis-1/2 lg:basis-1/4 ">
+				<Carousel.Item class="w-full md:basis-1/2 lg:basis-1/5">
 					<ProductCard {...product} />
 				</Carousel.Item>
 			{/each}

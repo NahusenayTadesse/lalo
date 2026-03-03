@@ -48,23 +48,46 @@
 		<div class="mb-8 grid grid-cols-1 gap-8 md:grid-cols-4">
 			<!-- Company Info -->
 			<div>
-				<h4 class="mb-4 font-semibold">About Lalo Bakery Solution</h4>
-				<p class="mb-4 text-sm text-foreground/70">
-					Your trusted online shopping destination for quality products and exceptional service.
-				</p>
+				<img src="/logo.webp" class="w-30" alt="Lalo Logo" />
+				<h4 class="mb-4 font-semibold">Lalo Bakery Solution</h4>
+
 				<div class="flex flex-col gap-2 text-sm">
-					<div class="flex items-center gap-2 text-foreground/70">
+					<a
+						href="https://maps.app.goo.gl/KMrgwGNNbsE2SAeV7"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="flex items-center gap-2 text-foreground/70"
+					>
 						<MapPinIcon class="size-4 shrink-0" />
-						<span>123 Main St, City, State 12345</span>
-					</div>
-					<div class="flex items-center gap-2 text-foreground/70">
+						<span>Diplomat Building, Mozambique St, Addis Ababa</span>
+					</a>
+					<a
+						href="tel:+251908454545"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="flex items-center gap-2 text-foreground/70"
+					>
 						<PhoneIcon class="size-4 shrink-0" />
-						<span>+1 (555) 123-4567</span>
-					</div>
-					<div class="flex items-center gap-2 text-foreground/70">
+						<span>+251908454545</span>
+					</a>
+					<a
+						href="tel:+251908454545"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="flex items-center gap-2 text-foreground/70"
+					>
+						<PhoneIcon class="size-4 shrink-0" />
+						<span>+251908454545</span>
+					</a>
+					<a
+						href="mailto:info@mohammedlaloie.com"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="flex items-center gap-2 text-foreground/70"
+					>
 						<MailIcon class="size-4 shrink-0" />
 						<span>info@mohammedlaloie.com</span>
-					</div>
+					</a>
 				</div>
 			</div>
 

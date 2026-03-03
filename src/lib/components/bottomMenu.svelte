@@ -1,13 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import {
-		Calendar,
-		Container,
-		LayoutDashboard,
-		ShoppingBasket,
-		SquareChartGantt,
-		UsersRound
-	} from '@lucide/svelte';
+	import { Container, LayoutDashboard, SquareChartGantt, UsersRound } from '@lucide/svelte';
 
 	const mobNav = [
 		{ title: 'Dashboard', url: '/dashboard/', icon: LayoutDashboard },
