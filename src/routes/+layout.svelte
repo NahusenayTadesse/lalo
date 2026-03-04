@@ -62,7 +62,6 @@
 	<link rel="icon" href="/logo.png" />
 </svelte:head>
 <ModeWatcher />
-<Cart />
 
 <Toaster position="bottom-right" richColors closeButton />
 
@@ -83,6 +82,7 @@
 	{@render children()}
 
 	<Footer />
+	<Cart />
 {:else}
 	{@render children()}
 {/if}

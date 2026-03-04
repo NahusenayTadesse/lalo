@@ -1,0 +1,1 @@
+ALTER TABLE `recipe_ingredients` DROP INDEX `recipe_ingredients_name_unique`;

@@ -142,7 +142,7 @@
 				<span>Add Product</span>
 			</Button>
 		</div>
-		{#each $form.selectedProducts as product, i}
+		{#each $form.selectedProducts as product, i (product)}
 			<div
 				class="flex w-full flex-col items-end gap-3
  rounded-lg border

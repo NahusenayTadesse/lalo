@@ -1,0 +1,1 @@
+ALTER TABLE `recipes` ADD `featured_image` varchar(255);

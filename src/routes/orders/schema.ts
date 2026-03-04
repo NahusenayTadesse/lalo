@@ -7,11 +7,7 @@ export const add = z.object({
 			product: z.number({ message: 'Product is required' }).int().positive('Product is required'),
 			quantity: z.number().int().positive('Number of products must be at least 1')
 		})
-		.array(),
-
-	status: z
-		.enum(['pending', 'delivered', 'cancelled'], { message: 'Status is required' })
-		.default('pending')
+		.array()
 });
 
 export const edit = z.object({
@@ -22,10 +18,6 @@ export const edit = z.object({
 			product: z.number({ message: 'Product is required' }).int().positive('Product is required'),
 			quantity: z.number().int().positive('Number of products must be at least 1')
 		})
-		.array(),
-
-	status: z
-		.enum(['pending', 'delivered', 'cancelled'], { message: 'Status is required' })
-		.default('pending')
+		.array()
 });
 export type Edit = z.infer<typeof edit>;

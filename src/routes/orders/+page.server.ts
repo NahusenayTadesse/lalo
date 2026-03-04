@@ -53,7 +53,14 @@ TRIM(
 			status: orders.status
 		})
 		.from(orders)
-		.leftJoin(customers, eq(orders.customerId, customers.id));
+		.leftJoin(customers, eq(orders.customerId, customers.id))
+		.where(
+			and(
+				eq(orders.customerId, customerId?.value),
+				eq(orders.status, 'pending'),
+				eq(orders.status, 'cancelled')
+			)
+		);
 
 	const allItems = await db
 		.select({
@@ -73,6 +80,7 @@ TRIM(
 		form,
 		editForm,
 		allData,
+		customerId,
 		allItems,
 		fetchedProducts,
 		fetchedCustomers
@@ -86,7 +94,7 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: 'Please check the form for Errors' });
 		}
 
-		const { selectedProducts, customer, status } = form.data;
+		const { selectedProducts, customer } = form.data;
 
 		try {
 			await db.transaction(async (tx) => {
@@ -94,10 +102,7 @@ export const actions: Actions = {
 					.select({ value: products.id, price: products.price })
 					.from(products);
 
-				const [orderId] = await tx
-					.insert(orders)
-					.values({ customerId: customer, status })
-					.$returningId();
+				const [orderId] = await tx.insert(orders).values({ customerId: customer }).$returningId();
 
 				if (selectedProducts.length) {
 					await tx.insert(orderItems).values(
@@ -126,7 +131,7 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: 'Please check the form for Errors' });
 		}
 
-		const { id, selectedProducts, customer, status } = form.data;
+		const { id, selectedProducts, customer } = form.data;
 
 		try {
 			await db.transaction(async (tx) => {
@@ -136,7 +141,7 @@ export const actions: Actions = {
 
 				await tx
 					.update(orders)
-					.set({ customerId: customer, status })
+					.set({ customerId: customer })
 					.where(eq(orders.id, Number(id)));
 
 				if (selectedProducts.length) {

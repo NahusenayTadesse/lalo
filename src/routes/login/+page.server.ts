@@ -9,9 +9,9 @@ import { auth } from '$lib/server/auth';
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
 	if (locals.user) {
-		const roleName = await parent().roleName;
+		const roleName = (await parent()).roleName;
 
-		if (parent.roleName === 'Admin') {
+		if (roleName === 'Admin') {
 			return redirect(302, '/dashboard');
 		} else return redirect(302, '/');
 	}

@@ -8,6 +8,20 @@
       "when": 1772570138303,
       "tag": "0000_fuzzy_lord_hawal",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1772574098501,
+      "tag": "0001_sturdy_oracle",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1772583028340,
+      "tag": "0002_rapid_speed",
+      "breakpoints": true
     }
   ]
 }

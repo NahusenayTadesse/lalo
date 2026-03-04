@@ -30,14 +30,13 @@
 			cell: ({ row }) => {
 				return renderComponent(Edit, {
 					id: row.original.id,
-					customer: row.original.customerId,
+					customer: data?.customerId?.value,
 					customerList: data?.fetchedCustomers,
 					customerName: row.original.name,
 					orderItems: data?.allItems,
 					productList: data?.fetchedProducts,
 					data: data?.editForm,
-					icon: false,
-					status: row.original.status
+					icon: false
 				});
 			}
 		},
@@ -74,14 +73,13 @@
 			cell: ({ row }) => {
 				return renderComponent(Edit, {
 					id: row.original.id,
-					customer: row.original.customerId,
+					customer: data?.customerId?.value,
 					customerList: data?.fetchedCustomers,
 					customerName: row.original.name,
 					orderItems: data?.allItems,
 					productList: data?.fetchedProducts,
 					data: data?.editForm,
-					icon: true,
-					status: row.original.status
+					icon: true
 				});
 			}
 		}
@@ -120,6 +118,8 @@
 	const handleOrderClick = (order: any) => {
 		selectedOrder = order;
 	};
+
+	$form.customerId = data?.customerId?.value;
 </script>
 
 <svelte:head>
@@ -143,14 +143,7 @@
 				method="post"
 				enctype="multipart/form-data"
 			>
-				<InputComp
-					label="Customer"
-					name="customer"
-					type="combo"
-					{form}
-					{errors}
-					items={data?.fetchedCustomers}
-				/>
+				<InputComp label="Customer" name="customer" type="hidden" {form} {errors} />
 				<div class="mb-4 flex justify-end">
 					<Button type="button" size="sm" class="gap-2" onclick={() => addProduct()}>
 						<Plus class="h-4 w-4" />
@@ -207,19 +200,6 @@
 						</Button>
 					</div>
 				{/each}
-
-				<InputComp
-					label="Status"
-					name="status"
-					type="select"
-					{form}
-					{errors}
-					items={[
-						{ value: 'pending', name: 'Pending' },
-						{ value: 'delivered', name: 'Delivered' },
-						{ value: 'cancelled', name: 'Cancelled' }
-					]}
-				/>
 
 				<Button type="submit" form="main">
 					{#if $delayed}

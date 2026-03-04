@@ -40,8 +40,7 @@
 		customerList,
 		productList,
 		orderItems,
-		icon = false,
-		status = true
+		icon = false
 	}: {
 		data: SuperValidated<Infer<Edit>>;
 		id: number;
@@ -51,7 +50,6 @@
 		productList: Item[];
 		orderItems: OrderItem[];
 		icon: boolean;
-		status: boolean;
 	} = $props();
 
 	const { form, errors, enhance, delayed, message, allErrors } = superForm(data, {
@@ -83,7 +81,6 @@
 	$form.selectedProducts = simplifyOrderItems(
 		orderItems.filter((item) => Number(item.orderId) === Number(id))
 	);
-	$form.status = status;
 
 	import { toast } from 'svelte-sonner';
 	import InputComp from '$lib/formComponents/InputComp.svelte';
@@ -127,14 +124,7 @@
 						>
 							<Errors allErrors={$allErrors} />
 							<input type="hidden" name="id" value={$form.id} />
-							<InputComp
-								label="Customer"
-								name="customer"
-								type="combo"
-								{form}
-								{errors}
-								items={customerList}
-							/>
+
 							<div class="mb-4 flex justify-end">
 								<Button type="button" size="sm" class="gap-2" onclick={() => addProduct()}>
 									<Plus class="h-4 w-4" />
@@ -191,19 +181,6 @@
 									</Button>
 								</div>
 							{/each}
-
-							<InputComp
-								label="Status"
-								name="status"
-								type="select"
-								{form}
-								{errors}
-								items={[
-									{ value: 'pending', name: 'Pending' },
-									{ value: 'delivered', name: 'Delivered' },
-									{ value: 'cancelled', name: 'Cancelled' }
-								]}
-							/>
 
 							<Button type="submit" class="mt-4" form="edit">
 								{#if $delayed}

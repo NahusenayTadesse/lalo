@@ -132,6 +132,7 @@ export const recipes = mysqlTable('recipes', {
 	instructions: text('instructions').notNull(), // Can store markdown or JSON steps
 	prepTime: int('prep_time'), // in minutes
 	cookTime: int('cook_time'), // in minutes
+	featuredImage: varchar('featured_image', { length: 255 }),
 	...secureFields
 });
 
@@ -143,7 +144,7 @@ export const ingredients = mysqlTable('ingredients', {
 export const recipeIngredients = mysqlTable('recipe_ingredients', {
 	id: int('id').primaryKey().autoincrement(),
 	recipeId: int('recipe_id').references(() => recipes.id),
-	name: varchar('name', { length: 255 }).notNull().unique(),
+	name: varchar('name', { length: 255 }).notNull(),
 	amount: varchar('amount', { length: 100 })
 });
 

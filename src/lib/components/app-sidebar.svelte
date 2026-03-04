@@ -11,7 +11,8 @@
 		Loader,
 		CircleCheckBig,
 		OctagonMinus,
-		ListOrdered
+		ListOrdered,
+		CookingPot
 	} from '@lucide/svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
@@ -44,6 +45,16 @@
 				{ title: 'Add Product', url: '/dashboard/products/add-products', icon: Plus },
 				{ title: 'Suppliers', url: '/dashboard/products/suppliers', icon: Sheet },
 				{ title: 'Add Supplier', url: '/dashboard/products/add-supplier', icon: Plus }
+			]
+		},
+
+		{
+			title: 'Recipes ',
+			url: '/dashboard/recipes',
+			icon: CookingPot,
+			items: [
+				{ title: 'All Recipes', url: '/dashboard/recipes', icon: Sheet },
+				{ title: 'Add Recipe', url: '/dashboard/recipes/add-recipes', icon: Plus }
 			]
 		},
 		{ title: 'Reports', url: '/dashboard/reports', icon: ChartArea },

@@ -9,8 +9,10 @@
 
 	const navLinks = [
 		{ label: 'Home', href: '/' },
-		{ label: 'Shop', href: '/shop' },
+
 		{ label: 'About Us', href: '/about-us' },
+		{ label: 'Recipes', href: '/recipes' },
+		{ label: 'Products', href: '/shop' },
 		{ label: 'Contact Us', href: '/contact-us' },
 		{ label: 'Orders', href: '/orders' }
 	];
