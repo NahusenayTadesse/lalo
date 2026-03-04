@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import AvatarSettings from './AvatarSettings.svelte';
+	import DarkMode from './DarkMode.svelte';
 	let mobileMenuOpen = $state(false);
 
 	let { data } = $props();
@@ -19,13 +20,13 @@
 </script>
 
 <header
-	class="sticky top-0 z-50 w-full border-b bg-linear-to-tr from-primary/30 via-background to-accent/10 backdrop-blur supports-backdrop-filter:bg-background/60"
+	class="sticky top-0 z-50 w-full bg-background backdrop-blur supports-backdrop-filter:bg-background/10"
 >
 	<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 		<div class="flex h-16 items-center justify-between">
 			<!-- Logo -->
 			<div class="flex shrink-0 items-center gap-2">
-				<a href="/"><img src="/logo.webp" loading="lazy" class="my-2 h-16 w-20" alt="Logo" /></a>
+				<a href="/"><img src="/logo.webp" loading="lazy" class="my-2 h-12 w-16" alt="Logo" /></a>
 
 				<!-- <span class="text-xl font-bold text-foreground">Lalo Bakery Solution</span> -->
 			</div>
@@ -41,19 +42,24 @@
 					</a>
 				{/each}
 			</nav>
-			{#if data === ''}
-				<!-- Search and Auth -->
-				<div class="hidden items-center gap-4 md:flex">
-					<Button variant="ghost" size="sm">
-						<a href="/login" class="text-sm">Sign In</a>
-					</Button>
-					<Button size="sm">
-						<a href="/signup" class="text-sm">Sign Up</a>
-					</Button>
+			<div class="flex flex-row items-center justify-end">
+				<div class="m-2">
+					{#if data === ''}
+						<!-- Search and Auth -->
+						<div class="hidden items-center gap-4 md:flex">
+							<Button variant="ghost" size="sm">
+								<a href="/login" class="text-sm">Sign In</a>
+							</Button>
+							<Button size="sm">
+								<a href="/signup" class="text-sm">Sign Up</a>
+							</Button>
+						</div>
+					{:else}
+						<AvatarSettings {data} />
+					{/if}
 				</div>
-			{:else}
-				<AvatarSettings {data} />
-			{/if}
+				<DarkMode />
+			</div>
 
 			<!-- Mobile Menu Button -->
 			<button class="p-2 md:hidden" onclick={() => (mobileMenuOpen = !mobileMenuOpen)}>

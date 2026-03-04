@@ -28,7 +28,16 @@
 			</div>
 
 			<!-- Main heading -->
-			<div transition:fly={{ y: 20, duration: 600, delay: 200 }} class="flex flex-col gap-4">
+			<div
+				transition:fly={{ y: 20, duration: 600, delay: 200 }}
+				class="flex flex-col items-center justify-center gap-4"
+			>
+				<img
+					src="/logo.webp"
+					loading="lazy"
+					class="my-2 h-28 w-40 justify-self-center"
+					alt="Logo"
+				/>
 				<h1 class="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
 					<span
 						class="bg-linear-to-r from-primary via-primary/40 to-primary bg-clip-text text-transparent"

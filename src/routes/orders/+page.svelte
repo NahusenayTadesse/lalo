@@ -127,7 +127,7 @@
 </svelte:head>
 
 <div
-	class="mt-16 flex min-h-dvh w-full! flex-col bg-linear-to-br from-primary/20 via-accent/10 to-background px-8 text-foreground"
+	class="mt-16 flex min-h-dvh w-full! flex-col bg-linear-to-br from-primary/5 via-accent/5 to-background px-8 text-foreground"
 >
 	<div class="mb-12 text-center">
 		<h2 class="mb-4 text-4xl font-bold sm:text-5xl">Orders</h2>

@@ -57,7 +57,6 @@
 				{ title: 'Add Recipe', url: '/dashboard/recipes/add-recipes', icon: Plus }
 			]
 		},
-		{ title: 'Reports', url: '/dashboard/reports', icon: ChartArea },
 
 		{
 			title: 'Admin Panel',
@@ -118,7 +117,7 @@
 			<Sidebar.GroupLabel>
 				<div class="flex flex-row items-center justify-center gap-4">
 					<img src="/logo.webp" class=" h-16 w-16" alt="Logo" />
-					<h4 class="text-center text-[16px]! text-primary">Lalo Bakery</h4>
+					<h4 class="text-center text-[16px]! text-primary">Lalo Bakery Solutions</h4>
 				</div></Sidebar.GroupLabel
 			>
 			<Sidebar.GroupContent class="my-4">

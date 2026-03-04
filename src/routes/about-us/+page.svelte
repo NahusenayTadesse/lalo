@@ -215,8 +215,8 @@
 				class="hover:shadow-lg-lg hover:shadow-lg-primary/10 border-primary/20 transition-all duration-300"
 			>
 				<CardHeader>
-					<div class="mb-4 inline-flex rounded-lg bg-accent/10 p-3">
-						<ToolCase class="size-6 text-accent" />
+					<div class="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
+						<ToolCase class="size-6 text-primary" />
 					</div>
 					<CardTitle>Bakery Equipment</CardTitle>
 				</CardHeader>
@@ -279,8 +279,8 @@
 				class="hover:shadow-lg-lg hover:shadow-lg-primary/10 border-primary/20 transition-all duration-300"
 			>
 				<CardHeader>
-					<div class="mb-4 inline-flex rounded-lg bg-accent/10 p-3">
-						<LeafIcon class="size-6 text-accent" />
+					<div class="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
+						<LeafIcon class="size-6 text-primary" />
 					</div>
 					<CardTitle>Dietary & Specialty Options</CardTitle>
 				</CardHeader>
@@ -324,9 +324,9 @@
 				class="hover:shadow-lg-lg hover:shadow-lg-accent/10 border-accent/20 transition-all duration-300"
 			>
 				<CardHeader>
-					<div class="flex items-start gap-4">
+					<div class="flex items-center gap-4">
 						<div class="rounded-lg bg-accent/10 p-3">
-							<BadgeCheckIcon class="size-6 text-accent" />
+							<BadgeCheckIcon class="size-6 text-primary" />
 						</div>
 						<div>
 							<CardTitle>Halal Certified</CardTitle>
@@ -345,9 +345,9 @@
 				class="hover:shadow-lg-lg hover:shadow-lg-accent/10 border-accent/20 transition-all duration-300"
 			>
 				<CardHeader>
-					<div class="flex items-start gap-4">
+					<div class="flex items-center gap-4">
 						<div class="rounded-lg bg-accent/10 p-3">
-							<BadgeCheckIcon class="size-6 text-accent" />
+							<BadgeCheckIcon class="size-6 text-primary" />
 						</div>
 						<div>
 							<CardTitle>Quality Standards</CardTitle>
@@ -404,8 +404,8 @@
 				class="hover:shadow-lg-lg hover:shadow-lg-primary/10 border-primary/20 transition-all duration-300"
 			>
 				<CardHeader>
-					<div class="mb-4 inline-flex rounded-lg bg-accent/10 p-3">
-						<BuildingIcon class="size-6 text-accent" />
+					<div class="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
+						<BuildingIcon class="size-6 text-primary" />
 					</div>
 					<CardTitle>Fixtec</CardTitle>
 					<CardDescription>Hand & Bar Tools</CardDescription>
