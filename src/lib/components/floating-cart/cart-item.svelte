@@ -2,6 +2,7 @@
 	import { useCart } from '$lib/hooks/cart.svelte.js';
 	import { Button } from '$lib/components/ui/button';
 	import { MinusIcon, PlusIcon, TrashIcon } from '@lucide/svelte';
+	import { Badge } from '$lib/components/ui/badge'; // Optional: if you have a badge component
 	import type { CartItem } from '$lib/hooks/cart.svelte.js';
 
 	const { item }: { item: CartItem } = $props();
@@ -15,26 +16,33 @@
 		}).format(price);
 	};
 
-	/** Decrease quantity */
+	/** Decrease quantity - Now passing amount */
 	const decreaseQuantity = () => {
-		cart.updateQuantity(item.productId, item.quantity - 1);
+		cart.updateQuantity(item.productId, item.amount, item.quantity - 1);
 	};
 
-	/** Increase quantity */
+	/** Increase quantity - Fixed: Now passing amount and correct current quantity */
 	const increaseQuantity = () => {
-		cart.updateQuantity(item.productId, item.quantity + 1);
+		cart.updateQuantity(item.productId, item.amount, item.quantity + 1);
 	};
 
-	/** Remove item */
+	/** Remove item - Now passing amount */
 	const removeItem = () => {
-		cart.removeItem(item.productId);
+		cart.removeItem(item.productId, item.amount);
 	};
 </script>
 
 <div class="flex flex-col gap-2 rounded-lg border border-border/50 bg-muted/50 p-3">
 	<div class="flex items-start justify-between gap-2">
 		<div class="min-w-0 flex-1">
-			<h4 class="truncate text-sm font-medium">{item.productName}</h4>
+			<div class="flex items-center gap-2">
+				<h4 class="truncate text-sm font-medium">{item.productName}</h4>
+				<span
+					class="inline-flex items-center rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary ring-1 ring-primary/20 ring-inset"
+				>
+					{item.amount}
+				</span>
+			</div>
 			<p class="text-xs text-muted-foreground">ID: {item.productId}</p>
 		</div>
 		<Button
@@ -47,7 +55,10 @@
 		</Button>
 	</div>
 	<div class="flex items-center justify-between gap-2">
-		<span class="text-sm font-semibold text-primary">{formatPrice(item.price)}</span>
+		<div class="flex flex-col">
+			<span class="text-xs text-muted-foreground">Price per unit</span>
+			<span class="text-sm font-semibold text-primary">{formatPrice(item.price)}</span>
+		</div>
 		<div class="flex items-center gap-1">
 			<Button size="icon" variant="outline" class="size-7" onclick={decreaseQuantity}>
 				<MinusIcon class="size-3" />

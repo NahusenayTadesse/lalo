@@ -99,10 +99,6 @@
 	import { toast } from 'svelte-sonner';
 	import OrderItems from './order-items.svelte';
 
-	function addProduct() {
-		$form.selectedProducts = [...$form.selectedProducts, { product: 0, quantity: 1 }];
-	}
-
 	$effect(() => {
 		if ($message) {
 			if ($message.type === 'error') {
@@ -114,12 +110,16 @@
 	});
 	import { fly } from 'svelte/transition';
 
-	let selectedOrder = $state(null);
-	const handleOrderClick = (order: any) => {
-		selectedOrder = order;
-	};
+	// let selectedOrder = $state(null);
+	// const handleOrderClick = (order: any) => {
+	// 	selectedOrder = order;
+	// };
 
 	$form.customerId = data?.customerId?.value;
+
+	function addProduct() {
+		$form.selectedProducts = [...$form.selectedProducts, { product: 0, quantity: 1, amount: '' }];
+	}
 </script>
 
 <svelte:head>
@@ -150,54 +150,84 @@
 						<span>Add Product</span>
 					</Button>
 				</div>
+
 				{#each $form.selectedProducts as product, i (product)}
 					<div
-						class="flex w-full flex-col items-end gap-3
- rounded-lg border
- border-white/20 bg-white/10 p-3 shadow-lg
-  backdrop-blur-lg lg:flex-row dark:border-black/20 dark:bg-gray-700"
-						transition:fly={{ x: -200, duration: 200 }}
+						class="group relative mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all dark:border-white/10 dark:bg-white/5"
+						transition:fly={{ y: 20, duration: 200 }}
 					>
-						<div class={arrParts}>
-							<Label for="product">Selling Product</Label>
-
-							<ComboboxComp
-								items={data?.fetchedProducts}
-								name="selectedProducts"
-								required={true}
-								bind:value={$form.selectedProducts[i].product}
-							/>
-
-							{#if $errors.selectedProducts?.[i]?.product}
-								<p class="text-sm text-red-500">{$errors.selectedProducts[i].product}</p>
-							{/if}
-						</div>
-
-						<div class={arrParts}>
-							<Label for="noofproducts">Number of Product</Label>
-
-							<Input
-								type="number"
-								min="1"
-								name="quantity"
-								bind:value={$form.selectedProducts[i].quantity}
-							/>
-
-							{#if $errors.selectedProducts?.[i]?.quantity}
-								<p class="text-sm text-red-500">{$errors.selectedProducts[i].quantity}</p>
-							{/if}
-						</div>
-						<Button
-							type="button"
-							variant="outline"
-							title="Remove this product from list"
-							onclick={() => {
-								$form.selectedProducts.splice(i, 1);
-								$form.selectedProducts = $form.selectedProducts;
-							}}
+						<div
+							class="mb-4 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-white/5"
 						>
-							<X class="h-8 w-8" />
-						</Button>
+							<span class="text-xs font-bold tracking-widest text-muted-foreground uppercase">
+								Product Entry #{i + 1}
+							</span>
+
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								class="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+								onclick={() => {
+									$form.selectedProducts.splice(i, 1);
+									$form.selectedProducts = $form.selectedProducts;
+								}}
+							>
+								<X class="h-4 w-4" />
+								<span class="sr-only">Remove item</span>
+							</Button>
+						</div>
+
+						<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+							<div class="space-y-1.5">
+								<Label class="text-xs font-medium text-slate-500">Selling Product</Label>
+								<ComboboxComp
+									items={data?.productList}
+									name="selectedProducts"
+									required={true}
+									bind:value={$form.selectedProducts[i].product}
+								/>
+								{#if $errors.selectedProducts?.[i]?.product}
+									<p class="text-[11px] font-medium text-destructive">
+										{$errors.selectedProducts[i].product}
+									</p>
+								{/if}
+							</div>
+
+							<div class="space-y-1.5">
+								<Label class="text-xs font-medium text-slate-500">Price Amount</Label>
+								<ComboboxComp
+									items={$form.selectedProducts[i].product
+										? priceList.filter(
+												(p) => Number(p.productId) === $form.selectedProducts[i].product
+											)
+										: [{ value: '', name: 'Select a product first' }]}
+									name="selectedProducts"
+									required={true}
+									bind:value={$form.selectedProducts[i].amount}
+								/>
+								{#if $errors.selectedProducts?.[i]?.amount}
+									<p class="text-[11px] font-medium text-destructive">
+										{$errors.selectedProducts[i].amount}
+									</p>
+								{/if}
+							</div>
+
+							<div class="space-y-1.5 lg:col-span-2">
+								<Label class="text-xs font-medium text-slate-500">Quantity</Label>
+								<Input
+									type="number"
+									min="1"
+									placeholder="Enter quantity..."
+									bind:value={$form.selectedProducts[i].quantity}
+								/>
+								{#if $errors.selectedProducts?.[i]?.quantity}
+									<p class="text-[11px] font-medium text-destructive">
+										{$errors.selectedProducts[i].quantity}
+									</p>
+								{/if}
+							</div>
+						</div>
 					</div>
 				{/each}
 
@@ -218,7 +248,7 @@
 			currency="ETB"
 			isAdmin={false}
 			customerList={data?.fetchedCustomers}
-			productList={data?.fetchedProducts}
+			productList={data?.productList}
 			data={data?.editForm}
 		/>
 	</div>

@@ -57,7 +57,11 @@
 				{ title: 'Add Recipe', url: '/dashboard/recipes/add-recipes', icon: Plus }
 			]
 		},
-
+		{
+			title: 'Reports',
+			url: '/dashboard/reports',
+			icon: ChartArea
+		},
 		{
 			title: 'Admin Panel',
 			url: '/dashboard/admin-panel',

@@ -7,41 +7,72 @@
 	setCart();
 	let { data } = $props();
 
-	let product = $derived(data?.productList);
+	let products = $derived(data?.productList);
 	import * as Carousel from '$lib/components/ui/carousel/index.js';
 	import Hero from '$lib/components/hero.svelte';
 	import About from '$lib/components/about.svelte';
 	import Accordion from '$lib/components/accordion.svelte';
+
+	const groupedProducts = $derived(
+		data?.productList.reduce((acc, product) => {
+			const category = product.category || 'Uncategorized';
+			if (!acc[category]) {
+				acc[category] = [];
+			}
+			acc[category].push(product);
+			return acc;
+		}, {})
+	);
 </script>
+
+<svelte:head>
+	<title>Lalo Bakery</title>
+</svelte:head>
 
 <Hero />
 <About />
 
 <!-- Main Content -->
-<main class="container mx-auto px-4 py-8 pb-24">
-	<div class="mb-8">
-		<h2 class="mb-2 text-2xl font-bold">Products</h2>
-		<p class="text-muted-foreground">
-			Click on products to add them to your floating cart. Cart data persists in localStorage!
-		</p>
-	</div>
+<hr class="mb-12 border-muted/30" />
+<main class="container mx-auto px-4 py-12 pb-24">
+	{#each Object.entries(groupedProducts) as [categoryName, products] (categoryName)}
+		<section class="mb-16 last:mb-0">
+			<div class="mb-8 flex flex-col items-start gap-1 border-l-4 border-primary pl-6">
+				<h2 class="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+					{categoryName}
+				</h2>
+			</div>
 
-	<Carousel.Root
-		opts={{
-			align: 'start'
-		}}
-		class="w-full"
-	>
-		<Carousel.Content>
-			{#each product as product (product.productId)}
-				<Carousel.Item class="w-full md:basis-1/2 lg:basis-1/5">
-					<ProductCard {...product} />
-				</Carousel.Item>
-			{/each}
-		</Carousel.Content>
-		<Carousel.Previous />
-		<Carousel.Next />
-	</Carousel.Root>
+			<div class="relative px-2">
+				<Carousel.Root
+					opts={{
+						align: 'start',
+						loop: true
+					}}
+					class="w-full"
+				>
+					<Carousel.Content class="-ml-4">
+						{#each products as product (product.productId)}
+							<Carousel.Item class="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+								<div class="group h-full transition-transform duration-300 hover:-translate-y-2">
+									<ProductCard {...product} />
+								</div>
+							</Carousel.Item>
+						{/each}
+					</Carousel.Content>
+
+					<div class="hidden lg:block">
+						<Carousel.Previous
+							class="border-secondary bg-background text-secondary-foreground hover:bg-secondary"
+						/>
+						<Carousel.Next
+							class="border-secondary bg-background text-secondary-foreground hover:bg-secondary"
+						/>
+					</div>
+				</Carousel.Root>
+			</div>
+		</section>
+	{/each}
 </main>
 
 <Accordion />

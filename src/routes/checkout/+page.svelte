@@ -17,6 +17,7 @@
 	import { toast } from 'svelte-sonner';
 	import InputComp from '$lib/formComponents/InputComp.svelte';
 	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import Errors from '$lib/formComponents/Errors.svelte';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
 	import Signup from '$lib/forms/Signup.svelte';
 	import Login from '$lib/forms/Login.svelte';
@@ -31,28 +32,45 @@
 		}).format(price);
 	};
 
-	const { form, errors, enhance, delayed, message } = superForm(data.form, {
-		dataType: 'json'
+	const { form, errors, enhance, allErrors, delayed, message } = superForm(data.form, {
+		dataType: 'json',
+		resetForm: true,
+
+		onResult: ({ result }) => {
+			// 2. Only clear cart if the server actually says 'success'
+			if (result.type === 'success') {
+				cart.clearCart();
+				// Optional: Add a toast notification here
+			}
+		}
 	});
 
 	const formattedData = $derived(
 		cart?.items.map((item) => ({
 			product: item.productId,
-			quantity: item.quantity
+			quantity: item.quantity,
+			amount: item.amount,
+			price: item.price
 		})) || []
 	);
 
 	$effect(() => {
-		$form.selectedProducts = formattedData;
 		if ($message) {
 			if ($message.type === 'error') toast.error($message.text);
 			else {
-				cart.clearCart();
 				toast.success($message.text);
 			}
 		}
 	});
+
+	$effect(() => {
+		$form.selectedProducts = formattedData;
+	});
 </script>
+
+<svelte:head>
+	<title>Checkout - Lalo Bakery</title>
+</svelte:head>
 
 <div class="mx-auto max-w-6xl px-4 py-8 md:py-12">
 	<div class="mb-8 flex items-center gap-3">
@@ -89,6 +107,7 @@
 						method="post"
 						enctype="multipart/form-data"
 					>
+						<Errors allErrors={$allErrors} />
 						<InputComp
 							label=""
 							name="selectedProducts"

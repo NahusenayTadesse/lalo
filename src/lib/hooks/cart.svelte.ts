@@ -1,20 +1,20 @@
 import { setContext, getContext } from 'svelte';
+
 export type CartItem = {
 	productId: number;
 	productName: string;
+	amount: number | string; // e.g., "6-pack", "12-pack", or 500
 	price: number;
 	quantity: number;
 };
 
-/** Cart state type */
-export type CartState = {
-	items: CartItem[];
-	isOpen: boolean;
-};
+export interface ProductPrice {
+	amount: string | number; // e.g., "10 Pieces"
+	price: string | number; // e.g., "ETB 500"
+}
 
-const CART_STORAGE_KEY = 'svelte0-cart';
+const CART_STORAGE_KEY = 'lalo_bakery';
 
-/** Cart state class-based management with localStorage persistence */
 class UseCart {
 	items: CartItem[] = $state([]);
 	isOpen: boolean = $state(false);
@@ -26,18 +26,13 @@ class UseCart {
 	totalPrice = $derived(this.items.reduce((sum, item) => sum + item.price * item.quantity, 0));
 
 	constructor() {
-		// Load cart from localStorage on initialization
-
 		this.loadFromStorage();
-
-		// Save to localStorage whenever items change
 
 		$effect(() => {
 			this.saveToStorage();
 		});
 	}
 
-	/** Load cart from localStorage */
 	private loadFromStorage = () => {
 		if (typeof window === 'undefined') return;
 		try {
@@ -53,7 +48,6 @@ class UseCart {
 		}
 	};
 
-	/** Save cart to localStorage */
 	private saveToStorage = () => {
 		if (typeof window === 'undefined') return;
 		try {
@@ -63,56 +57,51 @@ class UseCart {
 		}
 	};
 
-	/** Toggle cart open/close */
-	toggle = () => {
-		this.isOpen = !this.isOpen;
-	};
+	toggle = () => (this.isOpen = !this.isOpen);
+	open = () => (this.isOpen = true);
+	close = () => (this.isOpen = false);
 
-	/** Open cart */
-	open = () => {
-		this.isOpen = true;
-	};
-
-	/** Close cart */
-	close = () => {
-		this.isOpen = false;
-	};
-
-	/** Add item to cart */
+	/** * Add item to cart
+	 * Now checks BOTH productId and amount to determine if it's a new line item
+	 */
 	addItem = (item: Omit<CartItem, 'quantity'>, quantity: number = 1) => {
-		const existingIndex = this.items.findIndex((i) => i.productId === item.productId);
+		const existingIndex = this.items.findIndex(
+			(i) => i.productId === item.productId && i.amount === item.amount
+		);
+
 		if (existingIndex >= 0) {
 			this.items[existingIndex].quantity += quantity;
 		} else {
-			this.items = [...this.items, { ...item, quantity }];
+			this.items.push({ ...item, quantity });
 		}
 	};
 
-	/** Remove item from cart */
-	removeItem = (productId: number) => {
-		this.items = this.items.filter((item) => item.productId !== productId);
+	/** Remove specific variation from cart */
+	removeItem = (productId: number, amount: number | string) => {
+		this.items = this.items.filter(
+			(item) => !(item.productId === productId && item.amount === amount)
+		);
 	};
 
-	/** Update item quantity */
-	updateQuantity = (productId: number, quantity: number) => {
+	/** Update quantity for a specific variation */
+	updateQuantity = (productId: number, amount: number | string, quantity: number) => {
 		if (quantity <= 0) {
-			this.removeItem(productId);
+			this.removeItem(productId, amount);
 			return;
 		}
-		const index = this.items.findIndex((i) => i.productId === productId);
+
+		const index = this.items.findIndex((i) => i.productId === productId && i.amount === amount);
+
 		if (index >= 0) {
 			this.items[index].quantity = quantity;
 		}
 	};
 
-	/** Clear all items from cart */
 	clearCart = () => {
 		this.items = [];
 	};
 }
 
-/** Set cart state */
+/** Context API Helpers */
 export const setCart = () => setContext('cartState', new UseCart());
-
-/** Use cart state */
-export const useCart = () => getContext<ReturnType<typeof setCart>>('cartState');
+export const useCart = () => getContext<UseCart>('cartState');

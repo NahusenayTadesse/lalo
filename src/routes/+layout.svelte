@@ -59,13 +59,13 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href="/logo.png" />
+	<link rel="icon" href="/logo.webp" />
 </svelte:head>
 <ModeWatcher />
 
 <Toaster position="bottom-right" richColors closeButton />
 
-<ProgressBar color="#3B82F6" zIndex={1000} />
+<ProgressBar color="#bc3d00" zIndex={1000} />
 
 {#if updated.current}
 	<div class={toastmsg} transition:fly={{ x: 20, duration: 300 }}>

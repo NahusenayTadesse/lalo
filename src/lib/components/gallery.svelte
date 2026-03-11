@@ -18,7 +18,7 @@
 
 <!-- 5.  thumbnail grid ---------------------------------------------------- -->
 <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-	{#each images as image, index (image)}
+	{#each images as image, index (index)}
 		<div
 			class="group cursor-pointer overflow-hidden rounded-lg bg-secondary"
 			role="button"

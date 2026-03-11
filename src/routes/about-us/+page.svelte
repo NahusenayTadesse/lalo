@@ -15,6 +15,10 @@
 	} from '$lib/components/ui/card';
 </script>
 
+<svelte:head>
+	<title>About Us - Lalo Bakery</title>
+</svelte:head>
+
 <section
 	class="relative overflow-hidden bg-linear-to-br from-primary/20 via-accent/10 to-background px-4 py-20 sm:py-32"
 >

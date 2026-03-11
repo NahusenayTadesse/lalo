@@ -22,9 +22,13 @@ export const add = z.object({
 		.int({ message: 'Quantity can only be full numbers, no decimals.' })
 		.positive({ message: 'Quantity must be a positive number.' })
 		.default(0),
-	price: z
-		.number({ message: 'Price is required' })
-		.positive({ message: 'Price must be a positive number.' }),
+	prices: z
+		.object({
+			price: z.number('Prices are required.'),
+			amount: z.string('Variation Name is required.')
+		})
+		.array()
+		.min(1, { message: 'Prices are required.' }),
 
 	supplier: z.coerce.number('Supplier is required'),
 	reorderLevel: z.coerce

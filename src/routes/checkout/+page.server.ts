@@ -13,41 +13,17 @@ export const load: PageServerLoad = async () => {
 	const signupForm = await superValidate(zod4(addUser));
 	const loginForm = await superValidate(zod4(loginSchema));
 
-	const fetchedProducts = await db
-		.select({
-			value: products.id,
-			name: sql<string>`
-TRIM(
-  CONCAT(
-    ${products.name},
-    COALESCE(CONCAT(' ', ${products.price}, ' ETB'), ''),
-    COALESCE(CONCAT(' ', ${products.quantity}, ' Left'), '')
-  )
-)`,
-
-			price: products.price
-		})
-		.from(products);
-
-	const fetchedCustomers = await db
-		.select({
-			value: customers.id,
-			name: customers.name
-		})
-		.from(customers);
-
 	return {
 		form,
 		signupForm,
-		loginForm,
-		fetchedProducts,
-		fetchedCustomers
+		loginForm
 	};
 };
 
 export const actions: Actions = {
 	add: async ({ request, locals }) => {
 		const form = await superValidate(request, zod4(add));
+		console.log(form.data);
 		if (!form.valid) {
 			return message(form, { type: 'error', text: 'Please check the form for Errors' });
 		}
@@ -56,10 +32,6 @@ export const actions: Actions = {
 
 		try {
 			await db.transaction(async (tx) => {
-				const fetchedProducts = await tx // ← tx, not db
-					.select({ value: products.id, price: products.price })
-					.from(products);
-
 				const customer = await tx
 					.select({ value: customers.id })
 					.from(customers)
@@ -76,9 +48,9 @@ export const actions: Actions = {
 						selectedProducts.map((product) => ({
 							orderId: orderId.id,
 							productId: Number(product.product),
+							amount: product.amount,
 							quantity: Number(product.quantity),
-							price: getPrice(fetchedProducts, Number(product.product)),
-							createdBy: locals?.user?.id
+							price: Number(product.price)
 						}))
 					);
 				}

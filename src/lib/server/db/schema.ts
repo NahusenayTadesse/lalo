@@ -15,11 +15,17 @@ export const products = mysqlTable('products', {
 	description: varchar('description', { length: 255 }),
 	categoryId: int('category_id').references(() => productCategories.id, { onDelete: 'set null' }),
 	quantity: int('quantity').notNull().default(0),
-	price: decimal('price', { precision: 10, scale: 2 }).notNull(),
 	commissionAmount: decimal('commission_amount', { precision: 10, scale: 2 }).notNull(),
 	supplierId: int('supplier_id').references(() => productSuppliers.id),
 	reorderLevel: int('reorder_level'),
 	...secureFields
+});
+
+export const prices = mysqlTable('prices', {
+	id: int('id').primaryKey().autoincrement(),
+	productId: int('product_id').references(() => products.id, { onDelete: 'cascade' }),
+	price: decimal('price', { precision: 10, scale: 2 }).notNull(),
+	amount: varchar('amount', { length: 255 }).notNull()
 });
 
 export const productImages = mysqlTable('product_images', {
@@ -102,6 +108,7 @@ export const orderItems = mysqlTable('order_items', {
 	productId: int('product_id').references(() => products.id),
 	quantity: int('quantity').notNull(),
 	price: decimal('price', { precision: 10, scale: 2 }).notNull(),
+	amount: varchar('amount', { length: 255 }).notNull(),
 	...secureFields
 });
 

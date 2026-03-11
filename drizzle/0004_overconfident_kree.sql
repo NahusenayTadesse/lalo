@@ -1,0 +1,1 @@
+ALTER TABLE `order_items` ADD `amount` varchar(255) NOT NULL;

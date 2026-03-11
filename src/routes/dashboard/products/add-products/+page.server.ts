@@ -7,6 +7,7 @@ import {
 	products as inventory,
 	productCategories,
 	productImages,
+	prices as priceList,
 	productSuppliers as suppliers
 } from '$lib/server/db/schema';
 import type { Actions } from './$types';
@@ -58,10 +59,9 @@ export const actions: Actions = {
 			category,
 			description,
 			quantity,
-			price,
+			prices,
 			supplier,
 			reorderLevel,
-
 			image,
 			gallery
 		} = form.data;
@@ -81,12 +81,19 @@ export const actions: Actions = {
 						categoryId: category,
 						description,
 						quantity,
-						price,
+
 						supplierId: supplier,
 						reorderLevel,
 						featuredImage
 					})
 					.$returningId();
+
+				const priceRecords = prices.map((p) => ({
+					productId: product.id,
+					price: p.price,
+					amount: p.amount
+				}));
+				await tx.insert(priceList).values(priceRecords);
 
 				const newProductId = product.id;
 

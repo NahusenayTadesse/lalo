@@ -5,7 +5,7 @@ import { redirect } from '@sveltejs/kit';
 
 import { add, edit } from './schema';
 import { db } from '$lib/server/db';
-import { orders, orderItems, products, customers } from '$lib/server/db/schema';
+import { orders, orderItems, products, customers, prices } from '$lib/server/db/schema';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -19,16 +19,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const fetchedProducts = await db
 		.select({
 			value: products.id,
-			name: sql<string>`
-TRIM(
-  CONCAT(
-    ${products.name},
-    COALESCE(CONCAT(' ', ${products.price}, ' ETB'), ''),
-    COALESCE(CONCAT(' ', ${products.quantity}, ' Left'), '')
-  )
-)`,
-
-			price: products.price
+			name: products.name
 		})
 		.from(products);
 
@@ -38,6 +29,16 @@ TRIM(
 			name: customers.name
 		})
 		.from(customers);
+
+	const fetchedPrices = await db
+		.select({
+			value: sql<string>`CONCAT(${prices.price}, ' ', ${prices.amount})`,
+			name: sql<string>`CONCAT(${prices.price}, ' ', ${prices.amount}, ' pieces')`,
+			productId: prices.productId,
+			price: prices.price,
+			amount: prices.amount
+		})
+		.from(prices);
 
 	const customerId = await db
 		.select({ value: customers.id })
@@ -83,7 +84,8 @@ TRIM(
 		customerId,
 		allItems,
 		fetchedProducts,
-		fetchedCustomers
+		fetchedCustomers,
+		fetchedPrices
 	};
 };
 

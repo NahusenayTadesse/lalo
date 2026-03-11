@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select';
+	import { Checkbox } from 'bits-ui';
+	import * as Popover from '$lib/components/ui/popover/index.js';
+	import * as Command from '$lib/components/ui/command/index.js';
 	import {
 		Card,
 		CardHeader,
@@ -13,9 +15,10 @@
 	import { Label } from '$lib/components/ui/label/index';
 	import { Badge } from '$lib/components/ui/badge/index';
 	import Button from '../ui/button/button.svelte';
-	import { RotateCcw, SlidersHorizontal, X } from '@lucide/svelte';
+	import { RotateCcw, SlidersHorizontal, X, Check, ChevronsUpDown } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import { fly } from 'svelte/transition';
+	import { cn } from '$lib/utils.js';
 
 	interface Props {
 		data: any[];
@@ -27,16 +30,16 @@
 	import { buttonVariants } from '../ui/button/index.js';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 
-	// Create a map of filterKey -> selectedValue
-	let selectedFilters = $state<Record<string, string>>({});
+	// Create a map of filterKey -> selectedValues (array for multi-select)
+	let selectedFilters = $state<Record<string, string[]>>({});
 
 	let open = $state(false);
 
-	// Initialize selectedFilters for each filterKey
+	// Initialize selectedFilters for each filterKey with empty arrays
 	$effect(() => {
 		filterKeys.forEach((key) => {
 			if (!(key in selectedFilters)) {
-				selectedFilters[key] = '';
+				selectedFilters[key] = [];
 			}
 		});
 	});
@@ -54,35 +57,58 @@
 				if (key === filterKey) {
 					return String(item[key]) === value;
 				}
-				const selectedValue = selectedFilters[key];
-				if (selectedValue === '') return true;
-				return String(item[key]) === selectedValue;
+				const selectedValues = selectedFilters[key];
+				if (selectedValues.length === 0) return true;
+				return selectedValues.includes(String(item[key]));
 			});
 		}).length;
 	};
 
-	// Filter data based on all active filters
+	// Toggle value in array (add if not present, remove if present)
+	const toggleFilterValue = (key: string, value: string) => {
+		const current = selectedFilters[key];
+		if (current.includes(value)) {
+			selectedFilters[key] = current.filter((v) => v !== value);
+		} else {
+			selectedFilters[key] = [...current, value];
+		}
+	};
+
+	// Check if a value is selected
+	const isValueSelected = (key: string, value: string) => {
+		return selectedFilters[key]?.includes(value) ?? false;
+	};
+
+	// Filter data based on all active filters (AND logic within each key)
 	$effect(() => {
 		filteredList = data.filter((item: any) => {
 			return filterKeys.every((key) => {
-				const selectedValue = selectedFilters[key];
-				if (selectedValue === '') return true;
-				return String(item[key]) === selectedValue;
+				const selectedValues = selectedFilters[key];
+				if (selectedValues.length === 0) return true;
+				return selectedValues.includes(String(item[key]));
 			});
 		});
 	});
+
 	let isResetting = $state(false);
 	const resetFilters = () => {
 		isResetting = true;
-		selectedFilters = { category: '', status: '', priority: '' };
+		selectedFilters = {};
+		filterKeys.forEach((key) => {
+			selectedFilters[key] = [];
+		});
 		filteredList = data;
 		toast.success('Filters reset');
 		isResetting = false;
 	};
 
-	const activeFilterCount = $derived(Object.values(selectedFilters).filter((v) => v !== '').length);
+	const activeFilterCount = $derived(
+		Object.values(selectedFilters).reduce((acc, arr) => acc + arr.length, 0)
+	);
 
 	let Icon = $derived(open ? X : SlidersHorizontal);
+
+	// Track open state for each popover
 </script>
 
 <Tooltip.Provider>
@@ -138,80 +164,107 @@
 					</div>
 
 					<!-- Filter Controls -->
-					<div class="flex flex-row flex-wrap gap-2">
+					<div class="flex flex-row flex-wrap gap-4">
 						{#each filterKeys as filterKey (filterKey)}
-							<div class="space-y-2">
+							<div class="min-w-50 space-y-2">
 								<Label for={filterKey} class="text-sm font-medium text-foreground capitalize">
 									{pluralize(filterKey)}
 								</Label>
-								<Select type="single" bind:value={selectedFilters[filterKey]}>
-									<SelectTrigger
-										id={filterKey}
-										class="capitalize transition-all duration-200 hover:border-primary/50 focus:ring-primary"
-									>
-										{#if selectedFilters[filterKey] === ''}
-											<span class="text-muted-foreground"
-												>All {pluralize(filterKey).replace(/([a-z])([A-Z])/g, '$1 $2')}</span
+
+								<Popover.Root>
+									<Popover.Trigger class="w-full">
+										{#snippet child({ props })}
+											<Button
+												variant="outline"
+												role="combobox"
+												class="w-full justify-between"
+												{...props}
 											>
-										{:else}
-											<span class="font-medium">{selectedFilters[filterKey]}</span>
-										{/if}
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="" class="capitalize">All {pluralize(filterKey)}</SelectItem>
-										{#each getDistinctValues(filterKey) as value}
-											<SelectItem class="capitalize" value={String(value)}>
-												{value}
-											</SelectItem>
+												<span class="truncate">
+													{#if selectedFilters[filterKey]?.length === 0}
+														<span class="text-muted-foreground capitalize">
+															All {pluralize(filterKey).replace(/([a-z])([A-Z])/g, '$1 $2')}
+														</span>
+													{:else if selectedFilters[filterKey]?.length === 1}
+														<span class="font-medium">{selectedFilters[filterKey][0]}</span>
+													{:else}
+														<span class="font-medium">
+															{selectedFilters[filterKey].length} selected
+														</span>
+													{/if}
+												</span>
+												<ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+											</Button>
+										{/snippet}
+									</Popover.Trigger>
+									<Popover.Content class="w-50 p-0">
+										<Command.Root>
+											<Command.Input placeholder={`Search ${pluralize(filterKey)}...`} />
+											<Command.List>
+												<Command.Empty>No {pluralize(filterKey)} found.</Command.Empty>
+												<Command.Group>
+													{#each getDistinctValues(filterKey) as value}
+														<Command.Item
+															value={String(value)}
+															onSelect={() => toggleFilterValue(filterKey, String(value))}
+															class="flex cursor-pointer items-center gap-2"
+														>
+															<Checkbox.Root
+																checked={isValueSelected(filterKey, String(value))}
+																class="flex size-4 items-center justify-center rounded-sm border border-primary/50"
+															>
+																{#snippet children({ checked })}
+																	{#if checked}
+																		<Check class="size-3.5 text-primary" />
+																	{/if}
+																{/snippet}
+															</Checkbox.Root>
+															<span class="flex-1 capitalize">{value}</span>
+															<span class="text-xs text-muted-foreground">
+																({getCountForValue(filterKey, String(value))})
+															</span>
+														</Command.Item>
+													{/each}
+												</Command.Group>
+											</Command.List>
+										</Command.Root>
+									</Popover.Content>
+								</Popover.Root>
+
+								<!-- Selected badges -->
+								{#if selectedFilters[filterKey]?.length > 0}
+									<div class="mt-2 flex flex-wrap gap-1">
+										{#each selectedFilters[filterKey] as selectedValue}
+											<Badge variant="secondary" class="gap-1 pr-1">
+												{selectedValue}
+												<button
+													class="ml-1 hover:text-destructive"
+													onclick={() => toggleFilterValue(filterKey, selectedValue)}
+												>
+													<X class="size-3" />
+												</button>
+											</Badge>
 										{/each}
-									</SelectContent>
-								</Select>
+									</div>
+								{/if}
 							</div>
 						{/each}
 					</div>
 				</div>
 
 				<!-- Results Info -->
-				<div class="flex items-center justify-between rounded-lg bg-muted/30 px-4 py-3">
+				<div class="mt-4 flex items-center justify-between rounded-lg bg-muted/30 px-4 py-3">
 					<p class="text-sm text-muted-foreground">
 						Showing <span class="font-semibold text-foreground">{filteredList.length}</span> results
 					</p>
+					{#if activeFilterCount > 0}
+						<p class="text-xs text-muted-foreground">
+							Active filters: {activeFilterCount}
+						</p>
+					{/if}
 				</div>
 			</CardContent>
 			<CardFooter></CardFooter>
 		</Card>
 	</div>
 {/if}
-<!-- <div class="mt-3 flex flex-col gap-3 rounded-lg bg-background p-3">
-	<h4 class="text-sm font-medium text-muted-foreground">Filters</h4>
-
-	<div class="flex flex-row flex-wrap gap-2">
-		<Button
-			variant="ghost"
-			size="icon"
-			class="active:animate-[spin_1s_linear_infinite_reverse]"
-			onclick={() => (filteredList = data)}
-			title="Reset Filters"><RotateCcw /></Button
-		>
-		{#each filterKeys as filterKey (filterKey)}
-			<div class="flex flex-col gap-2">
-				<Label class="capitalize">{pluralize(filterKey)}</Label>
-				<Select type="single" bind:value={selectedFilters[filterKey]}>
-					<SelectTrigger class="capitalize">
-						{#if selectedFilters[filterKey] === ''}
-							All {pluralize(filterKey)}
-						{:else}
-							{selectedFilters[filterKey]}
-						{/if}
-					</SelectTrigger>
-					<SelectContent>
-						<SelectItem value="" class="capitalize">All {pluralize(filterKey)}</SelectItem>
-						{#each getDistinctValues(filterKey) as value}
-							<SelectItem class="capitalize" value={String(value)}>{value}</SelectItem>
-						{/each}
-					</SelectContent>
-				</Select>
-			</div>
-		{/each}
-	</div>
-</div> -->

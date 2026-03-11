@@ -66,6 +66,10 @@
 	];
 </script>
 
+<svelte:head>
+	<title>Contact Us - Lalo Bakery</title>
+</svelte:head>
+
 <div class="min-h-dvh w-full bg-background text-foreground transition-colors">
 	<!-- Main Content -->
 	<main class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">

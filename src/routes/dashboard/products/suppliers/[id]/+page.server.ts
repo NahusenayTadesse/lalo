@@ -4,7 +4,7 @@ import { eq, count } from 'drizzle-orm';
 
 import { add, edit } from './schema';
 import { db } from '$lib/server/db';
-import { products, productSuppliers as supplySuppliers } from '$lib/server/db/schema/';
+import { products, productSuppliers as supplySuppliers } from '$lib/server/db/schema';
 import type { Actions } from './$types';
 import type { PageServerLoad } from './$types.js';
 export const load: PageServerLoad = async ({ params }) => {

@@ -1,21 +1,11 @@
-import { superValidate } from 'sveltekit-superforms';
-import { zod4 } from 'sveltekit-superforms/adapters';
-import { edit, adjust, damaged, editGallery } from './schema';
-
 import { db } from '$lib/server/db';
-import {
-	productCategories,
-	products,
-	user,
-	productSuppliers as suppliers,
-	orderItems,
-	orders,
-	productImages
-} from '$lib/server/db/schema';
-import { eq, and, sql, isNotNull, desc } from 'drizzle-orm';
+import { productCategories, products, prices, productImages } from '$lib/server/db/schema';
+import { eq, sql, min } from 'drizzle-orm';
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ params, locals }) => {
+import { error } from '@sveltejs/kit';
+
+export const load: LayoutServerLoad = async ({ params }) => {
 	const { id } = params;
 
 	const result = await db
@@ -31,18 +21,32 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 		.select({
 			productId: products.id,
 			productName: products.name,
-			price: products.price,
+			price: min(prices.price),
 			description: products.description,
 			category: productCategories.name,
 			image: products.featuredImage
 		})
 		.from(products)
 		.leftJoin(productCategories, eq(productCategories.id, products.categoryId))
+		.leftJoin(prices, eq(prices.productId, products.id))
 		.where(eq(products.id, Number(id)))
 		.then((rows) => rows[0]);
 
+	if (!product) {
+		error(404, 'Product not found');
+	}
+
+	const priceList = await db
+		.select({
+			amount: prices.amount,
+			price: sql<number>`CAST(${prices.price} AS DOUBLE)`
+		})
+		.from(prices)
+		.where(eq(prices.productId, Number(id)));
+
 	return {
 		product,
+		priceList,
 		images,
 		result
 	};

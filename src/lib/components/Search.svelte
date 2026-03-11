@@ -7,29 +7,32 @@
 	let list = [
 		{ label: 'Dashboard', path: '/dashboard' },
 
-		{ label: 'Add Positions', path: '/dashboard/admin-panel/add-positions' },
-		{ label: 'Add Product Category', path: '/dashboard/admin-panel/add-product-category' },
-		{ label: 'Add Roles', path: '/dashboard/admin-panel/add-roles' },
-		{ label: 'Add Services (Admin Panel)', path: '/dashboard/admin-panel/add-services' },
-		{ label: 'Add Users', path: '/dashboard/admin-panel/add-users' },
+		// Admin Panel
 
-		{ label: 'Add Appointment', path: '/dashboard/appointments/add-appointment' },
-		{ label: 'All Appointments', path: '/dashboard/appointments/all-appointments' },
+		// Customers
+		{ label: 'Customers', path: '/dashboard/customers' },
 
-		{ label: 'Add Inventory', path: '/dashboard/inventory/add-inventory' },
+		// Orders
+		{ label: 'All Orders', path: '/dashboard/orders/all-orders' },
+		{ label: 'Cancelled Orders', path: '/dashboard/orders/cancelled' },
+		{ label: 'Delivered Orders', path: '/dashboard/orders/delivered' },
 
+		// Products
+		{ label: 'Products', path: '/dashboard/products' },
 		{ label: 'Add Products', path: '/dashboard/products/add-products' },
+		{ label: 'Product Categories', path: '/dashboard/products/categories' },
+
+		// Recipes
+		{ label: 'Recipes', path: '/dashboard/recipes/recipes' },
+		{ label: 'Add Recipe', path: '/dashboard/recipes/add-recipes' },
 
 		{ label: 'Reports', path: '/dashboard/reports' },
-		{ label: 'Sales', path: '/dashboard/sales' },
 
-		{ label: 'Add Services', path: '/dashboard/services/add-services' },
-
-		{ label: 'Add Staff', path: '/dashboard/staff/add-staff' },
-
-		{ label: 'Add Supplies', path: '/dashboard/supplies/add-supplies' },
-
-		{ label: 'Login', path: '/login' }
+		{ label: 'Payment Methods', path: '/dashboard/admin-panel/payment-methods' },
+		{ label: 'Roles', path: '/dashboard/admin-panel/roles' },
+		{ label: 'Add Roles', path: '/dashboard/admin-panel/roles/add-roles' },
+		{ label: 'Users', path: '/dashboard/admin-panel/users' },
+		{ label: 'Add Users', path: '/dashboard/admin-panel/users/add-users' }
 	];
 </script>
 

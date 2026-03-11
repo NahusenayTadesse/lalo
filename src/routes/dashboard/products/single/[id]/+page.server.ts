@@ -9,6 +9,7 @@ import {
 	productImages,
 	productAdjustments,
 	damagedProducts,
+	prices as priceList,
 	transactions
 } from '$lib/server/db/schema';
 import { eq, and, sql, isNotNull, desc } from 'drizzle-orm';
@@ -29,7 +30,7 @@ export const actions: Actions = {
 			return fail(400, { form });
 		}
 
-		const { productName, category, description, quantity, price, supplier, reorderLevel, image } =
+		const { productName, category, description, quantity, prices, supplier, reorderLevel, image } =
 			form.data;
 
 		try {
@@ -43,7 +44,6 @@ export const actions: Actions = {
 						description,
 						categoryId: category,
 						quantity,
-						price: price.toString(),
 						supplierId: supplier,
 						reorderLevel,
 						updatedBy: locals?.user?.id,
@@ -65,6 +65,14 @@ export const actions: Actions = {
 					})
 					.where(eq(products.id, Number(id)));
 			}
+
+			const priceRecords = prices.map((p) => ({
+				productId: Number(id),
+				price: p.price,
+				amount: p.amount
+			}));
+			await db.delete(priceList).where(eq(priceList.productId, Number(id)));
+			await db.insert(priceList).values(priceRecords);
 
 			// Stay on the same page and set a flash message
 			setFlash({ type: 'success', message: 'Product Updated Successuflly Added' }, cookies);

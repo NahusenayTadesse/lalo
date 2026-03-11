@@ -12,11 +12,9 @@
 	import InputComp from '$lib/formComponents/InputComp.svelte';
 
 	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import { ArrowLeft, Pencil, Save, History } from '@lucide/svelte';
-	import SelectComp from '$lib/formComponents/SelectComp.svelte';
+	import { ArrowLeft, Plus, Pencil, Save, History } from '@lucide/svelte';
 	import type { Snapshot } from '@sveltejs/kit';
 	import { getCurrentMonthRange } from '$lib/global.svelte';
-	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import Delete from '$lib/forms/Delete.svelte';
 	import SingleView from '$lib/components/SingleView.svelte';
 	import Errors from '$lib/formComponents/Errors.svelte';
@@ -46,7 +44,8 @@
 		data.form,
 		{
 			validators: zod4Client(edit),
-			resetForm: false
+			resetForm: false,
+			dataType: 'json'
 		}
 	);
 
@@ -80,6 +79,12 @@
 	});
 
 	let images = $derived(data?.images);
+
+	let arrParts = `flex flex-col justify-start gap-2 w-full`;
+
+	function addIng() {
+		$form.prices = [...$form.prices, { price: 0, amount: '' }];
+	}
 </script>
 
 <svelte:head>
@@ -101,11 +106,11 @@
 		{#key data?.product}
 			<Adjustment data={data.adjustForm} name={data.product?.name} />
 		{/key}
-		<Button href="/dashboard/products/{page.params.id}/ranges/{getCurrentMonthRange()}">
+		<Button href="/dashboard/products/single/{page.params.id}/ranges/{getCurrentMonthRange()}">
 			<History /> See Change History
 		</Button>
 		<Damaged data={data.damagedForm} name={data.product?.name} employees={data.employeesList} />
-		<Button href={`/dashboard/products/${page.params.id}/damaged/${getCurrentMonthRange()}`}>
+		<Button href={`/dashboard/products/single/${page.params.id}/damaged/${getCurrentMonthRange()}`}>
 			<History /> See Damaged History
 		</Button>
 
@@ -204,6 +209,63 @@
 					placeholder="Enter when you want to be notified"
 					required
 				/>
+
+				<div class="mb-4 flex justify-end">
+					<Button type="button" size="sm" class="gap-2" onclick={() => addIng()}>
+						<Plus class="h-4 w-4" />
+						<span>Add Prices</span>
+					</Button>
+				</div>
+				{#each $form.prices as ing, i (ing)}
+					<div
+						class="flex w-full flex-col items-end gap-3
+ rounded-lg border
+ border-white/20 bg-white/10 p-3 shadow-lg
+  backdrop-blur-lg lg:flex-row dark:border-black/20 dark:bg-gray-700"
+					>
+						<div class={arrParts}>
+							<Label for="price">Price</Label>
+
+							<Input
+								type="number"
+								name="price"
+								placeholder="Enter Price"
+								bind:value={$form.prices[i].price}
+							/>
+
+							{#if $errors.prices?.[i]?.price}
+								<p class="text-sm text-red-500">{$errors.prices[i].price}</p>
+							{/if}
+						</div>
+
+						<div class={arrParts}>
+							<Label for="amount">Amount</Label>
+
+							<Input
+								type="number"
+								name="amount"
+								min="1"
+								placeholder="Amount of Ingredient"
+								bind:value={$form.prices[i].amount}
+							/>
+
+							{#if $errors.prices?.[i]?.amount}
+								<p class="text-sm text-red-500">{$errors.prices[i].amount}</p>
+							{/if}
+						</div>
+						<Button
+							type="button"
+							variant="outline"
+							title="Remove this product from list"
+							onclick={() => {
+								$form.prices.splice(i, 1);
+								$form.prices = $form.prices;
+							}}
+						>
+							<X class="h-8 w-8" />
+						</Button>
+					</div>
+				{/each}
 
 				<Button form="edit" type="submit" class="mt-4">
 					{#if $delayed}

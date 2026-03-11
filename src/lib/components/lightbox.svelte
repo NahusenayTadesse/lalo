@@ -139,7 +139,7 @@
 			<div
 				class="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-lg bg-black/50 p-2"
 			>
-				{#each images as image, index (image)}
+				{#each images as image, index (index)}
 					<button
 						class={[
 							'size-12 overflow-hidden rounded-md border-2 transition-all duration-200',

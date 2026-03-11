@@ -22,6 +22,20 @@
       "when": 1772583028340,
       "tag": "0002_rapid_speed",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1773254850887,
+      "tag": "0003_nasty_warstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1773257267405,
+      "tag": "0004_overconfident_kree",
+      "breakpoints": true
     }
   ]
 }

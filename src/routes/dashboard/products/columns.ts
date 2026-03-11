@@ -3,6 +3,7 @@ import DataTableLinks from '$lib/components/Table/data-table-links.svelte';
 import DataTableActions from './data-table-actions.svelte';
 import DataTableSort from '$lib/components/Table/data-table-sort.svelte';
 import ImageViewer from '$lib/components/Table/image-viewer.svelte';
+import PriceList from './priceList.svelte';
 
 export const columns = [
 	{
@@ -44,7 +45,7 @@ export const columns = [
 	},
 
 	{
-		accessorKey: 'price',
+		accessorKey: 'prices',
 		header: ({ column }) =>
 			renderComponent(DataTableSort, {
 				name: 'Price',
@@ -53,19 +54,12 @@ export const columns = [
 			}),
 		sortable: true,
 
-		cell: (info) => info.getValue() + ' ETB'
-	},
-
-	{
-		accessorKey: 'quantity',
-		header: ({ column }) =>
-			renderComponent(DataTableSort, {
-				name: 'Quantity',
-				onclick: column.getToggleSortingHandler()
-			}),
-
-		sortable: true,
-		cell: (info) => `${info.getValue()} Pieces` // always “day”
+		cell: ({ row }) => {
+			// You can pass whatever you need from `row.original` to the component
+			return renderComponent(PriceList, {
+				priceList: row.original.priceList
+			});
+		}
 	},
 
 	{
@@ -77,37 +71,10 @@ export const columns = [
 			}),
 		sortable: true
 	},
-	{
-		accessorKey: 'supplier',
-		header: ({ column }) =>
-			renderComponent(DataTableSort, {
-				name: 'Supplier',
-				onclick: column.getToggleSortingHandler()
-			}),
-		sortable: true
-	},
+
 	{
 		accessorKey: 'description',
 		header: 'Description'
-	},
-
-	{
-		accessorKey: 'saleCount',
-		header: ({ column }) =>
-			renderComponent(DataTableSort, {
-				name: 'Sales',
-				onclick: column.getToggleSortingHandler()
-			}),
-		sortable: true,
-		cell: (info) => {
-			const n = info.getValue(); // number of days
-			return `${n === null ? '' : n} ${n === null ? 'Nothing Sold Yet' : 'Sold'}`;
-		}
-	},
-
-	{
-		accessorKey: 'supplier',
-		header: 'Supplier'
 	},
 
 	{

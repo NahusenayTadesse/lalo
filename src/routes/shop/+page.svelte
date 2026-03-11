@@ -17,13 +17,18 @@
 	// Category filter state
 	let selectedCategories = $state<string[]>([]);
 	let minPrice = $state(0);
-	let maxPrice = $state(
-		Math.max(
-			...(data?.productList.map((p) =>
-				typeof p.price === 'number' ? p.price : parseFloat(p.price as string)
-			) ?? [0])
-		)
-	);
+	let maxPrice = $derived(Math.max(...data.productList.map((p) => Number(p.price))));
+
+	// Add this effect to "catch" the data when it loads
+	$effect(() => {
+		if (data?.productList.length > 0) {
+			const actualMax = Math.max(...data.productList.map((p) => Number(p.price)));
+			// Only auto-initialize once
+			if (maxPrice === 10000) {
+				maxPrice = actualMax;
+			}
+		}
+	});
 
 	// Get unique categories from products
 	const categories = $derived(
@@ -37,8 +42,7 @@
 				product.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
 				product.category?.toLowerCase().includes(searchQuery.toLowerCase());
 
-			const price =
-				typeof product.price === 'number' ? product.price : parseFloat(product.price as string);
+			const price = Number(product.price);
 			const matchesPrice = price >= minPrice && price <= maxPrice;
 
 			const matchesCategory =
@@ -84,6 +88,35 @@
 	);
 </script>
 
+<svelte:head>
+	<title>Shop - Amy Bakes</title>
+
+	<meta
+		name="description"
+		content="Shop the Amy Bakes collection. From our signature 'Less Guilt' muffins to authentic American-style chewy cookies, experience quality baked with business precision."
+	/>
+	<meta
+		name="keywords"
+		content="buy cookies online, healthy muffins, Amy Bakes shop, American style cookies, freshly baked goods, Melela Partners treats"
+	/>
+
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content="Shop Amy Bakes: The Business of Baking" />
+	<meta
+		property="og:description"
+		content="Treat yourself to our 'Less Guilt' muffins and authentic American-style chewy cookies. Hand-crafted with heart and precision."
+	/>
+	<meta property="og:image" content="/files/cookie.webp" />
+
+	<meta property="twitter:card" content="summary_large_image" />
+	<meta property="twitter:title" content="Shop Amy Bakes | Freshly Baked Cookies & Muffins" />
+	<meta
+		property="twitter:description"
+		content="Experience the perfect balance of heart and precision. Shop our signature baked goods online."
+	/>
+	<meta property="twitter:image" content="/files/cookie.webp" />
+</svelte:head>
+
 <div class="min-h-dvh bg-background pb-8 text-foreground transition-colors duration-300">
 	<!-- Header -->
 	<header class="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-sm">
@@ -91,7 +124,7 @@
 			<div class="mb-6 flex items-center justify-between">
 				<div>
 					<h1 class="text-3xl font-bold">Shop</h1>
-					<p class="mt-1 text-muted-foreground">Browse our collection of products</p>
+					<p class="mt-1 text-muted-foreground">Browse our collection of Baked Goods</p>
 				</div>
 			</div>
 
@@ -174,24 +207,19 @@
 					<!-- Category Filter -->
 					<div class="flex flex-col gap-4">
 						<h3 class="text-sm font-medium">Categories</h3>
-						<div class="space-y-3">
-							{#each categories as category (category)}
-								<div class="flex items-center gap-3">
-									<Checkbox
-										id={`category-${category}`}
-										checked={selectedCategories.includes(category)}
-										onchange={() => toggleCategory(category)}
-										class="cursor-pointer"
-									/>
-									<Label for={`category-${category}`} class="flex-1 cursor-pointer text-sm">
-										{category}
-									</Label>
-									<span class="text-xs text-muted-foreground">
-										{filteredProducts.filter((p) => p.category === category).length}
-									</span>
-								</div>
-							{/each}
-						</div>
+						{#each categories as category (category)}
+							<div class="flex items-center gap-3">
+								<Checkbox
+									id={`category-${category}`}
+									checked={selectedCategories.includes(category)}
+									onCheckedChange={() => toggleCategory(category)}
+									class="cursor-pointer"
+								/>
+								<Label for={`category-${category}`} class="flex-1 cursor-pointer text-sm">
+									{category}
+								</Label>
+							</div>
+						{/each}
 					</div>
 				</div>
 			</aside>
@@ -212,7 +240,7 @@
 				{#if filteredProducts.length > 0}
 					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
 						{#each filteredProducts as product (product.productId)}
-							<div class="animate-in duration-300 fade-in">
+							<div class="animate-in fade-in duration-300">
 								<ProductCard {...product} />
 							</div>
 						{/each}

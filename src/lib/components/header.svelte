@@ -20,7 +20,7 @@
 </script>
 
 <header
-	class="sticky top-0 z-50 w-full bg-background backdrop-blur supports-backdrop-filter:bg-background/10"
+	class="sticky top-0 z-50 w-full bg-primary/40 backdrop-blur supports-backdrop-filter:bg-primary/10"
 >
 	<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 		<div class="flex h-16 items-center justify-between">
