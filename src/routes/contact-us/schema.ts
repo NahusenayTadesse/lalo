@@ -14,5 +14,5 @@ export const contactSchema = z.object({
 			return `+251${mainNumber}`;
 		}),
 	subject: z.string().min(3, 'Subject must be at least 3 characters'),
-	message: z.string().min(10, 'Message must be at least 10 characters')
+	contactMessage: z.string().optional()
 });

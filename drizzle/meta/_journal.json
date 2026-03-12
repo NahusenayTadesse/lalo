@@ -36,6 +36,13 @@
       "when": 1773257267405,
       "tag": "0004_overconfident_kree",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1773340822224,
+      "tag": "0005_petite_black_panther",
+      "breakpoints": true
     }
   ]
 }

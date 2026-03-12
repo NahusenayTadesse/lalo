@@ -64,6 +64,15 @@
 			href: 'https://wa.me/'
 		}
 	];
+
+	$effect(() => {
+		if ($message) {
+			if ($message.type === 'error') toast.error($message.text);
+			else {
+				toast.success($message.text);
+			}
+		}
+	});
 </script>
 
 <svelte:head>
@@ -116,7 +125,7 @@
 								type="tel"
 								{form}
 								{errors}
-								name="Phone"
+								name="phoneNumber"
 								label="Phone Number"
 								placeholder="+251 901020304"
 							/>
@@ -134,7 +143,7 @@
 								{form}
 								{errors}
 								type="textarea"
-								name="message"
+								name="contactMessage"
 								label="Message"
 								placeholder="Tell us more about your inquiry..."
 							/>

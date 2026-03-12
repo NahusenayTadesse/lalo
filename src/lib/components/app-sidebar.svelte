@@ -8,6 +8,7 @@
 		Banknote,
 		Plus,
 		Sheet,
+		Mail,
 		Loader,
 		CircleCheckBig,
 		OctagonMinus,
@@ -56,6 +57,11 @@
 				{ title: 'All Recipes', url: '/dashboard/recipes', icon: Sheet },
 				{ title: 'Add Recipe', url: '/dashboard/recipes/add-recipes', icon: Plus }
 			]
+		},
+		{
+			title: 'Messages',
+			url: '/dashboard/messages',
+			icon: Mail
 		},
 		{
 			title: 'Reports',

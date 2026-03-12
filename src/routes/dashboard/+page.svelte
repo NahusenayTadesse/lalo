@@ -3,6 +3,7 @@
 	import { PackageIcon } from '@lucide/svelte';
 
 	import Reports from '$lib/components/dashboard/reports.svelte';
+	import DailyStats from '$lib/components/dashboard/daily-stats.svelte';
 
 	let { data } = $props();
 </script>
@@ -33,10 +34,12 @@
 			</div>
 		</div>
 	</div>
+	<div class="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
+		<DailyStats stats={data?.dailyStats} />
+	</div>
 
 	<!-- Main Content -->
 	<div class="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-		<Reports report={data.todayReport} />
 		<!-- Stats Grid -->
 
 		<!-- Reorder Items Grid -->

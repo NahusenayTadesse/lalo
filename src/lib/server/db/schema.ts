@@ -1,4 +1,12 @@
-import { mysqlTable, int, varchar, mysqlEnum, decimal, text } from 'drizzle-orm/mysql-core';
+import {
+	mysqlTable,
+	int,
+	varchar,
+	mysqlEnum,
+	decimal,
+	text,
+	timestamp
+} from 'drizzle-orm/mysql-core';
 import { secureFields, user } from './auth.schema';
 
 export const paymentMethods = mysqlTable('payment_methods', {
@@ -153,6 +161,16 @@ export const recipeIngredients = mysqlTable('recipe_ingredients', {
 	recipeId: int('recipe_id').references(() => recipes.id),
 	name: varchar('name', { length: 255 }).notNull(),
 	amount: varchar('amount', { length: 100 })
+});
+
+export const contactMessages = mysqlTable('contact_messages', {
+	id: int('id').primaryKey().autoincrement(),
+	name: varchar('name', { length: 255 }).notNull(),
+	email: varchar('email', { length: 100 }).notNull(),
+	phone: varchar('phone', { length: 20 }),
+	subject: varchar('subject', { length: 255 }).notNull(),
+	message: text('message').notNull(),
+	createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
 export * from './auth.schema';
