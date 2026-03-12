@@ -14,6 +14,7 @@
 		orders: any[];
 		orderItems?: any[];
 		customerList: Item[];
+		priceList?: Item[];
 		productList: Item[];
 		data: SuperValidated<Infer<EditOrder>>;
 		currency?: string;
@@ -27,7 +28,8 @@
 		isAdmin = false,
 		productList,
 		data,
-		customerList
+		customerList,
+		priceList = []
 	}: Props = $props();
 
 	let searchQuery = $state('');

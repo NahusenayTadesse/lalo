@@ -1,6 +1,6 @@
 import { setError, superValidate, message, fail } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, or } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 
 import { add, edit } from './schema';
@@ -58,8 +58,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.where(
 			and(
 				eq(orders.customerId, customerId?.value),
-				eq(orders.status, 'pending'),
-				eq(orders.status, 'cancelled')
+				or(eq(orders.status, 'pending'), eq(orders.status, 'cancelled'))
 			)
 		);
 
@@ -112,6 +111,7 @@ export const actions: Actions = {
 							orderId: orderId.id,
 							productId: Number(product.product),
 							quantity: Number(product.quantity),
+							amount: product.amount,
 							price: getPrice(fetchedProducts, Number(product.product)),
 							createdBy: locals?.user?.id
 						}))

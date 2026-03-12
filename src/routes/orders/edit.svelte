@@ -22,10 +22,19 @@
 		name: string;
 	};
 
+	type PriceItem = {
+		value: number;
+		name: string;
+		productId: number;
+		price: number;
+		amount: number | string;
+	};
+
 	type OrderItem = {
 		id: string | number;
 		orderId: string | number;
 		product: string;
+		amount?: number | string;
 		productId: string | number;
 		quantity: number | string;
 		price: string | number;
@@ -38,6 +47,7 @@
 		customer,
 		customerName,
 		productList,
+		priceList,
 		orderItems,
 		icon = false
 	}: {
@@ -46,6 +56,7 @@
 		customer: number;
 		customerName: string;
 		productList: Item[];
+		priceList: PriceItem[];
 		orderItems: OrderItem[];
 		icon: boolean;
 	} = $props();
@@ -64,12 +75,14 @@
 	interface SimpleProduct {
 		product: number; // This is the productId
 		quantity: number;
+		amount?: number | string;
 	}
 
 	const simplifyOrderItems = (items: OrderItem[]): SimpleProduct[] => {
 		return items.map((item) => ({
 			product: item.productId,
-			quantity: item.quantity
+			quantity: item.quantity,
+			amount: item.amount
 		}));
 	};
 
@@ -92,8 +105,6 @@
 			}
 		}
 	});
-
-	let arrParts = `flex flex-col justify-start gap-2 w-full`;
 </script>
 
 <Tooltip.Provider>
@@ -109,7 +120,7 @@
 				</Dialog.Trigger>
 
 				<Dialog.Content class="bg-background">
-					<ScrollArea class="h-128 w-full px-2 pr-4" orientation="both">
+					<ScrollArea class="h-64 w-full px-2 pr-4" orientation="both">
 						<Dialog.Header>
 							<Dialog.Title class="text-center text-4xl">Edit {customerName}</Dialog.Title>
 						</Dialog.Header>
@@ -175,9 +186,10 @@
 										<div class="space-y-1.5">
 											<Label class="text-xs font-medium text-slate-500">Price Amount</Label>
 											<ComboboxComp
-												items={$form.selectedProducts[i].product
+												items={$form.selectedProducts?.[i]?.product
 													? priceList.filter(
-															(p) => Number(p.productId) === $form.selectedProducts[i].product
+															(p) =>
+																Number(p.productId) === Number($form.selectedProducts[i].product)
 														)
 													: [{ value: '', name: 'Select a product first' }]}
 												name="selectedProducts"

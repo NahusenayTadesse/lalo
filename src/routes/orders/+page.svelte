@@ -182,7 +182,7 @@
 							<div class="space-y-1.5">
 								<Label class="text-xs font-medium text-slate-500">Selling Product</Label>
 								<ComboboxComp
-									items={data?.productList}
+									items={data?.fetchedProducts}
 									name="selectedProducts"
 									required={true}
 									bind:value={$form.selectedProducts[i].product}
@@ -198,7 +198,7 @@
 								<Label class="text-xs font-medium text-slate-500">Price Amount</Label>
 								<ComboboxComp
 									items={$form.selectedProducts[i].product
-										? priceList.filter(
+										? data?.fetchedPrices.filter(
 												(p) => Number(p.productId) === $form.selectedProducts[i].product
 											)
 										: [{ value: '', name: 'Select a product first' }]}
@@ -248,11 +248,13 @@
 			currency="ETB"
 			isAdmin={false}
 			customerList={data?.fetchedCustomers}
-			productList={data?.productList}
+			productList={data?.fetchedProducts}
+			priceList={data?.fetchedPrices}
 			data={data?.editForm}
 		/>
 	</div>
 </div>
-<!-- {#key data.allData}
+<!-- {data?.allData.length}
+{#key data.allData}
 	<DataTable {columns} data={data?.allData} search={true} />
 {/key} -->
