@@ -12,7 +12,7 @@
 	import InputComp from '$lib/formComponents/InputComp.svelte';
 
 	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import { ArrowLeft, Plus, Pencil, Save, History } from '@lucide/svelte';
+	import { ArrowLeft, Pencil, Save, History, X, Plus } from '@lucide/svelte';
 	import type { Snapshot } from '@sveltejs/kit';
 	import { getCurrentMonthRange } from '$lib/global.svelte';
 	import Delete from '$lib/forms/Delete.svelte';
@@ -54,10 +54,10 @@
 		($form.commission = data.product.commission),
 		($form.description = data.product.description),
 		($form.productId = data.product.id),
+		($form.prices = data?.priceList),
 		($form.quantity = data.product.quantity),
-		($form.price = data.product.price),
 		($form.reorderLevel = data.product.reorderLevel),
-		($form.supplier = data?.product?.supplierId));
+		($form.supplier = data.product.supplier));
 
 	export const snapshot: Snapshot = { capture, restore };
 
@@ -78,12 +78,50 @@
 		}
 	});
 
-	let images = $derived(data?.images);
+	import DataTable from '$lib/components/Table/data-table.svelte';
+	import DataTableSort from '$lib/components/Table/data-table-sort.svelte';
+	import { renderComponent } from '$lib/components/ui/data-table/index.js';
 
+	const columns = [
+		{
+			accessorKey: 'index',
+			header: '#',
+			cell: (info) => info.row.index + 1,
+			sortable: false
+		},
+
+		{
+			accessorKey: 'amount',
+			header: ({ column }) =>
+				renderComponent(DataTableSort, {
+					name: 'Amount',
+					onclick: column.getToggleSortingHandler()
+				}),
+			sortable: true,
+			cell: ({ row }) => {
+				return row.original.amount ?? 0 + 'Pieces';
+			}
+		},
+
+		{
+			accessorKey: 'Price',
+			header: ({ column }) =>
+				renderComponent(DataTableSort, {
+					name: 'Price',
+					onclick: column.getToggleSortingHandler()
+				}),
+			sortable: true,
+			cell: ({ row }) => {
+				return 'ETB ' + row.original.price;
+			}
+		}
+	];
+
+	let images = $derived(data?.images);
 	let arrParts = `flex flex-col justify-start gap-2 w-full`;
 
 	function addIng() {
-		$form.prices = [...$form.prices, { price: 0, amount: '' }];
+		$form.prices = [...$form.prices, { price: 0, amount: 0 }];
 	}
 </script>
 
@@ -109,7 +147,7 @@
 		<Button href="/dashboard/products/single/{page.params.id}/ranges/{getCurrentMonthRange()}">
 			<History /> See Change History
 		</Button>
-		<Damaged data={data.damagedForm} name={data.product?.name} employees={data.employeesList} />
+		<Damaged data={data.damagedForm} name={data.product?.name} />
 		<Button href={`/dashboard/products/single/${page.params.id}/damaged/${getCurrentMonthRange()}`}>
 			<History /> See Damaged History
 		</Button>
@@ -127,6 +165,7 @@
 				class="flex w-full flex-col items-start justify-start gap-4 lg:w-1/2"
 				id="edit"
 				method="post"
+				enctype="multipart/form-data"
 			>
 				<Errors allErrors={$allErrors} />
 
@@ -183,15 +222,6 @@
 				<InputComp
 					{form}
 					{errors}
-					type="number"
-					name="price"
-					label="Price"
-					placeholder="Enter the price of item"
-					required
-				/>
-				<InputComp
-					{form}
-					{errors}
 					type="select"
 					name="supplier"
 					label="Product Category"
@@ -239,13 +269,13 @@
 						</div>
 
 						<div class={arrParts}>
-							<Label for="amount">Amount</Label>
+							<Label for="amount">Variant</Label>
 
 							<Input
-								type="number"
+								type="text"
 								name="amount"
 								min="1"
-								placeholder="Amount of Ingredient"
+								placeholder="Variant of Product"
 								bind:value={$form.prices[i].amount}
 							/>
 
@@ -279,6 +309,22 @@
 		</div>
 	{/if}
 </SingleView>
+<div class="mx-auto my-12 px-4 sm:px-6 lg:px-4">
+	{#if data?.priceList}
+		{#key data?.priceList}
+			<div class="mb-6 border-b border-gray-100 pb-4">
+				<h1 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Price List</h1>
+				<DataTable
+					{columns}
+					data={data?.priceList}
+					class="w-6xl!"
+					fileName="{data?.product?.name} - Price List"
+					search={true}
+				/>
+			</div>
+		{/key}
+	{/if}
+</div>
 
 <div class="mx-auto my-12 px-4 sm:px-6 lg:px-4">
 	{#if data?.product?.name}
@@ -308,7 +354,7 @@
 			</Button>
 
 			{#if !editGallery}
-				<Gallery images={data?.images} title={data?.product?.name} />
+				<Gallery {images} title={data?.product?.name} />
 			{:else}
 				<EditGallery data={data?.galleryEdit} bind:images />
 			{/if}

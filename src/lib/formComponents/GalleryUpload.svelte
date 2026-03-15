@@ -98,7 +98,7 @@
 
 		<div class="flex flex-row gap-2">
 			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{#each $file as i, index (i.name)}
+				{#each $file as i, index (i)}
 					<div
 						class="group relative flex flex-col overflow-hidden rounded-xl border bg-card p-2 shadow-sm transition-all hover:shadow-md"
 					>
@@ -140,7 +140,7 @@
 
 		{#if images.length}
 			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-				{#each images as i, index (i)}
+				{#each images as i}
 					<div
 						class="group relative flex flex-col overflow-hidden rounded-xl border bg-card p-2 shadow-sm transition-all hover:shadow-md"
 					>

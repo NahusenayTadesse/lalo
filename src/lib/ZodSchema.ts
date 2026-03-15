@@ -344,8 +344,7 @@ export const damagedFormSchema = z.object({
 	damagedBy: z.coerce.string('Employee is required'),
 	quantity: z.coerce.string('Quantity must be greater than 0'),
 
-	reason: z.string().max(255).optional(),
+	reason: z.string().max(255).optional()
 
 	// Move .optional() inside the field definition
-	deductable: z.boolean('Deductable is required').default(true)
 });

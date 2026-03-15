@@ -125,10 +125,10 @@
 	>
 		<Sidebar.Group>
 			<Sidebar.GroupLabel>
-				<div class="flex flex-row items-center justify-center gap-4">
+				<a class="flex flex-row items-center justify-center gap-4" href="/" title="Go to Website Home Page" target="_blank">
 					<img src="/logo.webp" class=" h-16 w-16" alt="Logo" />
 					<h4 class="text-center text-[16px]! text-primary">Lalo Bakery Solutions</h4>
-				</div></Sidebar.GroupLabel
+				</a></Sidebar.GroupLabel
 			>
 			<Sidebar.GroupContent class="my-4">
 				<NavMain items={navigation} />

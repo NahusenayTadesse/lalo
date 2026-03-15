@@ -10,9 +10,10 @@ import {
 	productSuppliers as suppliers,
 	orderItems,
 	orders,
+	prices,
 	productImages
 } from '$lib/server/db/schema';
-import { eq, and, sql, isNotNull, desc } from 'drizzle-orm';
+import { eq, and, sql, isNotNull, desc, min } from 'drizzle-orm';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ params, locals }) => {
@@ -52,7 +53,7 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 		.select({
 			id: products.id,
 			name: products.name,
-			price: products.price,
+			price: min(prices.price),
 			description: products.description,
 			category: productCategories.name,
 			categoryId: productCategories.id,
@@ -67,6 +68,7 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 		})
 		.from(products)
 		.leftJoin(productCategories, eq(productCategories.id, products.categoryId))
+		.leftJoin(prices, eq(prices.productId, products.id))
 		.leftJoin(suppliers, eq(suppliers.id, products.supplierId))
 		.leftJoin(orderItems, eq(products.id, orderItems.productId))
 		.leftJoin(orders, and(eq(orderItems.orderId, orders.id), eq(orders.status, 'delivered')))
@@ -75,7 +77,7 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 		.groupBy(
 			products.id,
 			products.name,
-			products.price,
+			prices.price,
 			orderItems.quantity,
 			products.description,
 			productCategories.name,
@@ -84,6 +86,14 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 			products.reorderLevel
 		)
 		.then((rows) => rows[0]);
+
+	const priceList = await db
+		.select({
+			amount: prices.amount,
+			price: sql<number>`CAST(${prices.price} AS DOUBLE)`
+		})
+		.from(prices)
+		.where(eq(prices.productId, Number(id)));
 
 	const categories = await db
 		.select({
@@ -102,6 +112,7 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 		supplierList,
 		damagedForm,
 		allCategories,
-		images
+		images,
+		priceList
 	};
 };

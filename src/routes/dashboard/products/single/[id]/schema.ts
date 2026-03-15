@@ -40,6 +40,7 @@ export const edit = z.object({
 		.instanceof(File)
 		.refine((file) => file.size <= MAX_FILE_SIZE, `Max file size is 10MB.`)
 		.refine((file) => ACCEPTED_FILE_TYPES.includes(file.type), 'Invalid file type.')
+		.optional()
 });
 
 export const adjust = z.object({

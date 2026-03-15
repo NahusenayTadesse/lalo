@@ -12,12 +12,10 @@
 
 	let {
 		data,
-		name = 'item',
-		employees
+		name = 'item'
 	}: {
 		data: SuperValidated<Infer<DamagedForm>>;
 		name: string;
-		employees?: Item[];
 	} = $props();
 	const { form, errors, enhance, delayed, message } = superForm(data, {});
 	import { toast } from 'svelte-sonner';
@@ -68,23 +66,13 @@
 					<InputComp
 						label="Employee Responsible for the damage"
 						name="damagedBy"
-						type="combo"
+						type="text"
 						{form}
 						{errors}
-						placeholder="Enter Quantity"
+						placeholder="Enter Employee Name"
 						required={true}
-						items={employees}
 					/>
 
-					<InputComp
-						label="Deductable"
-						name="deductable"
-						type="checkboxSingle"
-						placeholder="Yes, deduct the cost from Employee"
-						{form}
-						{errors}
-						required={false}
-					/>
 					<Button type="submit" variant="destructive" size="lg">
 						{#if $delayed}
 							<LoadingBtn name="Entering Damaged Item" />

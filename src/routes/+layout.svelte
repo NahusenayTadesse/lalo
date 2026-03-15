@@ -59,7 +59,7 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href="/logo.webp" />
+	<link rel="icon" href="/logo192.png" />
 </svelte:head>
 <ModeWatcher />
 
