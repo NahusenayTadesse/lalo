@@ -65,13 +65,13 @@
 					class="aspect-square overflow-hidden rounded-2xl bg-linear-to-br from-primary/20 to-accent/20"
 				>
 					<img
-						src="$staticServer/placeholder.svg?size=square"
+						src="/files/demo.webp"
 						alt="Lalo Bakery Solution"
 						class="h-full w-full object-cover"
 					/>
 				</div>
 				<div
-					class="shadow-lg-lg absolute -right-6 -bottom-6 max-w-xs rounded-xl bg-primary p-6 text-primary-foreground"
+					class="shadow-lg-lg absolute lg:-right-6 -right-2 -bottom-6 max-w-xs rounded-xl bg-primary p-6 text-primary-foreground"
 				>
 					<p class="text-sm font-semibold">Trusted by bakeries across the region since 2011</p>
 				</div>
@@ -109,7 +109,7 @@
 	</div>
 </section>
 
-<section class="bg-gradient-to-b from-transparent via-primary/5 to-transparent px-4 py-20 sm:py-32">
+<section class="bg-linear-to-b from-transparent via-primary/5 to-transparent px-4 py-20 sm:py-32">
 	<div class="mx-auto max-w-5xl">
 		<div class="mb-16 text-center">
 			<h2 class="mb-4 text-3xl font-bold sm:text-4xl">Our Core Values</h2>

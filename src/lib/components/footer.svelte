@@ -94,7 +94,7 @@
 			</div>
 
 			<!-- Quick Links -->
-			<div class="w-lg">
+			<div class="lg:w-lg">
 				<h4 class="mb-4 font-semibold">Quick Links</h4>
 				<ul class="flex flex-col gap-2 text-sm">
 					<li>
