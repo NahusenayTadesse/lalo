@@ -44,7 +44,7 @@ export const productImages = mysqlTable('product_images', {
 
 export const customers = mysqlTable('customers', {
 	id: int('id').primaryKey().autoincrement(),
-	name: varchar('name', { length: 100 }).notNull().unique(),
+	name: varchar('name', { length: 100 }).notNull(),
 	email: varchar('email', { length: 100 }).notNull().unique(),
 	phone: varchar('phone', { length: 20 }),
 	userId: varchar('user_id', { length: 255 })

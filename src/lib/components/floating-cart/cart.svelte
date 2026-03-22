@@ -7,7 +7,7 @@
 	import CartItem from './cart-item.svelte';
 	import * as Popover from '$lib/components/ui/sheet/index.js';
 
-	const cart = useCart();
+	const cart = $derived(useCart());
 
 	let open = $state(false);
 

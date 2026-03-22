@@ -1,6 +1,8 @@
 import { superValidate, message } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { eq, and, sql } from 'drizzle-orm';
+import { sendEmail, customerCheckoutTemplate, adminCheckoutTemplate } from '$lib/server/email';
+import { USER } from '$env/static/private';
 
 import { addUser, loginSchema } from '$lib/ZodSchema';
 import { add } from './schema';
@@ -29,19 +31,23 @@ export const actions: Actions = {
 		}
 
 		const { selectedProducts } = form.data;
+		let customerInfo;
+		let newOrderId;
 
 		try {
 			await db.transaction(async (tx) => {
 				const customer = await tx
-					.select({ value: customers.id })
+					.select({ value: customers.id, email: customers.email })
 					.from(customers)
 					.where(eq(customers.userId, locals?.user?.id))
 					.then((rows) => rows[0]);
+				customerInfo = customer;
 
 				const [orderId] = await tx
 					.insert(orders)
 					.values({ customerId: customer.value, status: 'pending' })
 					.$returningId();
+				newOrderId = orderId.id;
 
 				if (selectedProducts.length) {
 					await tx.insert(orderItems).values(
@@ -55,6 +61,22 @@ export const actions: Actions = {
 					);
 				}
 			});
+
+			const total = selectedProducts.reduce((acc, p) => acc + p.price * p.quantity, 0);
+
+			// Send to Customer
+			sendEmail(
+				customerInfo?.email,
+				customerCheckoutTemplate(newOrderId, selectedProducts, total).subject,
+				customerCheckoutTemplate(newOrderId, selectedProducts, total).html
+			).catch((err) => console.error('Email Error (Customer):', err));
+
+			// Send to Admin
+			sendEmail(
+				USER,
+				adminCheckoutTemplate(newOrderId, selectedProducts, total).subject,
+				adminCheckoutTemplate(newOrderId, selectedProducts, total).html
+			).catch((err) => console.error('Email Error (Admin):', err));
 
 			return message(form, { type: 'success', text: 'Order Successfully Added' });
 		} catch (err) {
