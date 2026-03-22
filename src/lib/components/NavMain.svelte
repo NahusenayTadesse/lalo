@@ -13,6 +13,7 @@
 			// this should be `Component` after @lucide/svelte updates types
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			icon?: any;
+			counter?: string | number;
 			isActive?: boolean;
 			items?: {
 				title: string;
@@ -24,6 +25,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { slide } from 'svelte/transition';
+	import { fade, scale } from 'svelte/transition';
 
 	function variantChecker(url: string) {
 		const currentPath = page.url.pathname;
@@ -44,6 +46,10 @@
 		// For other items, check if current path starts with their URL but is not just /dashboard
 		return currentPath === url;
 	}
+
+	const formatCount = (count: number): string => {
+		return count > 99 ? '99+' : count.toString();
+	};
 </script>
 
 <Sidebar.Group>
@@ -57,6 +63,7 @@
 								{#snippet child({ props })}
 									<Sidebar.MenuButton
 										{...props}
+										class="relative"
 										variant={variantChecker(item.url) ? 'outline' : 'default'}
 										size="lg"
 										title="Goto {item.title}"
@@ -71,6 +78,14 @@
 											class="ms-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
 										/>
 									</Sidebar.MenuButton>
+									{#if item.counter > 0}
+										<span
+											class="absolute -top-2 -right-2 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
+											in:scale={{ duration: 200 }}
+										>
+											{formatCount(item.counter)}
+										</span>
+									{/if}
 								{/snippet}
 							</Collapsible.Trigger>
 
@@ -106,6 +121,7 @@
 					<Sidebar.MenuItem>
 						<Sidebar.MenuButton
 							size="lg"
+							class="relative"
 							variant={variantChecker(item.url) ? 'outline' : 'default'}
 						>
 							{#snippet child({ props })}
@@ -115,6 +131,15 @@
 								</a>
 							{/snippet}
 						</Sidebar.MenuButton>
+
+						{#if item.counter > 0}
+							<span
+								class="absolute -top-2 -right-2 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
+								in:scale={{ duration: 200 }}
+							>
+								{formatCount(item.counter)}
+							</span>
+						{/if}
 					</Sidebar.MenuItem>
 				</Sidebar.Menu>
 			{/if}

@@ -23,6 +23,8 @@
 
 	import NavMain from './NavMain.svelte';
 
+	let { messageNumber, ordersNumber, ...restProps }: ComponentProps<typeof Sidebar.Root> = $props();
+
 	const navigation = [
 		{ title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
 		{ title: 'Customers', url: '/dashboard/customers', icon: Users },
@@ -30,6 +32,7 @@
 			title: 'Orders',
 			url: '/dashboard/orders',
 			icon: ListOrdered,
+			counter: ordersNumber,
 			items: [
 				{ title: 'All Orders', url: '/dashboard/orders/all-orders', icon: Sheet },
 				{ title: 'Pending Orders', url: '/dashboard/orders', icon: Loader },
@@ -62,7 +65,8 @@
 		{
 			title: 'Messages',
 			url: '/dashboard/messages',
-			icon: Mail
+			icon: Mail,
+			counter: messageNumber
 		},
 		{
 			title: 'Testimonials  ',
@@ -89,8 +93,6 @@
 			]
 		}
 	];
-
-	let { ...restProps }: ComponentProps<typeof Sidebar.Root> = $props();
 
 	const on = 'bg-sidebar-primary text-sidebar-primary-foreground';
 	const off = 'text-sidebar-foreground';

@@ -10,7 +10,7 @@
 </script>
 
 <Sidebar.Provider>
-	<AppSidebar />
+	<AppSidebar messageNumber={data?.messageNumber} ordersNumber={data?.ordersNumber} />
 	<main class="w-full px-2">
 		<div
 			class="absolute top-2 left-2 z-10 flex w-[95%] flex-row

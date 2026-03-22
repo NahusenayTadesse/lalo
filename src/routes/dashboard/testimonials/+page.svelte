@@ -7,6 +7,8 @@
 	import { Button } from '$lib/components/ui/button/index';
 	import Edit from './edit.svelte';
 	import Delete from './delete.svelte';
+	import BigText from './bigText.svelte';
+
 	const columns = [
 		{
 			id: 'index',
@@ -52,7 +54,8 @@
 		{
 			accessorKey: 'testimonial',
 			header: 'Testimonials',
-			sortable: true
+			sortable: true,
+			cell: ({ row }) => renderComponent(BigText, { text: row.original.testimonial })
 		},
 
 		{
