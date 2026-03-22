@@ -13,7 +13,8 @@
 		CircleCheckBig,
 		OctagonMinus,
 		ListOrdered,
-		CookingPot
+		CookingPot,
+		Star
 	} from '@lucide/svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
@@ -62,6 +63,11 @@
 			title: 'Messages',
 			url: '/dashboard/messages',
 			icon: Mail
+		},
+		{
+			title: 'Testimonials  ',
+			url: '/dashboard/testimonials',
+			icon: Star
 		},
 		{
 			title: 'Reports',
@@ -125,7 +131,12 @@
 	>
 		<Sidebar.Group>
 			<Sidebar.GroupLabel>
-				<a class="flex flex-row items-center justify-center gap-4" href="/" title="Go to Website Home Page" target="_blank">
+				<a
+					class="flex flex-row items-center justify-center gap-4"
+					href="/"
+					title="Go to Website Home Page"
+					target="_blank"
+				>
 					<img src="/logo.webp" class=" h-16 w-16" alt="Logo" />
 					<h4 class="text-center text-[16px]! text-primary">Lalo Bakery Solutions</h4>
 				</a></Sidebar.GroupLabel

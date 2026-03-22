@@ -173,4 +173,12 @@ export const contactMessages = mysqlTable('contact_messages', {
 	createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
+export const testimonials = mysqlTable('testimonials', {
+	id: int('id').primaryKey().autoincrement(),
+	name: varchar('name', { length: 255 }).notNull(),
+	position: varchar('position', { length: 255 }),
+	message: text('message').notNull(),
+	...secureFields
+});
+
 export * from './auth.schema';

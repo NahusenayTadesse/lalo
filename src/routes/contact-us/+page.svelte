@@ -223,16 +223,13 @@
 					<CardContent class="space-y-2 text-sm">
 						<div class="flex justify-between">
 							<span class="text-muted-foreground">Monday - Friday</span>
-							<span class="font-semibold">8:00 AM - 8:00 PM</span>
+							<span class="font-semibold">8:30 AM - 5:30 PM </span>
 						</div>
 						<div class="flex justify-between">
 							<span class="text-muted-foreground">Saturday</span>
-							<span class="font-semibold">9:00 AM - 9:00 PM</span>
+							<span class="font-semibold">8:30 AM - 4:00 PM</span>
 						</div>
-						<div class="flex justify-between">
-							<span class="text-muted-foreground">Sunday</span>
-							<span class="font-semibold">10:00 AM - 6:00 PM</span>
-						</div>
+					
 					</CardContent>
 				</Card>
 			</div>
@@ -240,7 +237,7 @@
 	</main>
 </div>
 
-<section class="relative my-16 h-[50vh] w-full max-w-7xl justify-self-center lg:h-[90vh] lg:w-9/10">
+<!-- <section class="relative my-16 h-[50vh] w-full max-w-7xl justify-self-center lg:h-[90vh] lg:w-9/10">
 	<iframe
 		src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3940.6989163918774!2d38.74450221007991!3d8.999827389408697!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b8513494db273%3A0x88235dbe171c4224!2sDiplomat%20Building!5e0!3m2!1sen!2set!4v1772532021053!5m2!1sen!2set"
 		style="border:0;"
@@ -249,4 +246,4 @@
 		referrerpolicy="no-referrer-when-downgrade"
 		title="Map"
 	></iframe>
-</section>
+</section> -->

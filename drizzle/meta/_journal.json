@@ -43,6 +43,13 @@
       "when": 1773340822224,
       "tag": "0005_petite_black_panther",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1774205534800,
+      "tag": "0006_heavy_phalanx",
+      "breakpoints": true
     }
   ]
 }

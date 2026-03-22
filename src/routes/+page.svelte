@@ -12,6 +12,7 @@
 	import Hero from '$lib/components/hero.svelte';
 	import About from '$lib/components/about.svelte';
 	import Accordion from '$lib/components/accordion.svelte';
+	import Testimonial from '$lib/components/testimonial.svelte';
 
 	const groupedProducts = $derived(
 		data?.productList.reduce((acc, product) => {
@@ -74,5 +75,19 @@
 		</section>
 	{/each}
 </main>
+{#if data?.allPaymentMethods.length > 0}
+	<main class="flex flex-col items-center justify-center px-4 py-12 md:py-20">
+		<!-- Section Header -->
+		<div class="mb-12 max-w-2xl text-center">
+			<h2 class="mb-4 text-3xl font-bold text-foreground md:text-4xl">What Our Customers Say</h2>
+			<p class="text-lg text-muted-foreground">
+				Don't just take our word for it. Here's what people are saying about their experience.
+			</p>
+		</div>
+
+		<!-- Testimonial Carousel -->
+		<Testimonial testimonials={data?.allPaymentMethods} />
+	</main>
+{/if}
 
 <Accordion />
