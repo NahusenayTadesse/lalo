@@ -207,6 +207,15 @@
 					<!-- Category Filter -->
 					<div class="flex flex-col gap-4">
 						<h3 class="text-sm font-medium">Categories</h3>
+						<div class="flex items-center gap-3">
+							<Checkbox
+								id="category-all"
+								checked={selectedCategories.length === categories.length}
+								onCheckedChange={() => (selectedCategories = categories)}
+								class="cursor-pointer"
+							/>
+							<Label for="category-all" class="flex-1 cursor-pointer text-sm">All</Label>
+						</div>
 						{#each categories as category (category)}
 							<div class="flex items-center gap-3">
 								<Checkbox

@@ -1,29 +1,40 @@
 <script lang="ts">
-	import { setCart } from '$lib/hooks/cart.svelte.js';
+	import { useCart } from '$lib/hooks/cart.svelte.js';
 
 	import ProductCard from '$lib/components/product-card.svelte';
 
 	// Set app and cart hooks
-	setCart();
+	useCart();
 	let { data } = $props();
 
-	let products = $derived(data?.productList);
 	import * as Carousel from '$lib/components/ui/carousel/index.js';
 	import Hero from '$lib/components/hero.svelte';
 	import About from '$lib/components/about.svelte';
 	import Accordion from '$lib/components/accordion.svelte';
 	import Testimonial from '$lib/components/testimonial.svelte';
 
-	const groupedProducts = $derived(
-		data?.productList.reduce((acc, product) => {
-			const category = product.category || 'Uncategorized';
-			if (!acc[category]) {
-				acc[category] = [];
-			}
-			acc[category].push(product);
-			return acc;
-		}, {})
-	);
+	// const groupedProducts = $derived(
+	// 	data?.productList.reduce((acc, product) => {
+	// 		const category = product.category || 'Uncategorized';
+	// 		if (!acc[category]) {
+	// 			acc[category] = [];
+	// 		}
+	// 		acc[category].push(product);
+	// 		return acc;
+	// 	}, {})
+	// );
+	//
+	const groupedProducts = $derived.by(() => {
+		const list = data?.productList ?? [];
+		const groups: Record<string, any[]> = {};
+
+		for (const item of list) {
+			const cat = item.category ?? 'Uncategorized';
+			if (!groups[cat]) groups[cat] = [];
+			groups[cat].push(item);
+		}
+		return groups;
+	});
 </script>
 
 <svelte:head>

@@ -35,6 +35,12 @@ export const columns = [
 		sortable: true,
 		cell: ({ row }) => renderComponent(Copy, { data: row.original.phone })
 	},
+	{
+		accessorKey: 'email',
+		header: 'email',
+		sortable: true,
+		cell: ({ row }) => renderComponent(Copy, { data: row.original.email })
+	},
 
 	{
 		accessorKey: 'createdAt',

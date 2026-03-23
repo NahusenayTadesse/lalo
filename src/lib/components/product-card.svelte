@@ -20,17 +20,17 @@
 	let { productId, productName, price, amount, image, category, priceList }: Props = $props();
 
 	let quantity = $state(1);
-	const item = $derived({
-		productId,
-		productName,
-		price,
-		amount,
-		image,
-		category,
-		quantity,
-		priceList
-	});
-	const cart = useCart();
+	// const item = $derived({
+	// 	productId,
+	// 	productName,
+	// 	price,
+	// 	amount,
+	// 	image,
+	// 	category,
+	// 	quantity,
+	// 	priceList
+	// });
+	const cart = $derived(useCart());
 
 	let justAdded = $state(false);
 

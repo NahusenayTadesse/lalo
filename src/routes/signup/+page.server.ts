@@ -7,6 +7,7 @@ import { add } from './schema';
 import { redirect } from 'sveltekit-flash-message/server';
 import { auth } from '$lib/server/auth';
 import { eq, and, sql } from 'drizzle-orm';
+import { customerWelcomeTemplate, sendEmail } from '$lib/server/email';
 
 import { db } from '$lib/server/db';
 import { APIError } from 'better-auth';
@@ -66,7 +67,9 @@ export const actions: Actions = {
 					.where(eq(user.id, newCustomer?.user.id));
 				await tx.insert(customers).values({ email, name, phone, userId: newCustomer?.user.id });
 			});
+			const { subject, html } = customerWelcomeTemplate(name);
 
+			sendEmail(email, subject, html);
 			return message(form, {
 				type: 'success',
 				text: 'Sign Up Successful!'

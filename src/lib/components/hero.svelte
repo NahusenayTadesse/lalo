@@ -11,7 +11,7 @@
 
 	const stats = [
 		{ label: 'Years Experience', value: '25+', icon: WheatIcon },
-		{ label: 'Happy Bakeries', value: '500+', icon: ChefHatIcon },
+		{ label: 'Happy Bakeries', value: '100+', icon: ChefHatIcon },
 		{ label: 'Quality Products', value: '100+', icon: ShoppingBasketIcon }
 	];
 </script>
@@ -54,8 +54,8 @@
 					</h1>
 					<p class="text-xl font-medium text-primary/80">Ingredients That Deliver</p>
 					<p class="max-w-lg text-lg leading-relaxed text-muted-foreground">
-						Premium quality ingredients and expert solutions for bakeries of all sizes. From artisan
-						breads to delicate pastries.
+						Premium bakery solutions for bakeries of all sizes. From artisan breads to delicate
+						pastries.
 					</p>
 				</div>
 

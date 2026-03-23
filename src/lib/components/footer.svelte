@@ -106,6 +106,11 @@
 						>
 					</li>
 					<li>
+						<a href="/orders" class="text-foreground/70 transition-colors hover:text-foreground"
+							>Orders</a
+						>
+					</li>
+					<li>
 						<a href="/about-us" class="text-foreground/70 transition-colors hover:text-foreground"
 							>About Us</a
 						>
@@ -113,11 +118,6 @@
 					<li>
 						<a href="#" class="text-foreground/70 transition-colors hover:text-foreground"
 							>Contact Us</a
-						>
-					</li>
-					<li>
-						<a href="/orders" class="text-foreground/70 transition-colors hover:text-foreground"
-							>Orders</a
 						>
 					</li>
 				</ul>

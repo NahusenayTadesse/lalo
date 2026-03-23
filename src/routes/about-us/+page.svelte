@@ -3,7 +3,7 @@
 	import { ArrowRightIcon } from '@lucide/svelte';
 	import { CheckCircleIcon, ShieldCheckIcon, HeartHandshakeIcon } from '@lucide/svelte';
 	import { WheatIcon, BadgeCheckIcon, ToolCase, BookOpenIcon } from '@lucide/svelte';
-	import { BuildingIcon, CoffeeIcon, LeafIcon } from '@lucide/svelte';
+	import { BuildingIcon, CoffeeIcon, LeafIcon, Send } from '@lucide/svelte';
 	import { PhoneIcon } from '@lucide/svelte';
 
 	import {
@@ -13,6 +13,35 @@
 		CardHeader,
 		CardTitle
 	} from '$lib/components/ui/card';
+
+	import { IconBrandFacebook, IconBrandInstagram, IconBrandTiktok } from '@tabler/icons-svelte';
+
+	const socialLinks = [
+		{
+			name: 'Instagram',
+			url: 'https://www.instagram.com/lalobakerysolution?igsh=MTZ1eDNldHl3OW9iNw%3D%3D&utm_source=qr',
+			icon: IconBrandInstagram,
+			color: 'hover:text-pink-500'
+		},
+		{
+			name: 'TikTok',
+			url: 'https://www.tiktok.com/@lalobakerysolution?_r=1&_t=ZM-91WtG5hY5VY',
+			icon: IconBrandTiktok,
+			color: 'hover:text-black dark:hover:text-white'
+		},
+		{
+			name: 'Facebook',
+			url: 'https://facebook.com',
+			icon: IconBrandFacebook,
+			color: 'hover:text-blue-600'
+		},
+		{
+			name: 'Telegram',
+			url: 'https://t.me/LaloBakery',
+			icon: Send,
+			color: 'hover:text-blue-400'
+		}
+	];
 </script>
 
 <svelte:head>
@@ -37,7 +66,7 @@
 			</div>
 
 			<h1 class="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-				Excellence in Every Batch
+				Ingredients that deliver.
 			</h1>
 
 			<p class="mx-auto max-w-2xl text-lg text-foreground/70 sm:text-xl">
@@ -51,6 +80,26 @@
 					<ArrowRightIcon class="size-4" />
 				</Button>
 				<Button href="/contact-us" size="lg" variant="outline">Contact Us</Button>
+			</div>
+
+			<div class="flex flex-col items-center justify-between gap-4 border-t pt-8 md:flex-row">
+				<p class="text-sm text-foreground/70">Follow us on social media</p>
+				<div class="grid grid-cols-4 gap-3">
+					{#each socialLinks as social (social.url)}
+						<a
+							href={social.url}
+							target="_blank"
+							rel="noopener noreferrer"
+							class={[
+								'flex flex-col items-center gap-2 rounded-lg border p-4 transition-all hover:border-primary hover:shadow-lg',
+								social.color
+							]}
+							title={social.name}
+						>
+							<social.icon class="h-6 w-6" />
+						</a>
+					{/each}
+				</div>
 			</div>
 		</div>
 	</div>
@@ -71,7 +120,7 @@
 					/>
 				</div>
 				<div
-					class="shadow-lg-lg absolute lg:-right-6 -right-2 -bottom-6 max-w-xs rounded-xl bg-primary p-6 text-primary-foreground"
+					class="shadow-lg-lg absolute -right-2 -bottom-6 max-w-xs rounded-xl bg-primary p-6 text-primary-foreground lg:-right-6"
 				>
 					<p class="text-sm font-semibold">Trusted by bakeries across the region since 2011</p>
 				</div>

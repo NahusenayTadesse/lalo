@@ -1,6 +1,8 @@
 import { superValidate, message, setError } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
-import { eq, and, sql, min } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
+import { sendEmail, customerDeliveredTemplate, adminDeliveredTemplate } from '$lib/server/email';
+import { USER } from '$env/static/private';
 
 import { add, edit } from './schema';
 import { db } from '$lib/server/db';
@@ -157,7 +159,7 @@ export const actions: Actions = {
 					if (existingTransaction.transactionId) {
 						await db.update(transactions).set({
 							paymentMethodId: paymentMethod,
-							amount: String(calculateTotalAmount(selectedProducts)),
+							amount: String(getTotal(selectedProducts)),
 							recieptLink,
 							updatedBy: locals?.user?.id
 						});
@@ -171,7 +173,7 @@ export const actions: Actions = {
 							.insert(transactions)
 							.values({
 								paymentMethodId: paymentMethod,
-								amount: calculateTotalAmount(selectedProducts),
+								amount: getTotal(selectedProducts),
 								recieptLink,
 								createdBy: locals?.user?.id
 							})
@@ -199,6 +201,39 @@ export const actions: Actions = {
 				}
 			});
 
+			if (status === 'delivered') {
+				const customerId = await db
+					.select({
+						id: orders.customerId
+					})
+					.from(orders)
+					.where(eq(orders.id, id))
+					.then((rows) => rows[0]);
+
+				const customerInfo = await db
+					.select({
+						name: customers.name,
+						email: customers.email
+					})
+					.from(customers)
+					.where(eq(customers.id, customerId.id))
+					.then((rows) => rows[0]);
+
+				const total = getTotal(selectedProducts);
+
+				sendEmail(
+					customerInfo.email,
+					customerDeliveredTemplate(id, selectedProducts, total).subject,
+					customerDeliveredTemplate(id, selectedProducts, total).html
+				).catch((err) => console.error('Email Error (Customer):', err));
+
+				// Send to Admin
+				sendEmail(
+					USER,
+					adminDeliveredTemplate(id, selectedProducts, total).subject,
+					adminDeliveredTemplate(id, selectedProducts, total).html
+				).catch((err) => console.error('Email Error (Admin):', err));
+			}
 			return message(form, { type: 'success', text: 'Order Successfully Updated' });
 		} catch (err) {
 			console.error(err?.message);
@@ -218,16 +253,19 @@ function splitNumbers(input: string) {
 	const [first, second] = input.split(' ');
 	return {
 		price: Number(first),
-		amount: Number(second)
+		amount: second
 	};
 }
 
-const calculateTotalAmount = (
-	products: Array<{ amount: number; price: number; quantity: number }>
-) => {
-	return products.reduce((total, item) => {
-		// Convert string amount to number before adding
-		const price = parseFloat(item.amount) || 0;
-		return total + price * item.quantity;
-	}, 0);
+type SelectedProduct = {
+	product: number;
+	quantity: number;
+	amount: string; // e.g. "200.00 50g"
 };
+
+function getTotal(selectedProducts: SelectedProduct[] = []): number {
+	return selectedProducts.reduce((total, item) => {
+		const price = parseFloat(item?.amount?.split(' ')[0] ?? '0');
+		return total + price * (item.quantity ?? 0);
+	}, 0);
+}

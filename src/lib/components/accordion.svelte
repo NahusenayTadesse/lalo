@@ -88,7 +88,7 @@
 <div
 	class="min-h-dvh bg-linear-to-br from-primary/5 via-background to-accent/5 px-4 py-12 sm:px-6 lg:px-8"
 >
-	<div class="mx-auto max-w-3xl">
+	<div class="mx-auto w-full">
 		<!-- Header -->
 		<div class="mb-12 text-center">
 			<h1 class="mb-4 text-4xl font-bold text-foreground sm:text-5xl">Why Choose Us</h1>
@@ -98,7 +98,11 @@
 		</div>
 
 		<!-- Accordion -->
-		<Accordion type="single" collapsible class="w-full space-y-3">
+		<Accordion
+			type="single"
+			collapsible
+			class="grid w-9/10 grid-cols-1 items-center gap-3 space-y-3 justify-self-center lg:grid-cols-2"
+		>
 			{#each features as feature (feature.id)}
 				<AccordionItem
 					value={feature.id}
