@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
 	}
 });
 
-export const sendEmail = async (to: string, subject: string, text: string) => {
+export const sendEmail = async (to: string, subject: string, html: string) => {
 	await transporter.sendMail({
 		from: USER,
 		to,
@@ -80,7 +80,7 @@ export const adminCheckoutTemplate = (orderId, items, total) => ({
             <p>A new order has been placed on the website. <strong>Order ID: #${orderId}</strong></p>
             ${generateOrderTable(items)}
             <p style="font-size: 18px;"><strong>Total Revenue: ${total.toLocaleString()} ETB</strong></p>
-            <a href="https://your-admin-dashboard.com/orders/${orderId}"
+            <a href="lalobakerysolutions.com/dashboard/orders"
                style="background: #bc3d00; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
                View in Dashboard
             </a>
