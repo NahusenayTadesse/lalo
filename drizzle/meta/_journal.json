@@ -57,6 +57,20 @@
       "when": 1774216875192,
       "tag": "0007_warm_kylun",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1774295819274,
+      "tag": "0008_small_blizzard",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1774297349491,
+      "tag": "0009_open_namorita",
+      "breakpoints": true
     }
   ]
 }

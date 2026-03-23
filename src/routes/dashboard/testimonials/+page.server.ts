@@ -23,6 +23,7 @@ export const load: PageServerLoad = async () => {
 			name: paymentMethods.name,
 			position: paymentMethods.position,
 			testimonial: paymentMethods.message,
+			avatar: paymentMethods.avatar,
 			createdBy: user.name,
 			createdById: paymentMethods.createdBy
 		})
@@ -37,6 +38,8 @@ export const load: PageServerLoad = async () => {
 	};
 };
 
+import { saveUploadedFile } from '$lib/server/upload.js';
+
 export const actions: Actions = {
 	add: async ({ request, locals }) => {
 		const form = await superValidate(request, zod4(schema));
@@ -45,13 +48,15 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: 'Please check the form for Errors' });
 		}
 
-		const { name, position, testimonial } = form.data;
+		const { name, position, testimonial, avatar } = form.data;
 
 		try {
+			const avatarFile = await saveUploadedFile(avatar);
 			await db.insert(paymentMethods).values({
 				name,
 				position,
 				message: testimonial,
+				avatar: avatarFile,
 				createdBy: locals.user?.id
 			});
 
@@ -74,12 +79,19 @@ export const actions: Actions = {
 			return fail(400, { form });
 		}
 
-		const { id, name, position, testimonial } = form.data;
+		const { id, name, position, testimonial, avatar } = form.data;
 
 		try {
+			const avatarFile = await saveUploadedFile(avatar);
 			await db
 				.update(paymentMethods)
-				.set({ name, position, message: testimonial, updatedBy: locals?.user?.id })
+				.set({
+					name,
+					position,
+					message: testimonial,
+					avatar: avatarFile,
+					updatedBy: locals?.user?.id
+				})
 				.where(eq(paymentMethods.id, id));
 			return message(form, { type: 'success', text: 'Testimonial Successfully Updated' });
 		} catch (err: any) {

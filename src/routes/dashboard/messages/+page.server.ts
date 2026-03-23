@@ -3,12 +3,15 @@ import { contactMessages } from '$lib/server/db/schema';
 import { superValidate, message } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { eq } from 'drizzle-orm';
-import { setFlash } from 'sveltekit-flash-message/server';
 import { deleteSchema } from './schema';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
 	const form = await superValidate(zod4(deleteSchema));
+
+	await db.update(contactMessages).set({
+		seen: true
+	});
 
 	const messages = await db
 		.select({

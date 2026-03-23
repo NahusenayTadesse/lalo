@@ -18,6 +18,7 @@
 		name,
 		position,
 		testimonial,
+		avatar,
 		icon = false
 	}: {
 		data: SuperValidated<Infer<schema>>;
@@ -25,6 +26,7 @@
 		id: number;
 		name: string;
 		position?: string;
+		avatar?: string;
 		testimonial?: string;
 		icon: boolean;
 	} = $props();
@@ -42,6 +44,7 @@
 
 	import { toast } from 'svelte-sonner';
 	import InputComp from '$lib/formComponents/InputComp.svelte';
+	import ScrollArea from '$lib/components/ui/scroll-area/scroll-area.svelte';
 	$effect(() => {
 		if ($message) {
 			if ($message.type === 'error') {
@@ -69,30 +72,48 @@
 					<Dialog.Header>
 						<Dialog.Title class="text-center text-4xl">Edit {name}</Dialog.Title>
 					</Dialog.Header>
-					<form {action} use:enhance method="post" id="edit" class="flex w-full flex-col gap-4 p-4">
-						<Errors allErrors={$allErrors} />
-						<input type="hidden" name="id" value={$form.id} />
-						<InputComp
-							{form}
-							{errors}
-							label="Name of Customer"
-							type="text"
-							name="name"
-							required={true}
-						/>
-						<InputComp {form} {errors} label="Position" type="text" name="position" />
-						<InputComp {form} {errors} label="Testimonial" type="textarea" name="testimonial" />
 
-						<Button type="submit" class="mt-4" form="edit">
-							{#if $delayed}
-								<LoadingBtn name="Adding Menu Item" />
-							{:else}
-								<Save class="h-4 w-4" />
+					<ScrollArea class="h-128 w-full px-2 pr-4" orientation="both">
+						<form
+							{action}
+							use:enhance
+							method="post"
+							id="edit"
+							class="flex w-full flex-col gap-4 p-4"
+							enctype="multipart/form-data"
+						>
+							<Errors allErrors={$allErrors} />
+							<input type="hidden" name="id" value={$form.id} />
+							<InputComp
+								{form}
+								{errors}
+								label="Name of Customer"
+								type="text"
+								name="name"
+								required={true}
+							/>
+							<InputComp {form} {errors} label="Position" type="text" name="position" />
+							<InputComp {form} {errors} label="Testimonial" type="textarea" name="testimonial" />
+							<InputComp
+								{form}
+								{errors}
+								label="Logo or Avatar"
+								image={avatar ? avatar : ''}
+								type="file"
+								name="avatar"
+							/>
 
-								Save Changes
-							{/if}
-						</Button>
-					</form>
+							<Button type="submit" class="mt-4" form="edit">
+								{#if $delayed}
+									<LoadingBtn name="Saving Avatar" />
+								{:else}
+									<Save class="h-4 w-4" />
+
+									Save Changes
+								{/if}
+							</Button>
+						</form>
+					</ScrollArea>
 				</Dialog.Content>
 			</Dialog.Root>
 		</Tooltip.Trigger>

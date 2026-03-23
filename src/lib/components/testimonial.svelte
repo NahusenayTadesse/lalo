@@ -99,7 +99,7 @@
 						<div class="relative">
 							{#if currentTestimonial.avatar}
 								<img
-									src={currentTestimonial.avatar}
+									src="/files/{currentTestimonial.avatar}"
 									alt={currentTestimonial.name}
 									class="size-14 rounded-full object-cover ring-2 ring-primary/20 ring-offset-2 ring-offset-background"
 								/>

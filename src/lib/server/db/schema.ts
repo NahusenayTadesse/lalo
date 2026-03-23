@@ -2,6 +2,7 @@ import {
 	mysqlTable,
 	int,
 	varchar,
+	boolean,
 	mysqlEnum,
 	decimal,
 	text,
@@ -170,6 +171,7 @@ export const contactMessages = mysqlTable('contact_messages', {
 	phone: varchar('phone', { length: 20 }),
 	subject: varchar('subject', { length: 255 }).notNull(),
 	message: text('message').notNull(),
+	seen: boolean('seen').default(false),
 	createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
@@ -178,6 +180,7 @@ export const testimonials = mysqlTable('testimonials', {
 	name: varchar('name', { length: 255 }).notNull(),
 	position: varchar('position', { length: 255 }),
 	message: text('message').notNull(),
+	avatar: varchar('avatar', { length: 255 }),
 	...secureFields
 });
 

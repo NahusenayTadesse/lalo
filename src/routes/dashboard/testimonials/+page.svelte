@@ -8,6 +8,7 @@
 	import Edit from './edit.svelte';
 	import Delete from './delete.svelte';
 	import BigText from './bigText.svelte';
+	import ImageViewer from '$lib/components/Table/image-viewer.svelte';
 
 	const columns = [
 		{
@@ -18,6 +19,18 @@
 				return rowIndex + 1;
 			},
 			enableSorting: false
+		},
+		{
+			accessorKey: 'avatar',
+			header: 'Image',
+			sortable: true,
+			cell: ({ row }) => {
+				// You can pass whatever you need from `row.original` to the component
+				return renderComponent(ImageViewer, {
+					src: row.original.avatar,
+					alt: row.original.name
+				});
+			}
 		},
 		{
 			accessorKey: 'name',
@@ -132,10 +145,18 @@
 </svelte:head>
 {#key data?.allPaymentMethods}
 	<DialogComp title="+ Add New Testimonial" variant="default">
-		<form action="?/add" use:enhance id="main" class="flex flex-col gap-4" method="post">
+		<form
+			action="?/add"
+			use:enhance
+			id="main"
+			class="flex flex-col gap-4"
+			method="post"
+			enctype="multipart/form-data"
+		>
 			<InputComp {form} {errors} label="Name of Customer" type="text" name="name" required={true} />
 			<InputComp {form} {errors} label="Position" type="text" name="position" />
 			<InputComp {form} {errors} label="Testimonial" type="textarea" name="testimonial" />
+			<InputComp {form} {errors} label="Logo or Avatar" type="file" name="avatar" />
 
 			<Button type="submit" form="main">
 				{#if $delayed}

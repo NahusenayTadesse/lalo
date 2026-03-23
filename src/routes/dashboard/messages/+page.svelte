@@ -3,41 +3,36 @@
 	import { Card, CardHeader, CardTitle, CardContent } from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { MailIcon, TrashIcon, X } from '@lucide/svelte';
-	import { toast } from 'svelte-sonner';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { page } from '$app/state';
+	import { onMount } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
+	import { enhance } from '$app/forms';
+
+	onMount(async () => {
+		await invalidateAll();
+		const hasReloaded = sessionStorage.getItem('hasReloaded');
+
+		if (!hasReloaded) {
+			sessionStorage.setItem('hasReloaded', 'true');
+			window.location.reload();
+		} else {
+			// Clean up for the next time the user visits fresh
+			sessionStorage.removeItem('hasReloaded');
+		}
+	});
 
 	let { data } = $props();
-
-	let param = page.params;
 
 	let messages = $derived(data.messages);
 	let selectedMessage: (typeof messages)[0] | null = $state(null);
 
-	import InputComp from '$lib/formComponents/InputComp.svelte';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import Errors from '$lib/formComponents/Errors.svelte';
-
-	import { superForm } from 'sveltekit-superforms/client';
-
-	const { form, errors, enhance, delayed, message, allErrors } = superForm(data.form, {});
-
 	const markAsRead = (id: number) => {
 		messages = messages.map((m) => (m.id === id ? { ...m, status: 'Read' } : m));
 	};
-
-	$effect(() => {
-		if ($message) {
-			if ($message.type === 'error') toast.error($message.text);
-			else {
-				toast.success($message.text);
-			}
-		}
-	});
 </script>
 
-{#snippet deleteForm(title = 'Delete  Message')}
+<!-- {#snippet deleteForm(title = 'Delete  Message')}
 	<DialogComp {title} variant="destructive">
 		<form action="?/delete" use:enhance method="POST" class="flex flex-row justify-between">
 			<input type="hidden" name="id" value={message.id} />
@@ -53,7 +48,7 @@
 			</Dialog.Close>
 		</form>
 	</DialogComp>
-{/snippet}
+{/snippet} -->
 
 <svelte:head>
 	<title>Messages</title>

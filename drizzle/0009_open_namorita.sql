@@ -1,0 +1,1 @@
+ALTER TABLE `contact_messages` ADD `seen` boolean DEFAULT false;

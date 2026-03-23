@@ -8,6 +8,7 @@ export const load: PageServerLoad = async () => {
 			id: paymentMethods.id,
 			name: paymentMethods.name,
 			position: paymentMethods.position,
+			avatar: paymentMethods.avatar,
 			testimonial: paymentMethods.message
 		})
 		.from(paymentMethods);
