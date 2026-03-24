@@ -45,7 +45,7 @@
 <About />
 
 <!-- Main Content -->
-<hr class="mb-12 border-muted/30" />
+<!-- <hr class="mb-12 border-muted/30" />
 <main class="container mx-auto px-4 py-12 pb-24">
 	{#each Object.entries(groupedProducts) as [categoryName, products] (categoryName)}
 		<section class="mb-16 last:mb-0">
@@ -85,7 +85,7 @@
 			</div>
 		</section>
 	{/each}
-</main>
+</main> -->
 {#if data?.allPaymentMethods.length > 0}
 	<main class="flex flex-col items-center justify-center px-4 py-12 md:py-20">
 		<!-- Section Header -->

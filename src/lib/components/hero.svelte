@@ -18,10 +18,11 @@
 
 	// Slideshow Images
 	const images = [
-		'/bakery (1).avif', // Replace with your actual paths
 		'/bakery (1).webp',
 		'/bakery (2).webp',
-		'/bakery (3).webp'
+		'/bakery (3).webp',
+		'/bakery (4).webp',
+		'/bakery (5).webp'
 	];
 
 	let currentIndex = $state(0);
@@ -45,7 +46,7 @@
 				></div>
 			{/if}
 		{/each}
-		<div class="absolute inset-0 bg-black/60 backdrop-brightness-75"></div>
+		<div class="absolute inset-0 bg-black/30 backdrop-brightness-75 dark:bg-black/60"></div>
 	</div>
 
 	<div class="relative z-10 mx-auto flex min-h-dvh max-w-7xl flex-col justify-center px-6 lg:px-8">
