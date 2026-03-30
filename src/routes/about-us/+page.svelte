@@ -5,6 +5,7 @@
 	import { WheatIcon, BadgeCheckIcon, ToolCase, BookOpenIcon } from '@lucide/svelte';
 	import { BuildingIcon, CoffeeIcon, LeafIcon, Send } from '@lucide/svelte';
 	import { PhoneIcon } from '@lucide/svelte';
+	import FAQ from '$lib/components/faq.svelte';
 
 	import {
 		Card,
@@ -70,8 +71,8 @@
 			</h1>
 
 			<p class="mx-auto max-w-2xl text-lg text-foreground/70 sm:text-xl">
-				Lalo Bakery Solution delivers premium ingredients, equipment, and expertise to help bakeries
-				of all sizes succeed in a competitive market.
+				Established in 2011, we've grown from MasterChef into a comprehensive bakery ingredient and
+				equipment supplier serving both small bakeries and large-scale producers.
 			</p>
 
 			<div class="flex flex-col justify-center gap-4 pt-4 sm:flex-row">
@@ -491,6 +492,8 @@
 		</div>
 	</div>
 </section>
+
+<FAQ />
 
 <section class="bg-linear-to-r from-primary/15 via-accent/10 to-primary/15 px-4 py-20 sm:py-32">
 	<div class="mx-auto max-w-4xl">

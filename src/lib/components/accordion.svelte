@@ -91,7 +91,7 @@
 	<div class="mx-auto w-full">
 		<!-- Header -->
 		<div class="mb-12 text-center">
-			<h1 class="mb-4 text-4xl font-bold text-foreground sm:text-5xl">Why Choose Us</h1>
+			<h1 class="mb-4 text-4xl font-bold text-foreground sm:text-5xl">Why Us</h1>
 			<p class="text-lg text-muted-foreground">
 				Discover what makes our bakery solutions exceptional
 			</p>

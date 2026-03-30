@@ -69,10 +69,10 @@
 						<span class="block text-primary">Solutions</span>
 					</h1>
 					<p class="text-xl font-medium text-zinc-300">Ingredients That Deliver</p>
-					<p class="max-w-lg text-lg leading-relaxed text-zinc-400">
+					<!-- <p class="max-w-lg text-lg leading-relaxed text-zinc-400">
 						Premium bakery solutions for bakeries of all sizes. From artisan breads to delicate
 						pastries.
-					</p>
+					</p> -->
 				</div>
 
 				<div transition:fly={{ x: -30, duration: 800, delay: 400 }} class="flex flex-wrap gap-4">

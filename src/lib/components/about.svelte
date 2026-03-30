@@ -20,7 +20,7 @@
 		{ icon: CheckIcon, label: 'Quality Assured', description: 'Consistent standards guaranteed' }
 	];
 
-	const products = ['Flours', 'Yeasts', 'Improvers', 'Mixes', 'Specialty Products', 'Equipment'];
+	const products = ['Yeasts', 'Improvers', 'Mixes', 'Specialty Products', 'Equipment'];
 
 	const partners = [
 		{ name: 'Fixtec', description: 'Mechanical tools & construction materials' },
@@ -48,7 +48,7 @@
 		<div class="mb-16 grid gap-8 lg:grid-cols-3">
 			<!-- Company Story -->
 			<div transition:fly={{ y: 20, duration: 600, delay: 100 }} class="lg:col-span-2">
-				<Card class="shadow-lg-lg shadow-lg-primary/10 h-full border-primary/20">
+				<Card class="shadow-lg-lg  shadow-lg-primary/10 h-full border-primary/20">
 					<CardHeader>
 						<CardTitle class="text-2xl">Our Journey</CardTitle>
 						<CardDescription>From MasterChef to Industry Leader</CardDescription>
@@ -114,25 +114,33 @@
 		</div>
 
 		<!-- Lalo Business Group -->
-		<div transition:fly={{ y: 20, duration: 600, delay: 400 }}>
-			<Card class="shadow-lg-lg shadow-lg-primary/10 border-primary/20">
+		<div
+			transition:fly={{ y: 20, duration: 600, delay: 400 }}
+			class="shadow-lg-lg relative overflow-hidden rounded-lg border border-primary/20"
+			style="background-image: url('/bakery (4).webp'); background-size: contain; background-position: center;"
+		>
+			<div class="absolute inset-0 z-0 bg-black/70"></div>
+
+			<Card
+				class="shadow-lg-lg shadow-lg-primary/10 relative z-10 border-primary/20 bg-transparent text-white"
+			>
 				<CardHeader>
 					<CardTitle>Part of Lalo Business Group</CardTitle>
-					<CardDescription>Integrated solutions across industries</CardDescription>
+					<CardDescription class="text-gray-200">
+						Integrated solutions across industries
+					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<p class="mb-6 leading-relaxed text-foreground/80">
+					<p class="mb-6 leading-relaxed text-white">
 						As part of the Lalo Business Group, we work alongside complementary businesses to give
 						our clients access to integrated, cross-industry solutions that drive growth from the
 						ground up.
 					</p>
 					<div class="grid gap-6 md:grid-cols-2">
 						{#each partners as partner (partner.name)}
-							<div
-								class="rounded-lg border border-primary/10 bg-linear-to-br from-primary/5 to-accent/5 p-4"
-							>
-								<h4 class="mb-2 font-semibold text-foreground">{partner.name}</h4>
-								<p class="text-sm text-foreground/70">{partner.description}</p>
+							<div class="rounded-lg bg-black/25 p-4 text-white shadow-lg">
+								<h4 class="mb-2 font-semibold text-white">{partner.name}</h4>
+								<p class="text-sm text-white/70">{partner.description}</p>
 							</div>
 						{/each}
 					</div>
