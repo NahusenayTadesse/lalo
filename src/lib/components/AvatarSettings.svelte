@@ -2,7 +2,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 
-	import { LogOut, KeyRound } from '@lucide/svelte';
+	import { LogOut, KeyRound, User } from '@lucide/svelte';
 	import { enhance } from '$app/forms';
 	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
 	import { goto } from '$app/navigation';
@@ -25,7 +25,11 @@
 		<DropdownMenu.Group>
 			<DropdownMenu.Label>My Account</DropdownMenu.Label>
 			<DropdownMenu.Separator />
-			<DropdownMenu.Item onclick={() => goto('/dashboard/change-password')}>
+			<DropdownMenu.Item onclick={() => goto('/account')}>
+				<User /> My Account
+			</DropdownMenu.Item>
+
+			<DropdownMenu.Item onclick={() => goto('/change-password')}>
 				<KeyRound /> Change Password
 			</DropdownMenu.Item>
 			<DropdownMenu.Item>
