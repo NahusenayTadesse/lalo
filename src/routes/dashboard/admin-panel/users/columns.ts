@@ -29,7 +29,7 @@ export const columns = [
 			return renderComponent(DataTableLinks, {
 				id: row.original.id,
 				name: row.original.name,
-				link: '/dashboard/users'
+				link: '/dashboard/admin-panel/users'
 			});
 		}
 	},
@@ -62,19 +62,19 @@ export const columns = [
 			});
 		}
 	},
-	{
-		accessorKey: 'status',
-		header: ({ column }) =>
-			renderComponent(DataTableSort, {
-				name: 'Status',
-				onclick: column.getToggleSortingHandler()
-			}),
-		sortable: true,
-		cell: ({ row }) => {
-			const status = row.original.status;
-			return status ? 'Active' : 'Inactive';
-		}
-	},
+	// {
+	// 	accessorKey: 'status',
+	// 	header: ({ column }) =>
+	// 		renderComponent(DataTableSort, {
+	// 			name: 'Status',
+	// 			onclick: column.getToggleSortingHandler()
+	// 		}),
+	// 	sortable: true,
+	// 	cell: ({ row }) => {
+	// 		const status = row.original.status;
+	// 		return status ? 'Active' : 'Inactive';
+	// 	}
+	// },
 
 	{
 		accessorKey: 'permissionsCount',

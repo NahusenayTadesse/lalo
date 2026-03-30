@@ -26,7 +26,6 @@
 		{ name: 'Email', value: data.singleUser?.email },
 		{ name: 'Phone', value: data.singleUser?.phone },
 		{ name: 'Role', value: data.singleUser?.role },
-		{ name: 'Status', value: data.singleUser?.status ? 'Active' : 'Inactive' },
 		{ name: 'Created At', value: data.singleUser?.createdAt.toLocaleString() },
 		{ name: 'Updated At', value: data.singleUser?.updatedAt.toLocaleString() }
 	]);
@@ -59,7 +58,6 @@
 	$form.name = data.singleUser?.name;
 	$form.email = data.singleUser?.email;
 	$form.role = data.singleUser?.roleId;
-	$form.status = data.singleUser?.status;
 </script>
 
 <svelte:head>
@@ -94,10 +92,6 @@
 				{@render fe('Email', 'email', 'email', 'Change email', true)}
 
 				{@render selects('role', data?.roleList)}
-				{@render selects('status', [
-					{ value: true, name: 'Active' },
-					{ value: false, name: 'Inactive' }
-				])}
 
 				<Button form="edit" type="submit" class="mt-4">
 					{#if $delayed}

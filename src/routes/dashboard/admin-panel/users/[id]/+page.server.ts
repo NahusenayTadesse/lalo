@@ -8,6 +8,7 @@ import { eq, and, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from 'sveltekit-superforms';
 import { setFlash } from 'sveltekit-flash-message/server';
+import { error } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const { id } = params;
@@ -21,7 +22,6 @@ export const load: PageServerLoad = async ({ params }) => {
 			email: user.email,
 			roleId: user.roleId,
 			role: roles.name,
-			status: user.isActive,
 			createdAt: user.createdAt,
 			updatedAt: user.updatedAt
 		})
@@ -31,7 +31,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		.then((rows) => rows[0]);
 
 	if (!singleUser) {
-		return fail(404, { message: 'User not found' });
+		error(404, { message: 'User not found' });
 	}
 
 	const roleList = await db
@@ -74,17 +74,34 @@ export const actions: Actions = {
 			return fail(400, { form });
 		}
 
-		const { name, email, role, status } = form.data;
+		const { name, email, role } = form.data;
 
 		try {
+			const existingUser = await db
+				.select()
+				.from(user)
+				.where(eq(user.email, email))
+				.then((res) => res[0]);
+
+			if (existingUser) {
+				if (existingUser.id !== id) {
+					setError(form, 'email', 'User with this email already exists, change your email.');
+					return message(
+						form,
+						{
+							type: 'error',
+							text: 'User with this email already exists, change your email.'
+						},
+						{ status: 400 }
+					);
+				}
+			}
 			await db
 				.update(user)
 				.set({
 					name,
 					email,
-					roleId: role,
-					isActive: status,
-					updatedBy: locals?.user?.id
+					roleId: role
 				})
 				.where(eq(user.id, id));
 
@@ -113,7 +130,7 @@ export const actions: Actions = {
 		} catch (err) {
 			console.error('Error deleting user:', err);
 			setFlash({ type: 'error', message: `Unexpected Error: ${err?.message}` }, cookies);
-			return fail(400);
+			return message(form, { type: 'error', text: 'Unexpected Error: ' + err?.message });
 		}
 	}
 };

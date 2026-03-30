@@ -11,14 +11,14 @@ export const load: PageServerLoad = async () => {
 			email: user.email,
 			role: roles.name,
 			roleId: user.roleId,
-			status: user.isActive,
+
 			createdAt: user.createdAt,
 			permissionsCount: sql<number>`COUNT(DISTINCT ${rolePermissions.id})`
 		})
 		.from(user)
 		.leftJoin(roles, eq(roles.id, user.roleId))
 		.leftJoin(rolePermissions, eq(rolePermissions.roleId, roles.id))
-		.groupBy(user.id, user.name, user.email, roles.name, user.isActive, user.createdAt);
+		.groupBy(user.id, user.name, user.email, roles.name, user.createdAt);
 
 	return {
 		userList

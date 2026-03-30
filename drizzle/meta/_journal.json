@@ -71,6 +71,13 @@
       "when": 1774297349491,
       "tag": "0009_open_namorita",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1774873496802,
+      "tag": "0010_military_starfox",
+      "breakpoints": true
     }
   ]
 }

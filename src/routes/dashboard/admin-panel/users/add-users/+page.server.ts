@@ -1,6 +1,6 @@
 // import { encodeBase32LowerCase } from '@oslojs/encoding';
 
-import type { Actions, PageServerLoad } from './login/$types';
+import type { Actions, PageServerLoad } from '../$types';
 import { message, superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { add } from './schema';
@@ -9,17 +9,24 @@ import { eq } from 'drizzle-orm';
 
 import { db } from '$lib/server/db';
 import { APIError } from 'better-auth';
-import { user } from '$lib/server/db/schema';
+import { user, roles } from '$lib/server/db/schema';
 
 export const load: PageServerLoad = async () => {
 	const form = await superValidate(zod4(add));
+	const allRoles = await db
+		.select({
+			value: roles.id,
+			name: roles.name
+		})
+		.from(roles);
 
-	return { form };
+	return { form, allRoles };
 };
 
 export const actions: Actions = {
-	signup: async (event) => {
+	add: async (event) => {
 		const form = await superValidate(event.request, zod4(add));
+		console.log(form);
 		if (!form.valid) {
 			return message(
 				form,
@@ -33,16 +40,16 @@ export const actions: Actions = {
 			);
 		}
 
-		const { name, email, password, phone } = form.data;
+		const { name, email, password, role } = form.data;
 
 		try {
 			await db.transaction(async (tx) => {
-				const newCustomer = await auth.api.signUpEmail({
+				const newCustomer = await auth.api.createUser({
 					body: {
 						email,
 						password,
 						name,
-						callbackURL: '/auth/verification-success'
+						role: role === 1 ? 'admin' : 'user'
 					}
 				});
 				await tx
@@ -55,9 +62,10 @@ export const actions: Actions = {
 
 			return message(form, {
 				type: 'success',
-				text: 'Sign Up Successful!'
+				text: 'User Added Successful!'
 			});
 		} catch (error) {
+			console.error(error);
 			if (error instanceof APIError) {
 				return message(
 					form,
@@ -74,7 +82,7 @@ export const actions: Actions = {
 				form,
 				{
 					type: 'error',
-					text: 'Registration Failed'
+					text: 'Registration Failed' + error?.message
 				},
 				{
 					status: 500

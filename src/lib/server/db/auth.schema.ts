@@ -42,6 +42,10 @@ export const user = mysqlTable('user', {
 	email: varchar('email', { length: 255 }).notNull().unique(),
 	emailVerified: boolean('email_verified').default(false).notNull(),
 	image: text('image'),
+	role: text('role'),
+	banned: boolean('banned'),
+	banReason: text('ban_reason'),
+	banExpires: timestamp('ban_expires', { mode: 'date', fsp: 3 }),
 	roleId: int('role_id').references(() => roles.id, {
 		onDelete: 'set null'
 	}),
@@ -126,7 +130,8 @@ export const session = mysqlTable(
 		userAgent: text('user_agent'),
 		userId: varchar('user_id', { length: 36 })
 			.notNull()
-			.references(() => user.id, { onDelete: 'cascade' })
+			.references(() => user.id, { onDelete: 'cascade' }),
+		impersonatedBy: text('impersonated_by')
 	},
 	(table) => [index('session_userId_idx').on(table.userId)]
 );

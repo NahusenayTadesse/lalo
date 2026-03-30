@@ -26,7 +26,7 @@
 		</div>
 		<div class="p-2 pt-24 pb-24 lg:pt-4 lg:pb-4">
 			{@render children?.()}
-			<BottomMenu />
+			<!-- <BottomMenu /> -->
 		</div>
 	</main>
 </Sidebar.Provider>
