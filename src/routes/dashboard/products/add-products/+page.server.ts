@@ -12,7 +12,7 @@ import {
 } from '$lib/server/db/schema';
 import type { Actions } from './$types';
 import type { PageServerLoad } from './$types.js';
-import { setFlash } from 'sveltekit-flash-message/server';
+import { redirect, setFlash } from 'sveltekit-flash-message/server';
 import { eq } from 'drizzle-orm';
 
 export const load: PageServerLoad = async () => {
@@ -59,76 +59,66 @@ export const actions: Actions = {
 			category,
 			description,
 			quantity,
-			prices,
+
 			supplier,
 			reorderLevel,
 			image,
 			gallery
 		} = form.data;
 
-		try {
-			await db.transaction(async (tx) => {
-				// 1. Upload images first (usually done before the DB transaction starts
-				// to avoid keeping a DB connection open during slow network I/O)
-				const featuredImage = await saveUploadedFile(image);
-				const galleryImages = await uploadGallery(gallery);
+		const result = await db.transaction(async (tx) => {
+			// 1. Upload images first (usually done before the DB transaction starts
+			// to avoid keeping a DB connection open during slow network I/O)
+			const featuredImage = await saveUploadedFile(image);
+			const galleryImages = await uploadGallery(gallery);
 
-				// 2. Insert the main product
-				const [product] = await tx
-					.insert(inventory)
-					.values({
-						name: productName,
-						categoryId: category,
-						description,
-						quantity,
+			// 2. Insert the main product
+			const [product] = await tx
+				.insert(inventory)
+				.values({
+					name: productName,
+					categoryId: category,
+					description,
+					quantity,
 
-						supplierId: supplier,
-						reorderLevel,
-						featuredImage
-					})
-					.$returningId();
+					supplierId: supplier,
+					reorderLevel,
+					featuredImage,
+					createdBy: locals?.user?.id
+				})
+				.$returningId();
 
-				const priceRecords = prices.map((p) => ({
-					productId: product.id,
-					price: p.price,
-					amount: p.amount
+			const newProductId = product.id;
+
+			// 3. Prepare and insert the gallery images
+			if (galleryImages.length > 0) {
+				const imageRecords = galleryImages.map((url) => ({
+					productId: newProductId,
+					imageUrl: url
 				}));
-				await tx.insert(priceList).values(priceRecords);
 
-				const newProductId = product.id;
+				await tx.insert(productImages).values(imageRecords);
+			}
 
-				// 3. Prepare and insert the gallery images
-				if (galleryImages.length > 0) {
-					const imageRecords = galleryImages.map((url) => ({
-						productId: newProductId,
-						imageUrl: url
-					}));
+			// Return the ID or the full object if needed
+			return newProductId;
+		});
 
-					await tx.insert(productImages).values(imageRecords);
-				}
-
-				// Return the ID or the full object if needed
-				return newProductId;
-			});
-
-			// Stay on the same page and set a flash message
-			setFlash({ type: 'success', message: 'New Product Successuflly Added' }, cookies);
-
-			return message(form, { type: 'success', text: 'New Product Successfully Added' });
-		} catch (err) {
-			console.error(err);
-			setFlash(
-				{ type: 'error', message: 'An error occurred while adding the product.' + err?.message },
-				cookies
-			);
-
+		if (!result) {
 			return message(
 				form,
 				{
 					type: 'error',
-					text: 'An error occurred while adding the product.' + err?.message
+					text: 'An error occurred while adding the product.'
 				},
 				{ status: 500 }
+			);
+		} else {
+			message(form, { type: 'success', text: 'New Product Successfully Added' });
+			redirect(
+				`/dashboard/products/single/${result}`,
+				{ type: 'success', message: 'New Product Successfully Added' },
+				cookies
 			);
 		}
 	}

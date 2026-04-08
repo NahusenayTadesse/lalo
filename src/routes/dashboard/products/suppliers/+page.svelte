@@ -13,5 +13,5 @@
 </div>
 
 {#key data?.allData}
-	<DataTable {columns} data={data?.allData} search={true} fileName="Suppliers" />
+	<DataTable {columns} data={data?.allData} search={true} class="w-6xl!" fileName="Suppliers" />
 {/key}

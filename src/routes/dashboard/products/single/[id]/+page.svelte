@@ -12,7 +12,7 @@
 	import InputComp from '$lib/formComponents/InputComp.svelte';
 
 	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import { ArrowLeft, Pencil, Save, History, X, Plus } from '@lucide/svelte';
+	import { ArrowLeft, Pencil, Save, History, X, Plus, ArrowDown, Tag } from '@lucide/svelte';
 	import type { Snapshot } from '@sveltejs/kit';
 	import { getCurrentMonthRange } from '$lib/global.svelte';
 	import Delete from '$lib/forms/Delete.svelte';
@@ -20,6 +20,13 @@
 	import Errors from '$lib/formComponents/Errors.svelte';
 	import Adjustment from '$lib/forms/Adjustment.svelte';
 	import Damaged from '$lib/forms/Damaged.svelte';
+
+	function scrollToPrices() {
+		const element = document.getElementById('price-section-anchor');
+		if (element) {
+			element.scrollIntoView({ behavior: 'smooth' });
+		}
+	}
 
 	let singleTable = $derived([
 		{ name: 'Name', value: data.product?.name },
@@ -81,6 +88,9 @@
 	import DataTable from '$lib/components/Table/data-table.svelte';
 	import DataTableSort from '$lib/components/Table/data-table-sort.svelte';
 	import { renderComponent } from '$lib/components/ui/data-table/index.js';
+	import EditPrice from './editPrice.svelte';
+	import AddPrice from './addPrice.svelte';
+	import DeletePrice from './deletePrice.svelte';
 
 	const columns = [
 		{
@@ -97,10 +107,7 @@
 					name: 'Amount',
 					onclick: column.getToggleSortingHandler()
 				}),
-			sortable: true,
-			cell: ({ row }) => {
-				return row.original.amount ?? 0 + 'Pieces';
-			}
+			sortable: true
 		},
 
 		{
@@ -112,17 +119,36 @@
 				}),
 			sortable: true,
 			cell: ({ row }) => {
-				return 'ETB ' + row.original.price;
+				// You can pass whatever you need from `row.original` to the component
+				return renderComponent(EditPrice, {
+					id: row.original.id,
+					price: row.original.price,
+					amount: row.original.amount,
+					data: data?.priceEdit
+				});
+			}
+		},
+		{
+			accessorKey: 'delete',
+			header: ({ column }) =>
+				renderComponent(DataTableSort, {
+					name: 'Delete',
+					onclick: column.getToggleSortingHandler()
+				}),
+			sortable: true,
+			cell: ({ row }) => {
+				// You can pass whatever you need from `row.original` to the component
+				return renderComponent(DeletePrice, {
+					id: row.original.id,
+					price: row.original.price,
+					amount: row.original.amount,
+					data: data?.priceEdit
+				});
 			}
 		}
 	];
 
 	let images = $derived(data?.images);
-	let arrParts = `flex flex-col justify-start gap-2 w-full`;
-
-	function addIng() {
-		$form.prices = [...$form.prices, { price: 0, amount: 0 }];
-	}
 </script>
 
 <svelte:head>
@@ -154,6 +180,26 @@
 
 		<Delete redirect="/dashboard/products" />
 	</div>
+	{#if data.priceList.length === 0}
+		<div
+			class="mx-auto my-12 flex w-1/2 flex-col items-center rounded-xl border border-destructive p-8 text-center text-destructive backdrop-blur-sm"
+		>
+			<div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full">
+				<Tag class="h-6 w-6" />
+			</div>
+
+			<h3 class="text-lg font-bold">Pricing Required</h3>
+			<p class="mx-auto mt-2 max-w-sm text-sm leading-relaxed">
+				This product is currently hidden from customers. Add at least one price to enable
+				purchasing.
+			</p>
+
+			<Button variant="default" class="mt-4" onclick={scrollToPrices}>
+				<Plus class="mr-2 h-4 w-4" />
+				Add Pricing Structure
+			</Button>
+		</div>
+	{/if}
 	{#if editForm === false}
 		<div class="w-full p-4"><SingleTable {singleTable} /></div>
 	{/if}
@@ -162,7 +208,7 @@
 			<form
 				action="?/editProduct"
 				use:enhance
-				class="flex w-full flex-col items-start justify-start gap-4 lg:w-1/2"
+				class="flex w-full flex-col items-start justify-start gap-4 lg:w-full"
 				id="edit"
 				method="post"
 				enctype="multipart/form-data"
@@ -240,63 +286,6 @@
 					required
 				/>
 
-				<div class="mb-4 flex justify-end">
-					<Button type="button" size="sm" class="gap-2" onclick={() => addIng()}>
-						<Plus class="h-4 w-4" />
-						<span>Add Prices</span>
-					</Button>
-				</div>
-				{#each $form.prices as ing, i (ing)}
-					<div
-						class="flex w-full flex-col items-end gap-3
- rounded-lg border
- border-white/20 bg-white/10 p-3 shadow-lg
-  backdrop-blur-lg lg:flex-row dark:border-black/20 dark:bg-gray-700"
-					>
-						<div class={arrParts}>
-							<Label for="price">Price</Label>
-
-							<Input
-								type="number"
-								name="price"
-								placeholder="Enter Price"
-								bind:value={$form.prices[i].price}
-							/>
-
-							{#if $errors.prices?.[i]?.price}
-								<p class="text-sm text-red-500">{$errors.prices[i].price}</p>
-							{/if}
-						</div>
-
-						<div class={arrParts}>
-							<Label for="amount">Variant</Label>
-
-							<Input
-								type="text"
-								name="amount"
-								min="1"
-								placeholder="Variant of Product"
-								bind:value={$form.prices[i].amount}
-							/>
-
-							{#if $errors.prices?.[i]?.amount}
-								<p class="text-sm text-red-500">{$errors.prices[i].amount}</p>
-							{/if}
-						</div>
-						<Button
-							type="button"
-							variant="outline"
-							title="Remove this product from list"
-							onclick={() => {
-								$form.prices.splice(i, 1);
-								$form.prices = $form.prices;
-							}}
-						>
-							<X class="h-8 w-8" />
-						</Button>
-					</div>
-				{/each}
-
 				<Button form="edit" type="submit" class="mt-4">
 					{#if $delayed}
 						<LoadingBtn name="Saving Changes" />
@@ -309,11 +298,14 @@
 		</div>
 	{/if}
 </SingleView>
-<div class="mx-auto my-12 px-4 sm:px-6 lg:px-4">
-	{#if data?.priceList}
-		{#key data?.priceList}
-			<div class="mb-6 border-b border-gray-100 pb-4">
-				<h1 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Price List</h1>
+<div id="price-section-anchor" class="mx-auto my-12 px-4 pt-12 sm:px-6 lg:px-4">
+	{#key data?.priceList}
+		<div class="mb-6 flex flex-col gap-4 border-b border-gray-100 pb-4">
+			<h1 class="text-3xl font-bold tracking-tight sm:text-4xl">Price List</h1>
+			<div class="w-sm"><AddPrice data={data?.priceAdd} /></div>
+			{#if data.priceList.length === 0}
+				<p class="animate-pulse text-destructive">No prices available for this product.</p>
+			{:else}
 				<DataTable
 					{columns}
 					data={data?.priceList}
@@ -321,9 +313,9 @@
 					fileName="{data?.product?.name} - Price List"
 					search={true}
 				/>
-			</div>
-		{/key}
-	{/if}
+			{/if}
+		</div>
+	{/key}
 </div>
 
 <div class="mx-auto my-12 px-4 sm:px-6 lg:px-4">
@@ -332,7 +324,7 @@
 			<nav class="mb-2 text-xs font-medium tracking-wider text-gray-400 uppercase">
 				Gallery Images
 			</nav>
-			<h1 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+			<h1 class="text-3xl font-bold tracking-tight sm:text-4xl">
 				{data.product.name}
 			</h1>
 		</div>

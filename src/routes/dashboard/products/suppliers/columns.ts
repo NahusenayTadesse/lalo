@@ -1,10 +1,10 @@
 import { renderComponent } from '$lib/components/ui/data-table/index.js';
 import DataTableSort from '$lib/components/Table/data-table-sort.svelte';
 import Statuses from '$lib/components/Table/statuses.svelte';
-import Address from '$lib/components/Table/address.svelte';
+import BigText from '$lib/components/Table/bigText.svelte';
+
 import Copy from '$lib/Copy.svelte';
 
-import Edit from './edit.svelte';
 import DataTableLinks from '$lib/components/Table/data-table-links.svelte';
 export const columns = [
 	{
@@ -71,8 +71,8 @@ export const columns = [
 		sortable: true,
 		cell: ({ row }) => {
 			// You can pass whatever you need from `row.original` to the component
-			return renderComponent(Copy, {
-				data: row.original.description
+			return renderComponent(BigText, {
+				text: row.original.description
 			});
 		}
 	},

@@ -1,6 +1,6 @@
 import { superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
-import { edit, adjust, damaged, editGallery } from './schema';
+import { edit, adjust, damaged, editGallery, editPrice, addPrice } from './schema';
 
 import { db } from '$lib/server/db';
 import {
@@ -22,6 +22,8 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 	const adjustForm = await superValidate(zod4(adjust));
 	const damagedForm = await superValidate(zod4(damaged));
 	const galleryEdit = await superValidate(zod4(editGallery));
+	const priceEdit = await superValidate(zod4(editPrice));
+	const priceAdd = await superValidate(zod4(addPrice));
 
 	const allCategories = await db
 		.select({
@@ -89,6 +91,7 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 
 	const priceList = await db
 		.select({
+			id: prices.id,
 			amount: prices.amount,
 			price: sql<number>`CAST(${prices.price} AS DOUBLE)`
 		})
@@ -113,6 +116,8 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 		damagedForm,
 		allCategories,
 		images,
-		priceList
+		priceList,
+		priceEdit,
+		priceAdd
 	};
 };

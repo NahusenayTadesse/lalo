@@ -8,7 +8,7 @@
 
 	let isOpen = $state(false);
 
-	const handleMenuClick = (href: string) => {
+	const handleMenuClick = () => {
 		isOpen = false;
 	};
 	import { page } from '$app/state';
@@ -54,7 +54,7 @@
 					variant={page.url.pathname === item.href ? 'default' : 'ghost'}
 					size="sm"
 					href={item.href}
-					onclick={() => handleMenuClick(item.href)}
+					onclick={handleMenuClick}
 				>
 					{item.label}
 				</Button>
@@ -66,12 +66,8 @@
 					{#if data === ''}
 						<!-- Search and Auth -->
 						<div class="item-end hidden gap-4 md:flex">
-							<Button variant="ghost" size="sm">
-								<a href="/login" class="text-sm">Sign In</a>
-							</Button>
-							<Button size="sm">
-								<a href="/signup" class="text-sm">Sign Up</a>
-							</Button>
+							<Button href="/login" variant="ghost" size="sm">Sign In</Button>
+							<Button href="/signup" size="sm">Sign Up</Button>
 						</div>
 					{:else}
 						<AvatarSettings {data} />
@@ -124,10 +120,10 @@
 									variant="ghost"
 									href={item.href}
 									class="w-full justify-start gap-3 px-3 py-6 text-base font-medium transition-all active:scale-[0.98]"
-									onclick={() => handleMenuClick(item.href)}
+									onclick={handleMenuClick}
 								>
 									{#if item.icon}
-										<svelte:component this={item.icon} class="h-5 w-5 opacity-60" />
+										<item.icon class="h-5 w-5 opacity-60" />
 									{/if}
 									{item.label}
 								</Button>
@@ -142,8 +138,12 @@
 
 							{#if data === ''}
 								<div class="grid grid-cols-2 gap-2">
-									<Button variant="outline" class="h-11" href="/login">Log In</Button>
-									<Button class="h-11 shadow-sm" href="/signup">Join</Button>
+									<Button onclick={handleMenuClick} variant="outline" class="h-11" href="/login"
+										>Log In</Button
+									>
+									<Button onclick={handleMenuClick} class="h-11 shadow-sm" href="/signup"
+										>Join</Button
+									>
 								</div>
 							{/if}
 						</div>

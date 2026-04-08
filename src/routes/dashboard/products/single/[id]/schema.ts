@@ -22,13 +22,7 @@ export const edit = z.object({
 		.int({ message: 'Quantity can only be full numbers, no decimals.' })
 		.positive({ message: 'Quantity must be a positive number.' })
 		.default(0),
-	prices: z
-		.object({
-			price: z.number('Prices are required.'),
-			amount: z.string('Variation Name is required.')
-		})
-		.array()
-		.min(1, { message: 'Prices are required.' }),
+
 	supplier: z.coerce.number('Supplier is required'),
 	reorderLevel: z.coerce
 		.number()
@@ -84,3 +78,18 @@ export const editGallery = z.object({
 });
 
 export type EditGallery = z.infer<typeof editGallery>;
+
+export const editPrice = z.object({
+	id: z.number('Price Not found'),
+	price: z.coerce.number('Price must be a number'),
+	amount: z.string('Product Variation is required')
+});
+
+export type EditPrice = z.infer<typeof editPrice>;
+
+export const addPrice = z.object({
+	price: z.coerce.number('Price must be a number'),
+	amount: z.string('Product Variation is required')
+});
+
+export type AddPrice = z.infer<typeof addPrice>;

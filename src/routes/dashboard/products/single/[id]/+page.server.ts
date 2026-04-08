@@ -1,7 +1,7 @@
 import { superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 
-import { edit, adjust, damaged, editGallery } from './schema';
+import { edit, adjust, damaged, editGallery, editPrice, addPrice } from './schema';
 
 import { db } from '$lib/server/db';
 import {
@@ -31,7 +31,7 @@ export const actions: Actions = {
 			return fail(400, { form });
 		}
 
-		const { productName, category, description, quantity, prices, supplier, reorderLevel, image } =
+		const { productName, category, description, quantity, supplier, reorderLevel, image } =
 			form.data;
 
 		try {
@@ -65,16 +65,6 @@ export const actions: Actions = {
 					})
 					.where(eq(products.id, Number(id)));
 			}
-
-			const priceRecords = prices.map((p) => ({
-				productId: Number(id),
-				price: p.price,
-				amount: p.amount
-			}));
-			await db.delete(priceList).where(eq(priceList.productId, Number(id)));
-			await db.insert(priceList).values(priceRecords);
-
-			// Stay on the same page and set a flash message
 
 			return message(form, { type: 'success', text: 'Product Updated Successfully' });
 		} catch (err) {
@@ -244,6 +234,75 @@ export const actions: Actions = {
 			return message(form, { type: 'success', text: 'Product Gallery added Successfully!' });
 		} catch (err) {
 			console.error('Error marking adding product gallery:', err);
+			return message(form, { type: 'error', text: `Unexpected Error: ${err?.message}` });
+		}
+	},
+	editPrice: async ({ request }) => {
+		const form = await superValidate(request, zod4(editPrice));
+
+		if (!form.valid) {
+			return message(form, { type: 'error', text: 'Invalid form data' });
+		}
+
+		const { id, price, amount } = form.data;
+
+		try {
+			await db
+				.update(priceList)
+				.set({
+					id,
+					price: String(price),
+					amount
+				})
+				.where(eq(priceList.id, id));
+
+			return message(form, { type: 'success', text: 'Product Price updated Successfully!' });
+		} catch (err) {
+			console.error('Error editing product price:', err);
+			return message(form, { type: 'error', text: `Unexpected Error: ${err?.message}` });
+		}
+	},
+	addPrice: async ({ request, params }) => {
+		const form = await superValidate(request, zod4(addPrice));
+		const { id } = params;
+
+		if (!form.valid) {
+			return message(form, { type: 'error', text: 'Invalid form data' });
+		}
+
+		const { price, amount } = form.data;
+
+		try {
+			await db.insert(priceList).values({
+				productId: Number(id),
+				price: String(price),
+				amount
+			});
+
+			return message(form, { type: 'success', text: 'Product Price added Successfully!' });
+		} catch (err) {
+			console.error('Error adding product price:', err);
+			return message(form, { type: 'error', text: `Unexpected Error: ${err?.message}` });
+		}
+	},
+	deletePrice: async ({ request }) => {
+		const form = await superValidate(request, zod4(editPrice));
+
+		if (!form.valid) {
+			return message(form, { type: 'error', text: 'Invalid form data' });
+		}
+
+		const { id, price, amount } = form.data;
+
+		try {
+			await db.delete(priceList).where(eq(priceList.id, id));
+
+			return message(form, {
+				type: 'success',
+				text: `Variant ${amount} with ${price} price deleted Successfully!`
+			});
+		} catch (err) {
+			console.error('Error deleting Variant price:', err);
 			return message(form, { type: 'error', text: `Unexpected Error: ${err?.message}` });
 		}
 	}
