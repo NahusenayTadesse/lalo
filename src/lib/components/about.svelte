@@ -48,19 +48,23 @@
 		<div class="mb-16 grid gap-8 lg:grid-cols-3">
 			<!-- Company Story -->
 			<div transition:fly={{ y: 20, duration: 600, delay: 100 }} class="lg:col-span-2">
-				<Card class="shadow-lg-lg  shadow-lg-primary/10 h-full border-primary/20">
+				<Card
+					style="background-image: url('/bakery (9).webp')"
+					class="shadow-lg-lg shadow-lg-primary/10 relative z-0 h-full border-primary/20  bg-cover bg-center text-white"
+				>
+					<div class="absolute inset-0 -z-1 bg-black/60"></div>
 					<CardHeader>
 						<CardTitle class="text-2xl">Our Journey</CardTitle>
-						<CardDescription>From MasterChef to Industry Leader</CardDescription>
+						<CardDescription class="text-white">From MasterChef to Industry Leader</CardDescription>
 					</CardHeader>
-					<CardContent class="flex flex-col gap-4">
-						<p class="leading-relaxed text-foreground/80">
+					<CardContent class="flex flex-col gap-4 text-white">
+						<p class="leading-relaxed">
 							Formerly known as MasterChef, we rebranded as Lalo Bakery Solutions to better reflect
 							our mission of delivering excellence in baking across every stage of production. Our
 							comprehensive portfolio includes flours, yeasts, improvers, mixes, specialty products,
 							and equipment—all backed by industry knowledge and technical support.
 						</p>
-						<p class="leading-relaxed text-foreground/80">
+						<p class="leading-relaxed">
 							Guided by a commitment to reliability and customer satisfaction, we work with bakeries
 							to support the creation of products that meet market demands and stand out for their
 							excellence.

@@ -10,19 +10,21 @@
 
 	import { ModeWatcher } from 'mode-watcher';
 	import { fly } from 'svelte/transition';
-
 	import { Button } from '$lib/components/ui/button';
 	import { toast } from 'svelte-sonner';
 
 	async function notifyBrowser(title: string, body: string) {
 		if (!('Notification' in window)) return; // Safari iOS etc.
+
 		if (Notification.permission === 'granted') {
 			new Notification(title, { body, icon: '/logo.png' });
 		} else if (Notification.permission !== 'denied') {
 			const perm = await Notification.requestPermission();
+
 			if (perm === 'granted') new Notification(title, { body, icon: '/logo.png' });
 		}
 	}
+
 	import { setCart } from '$lib/hooks/cart.svelte'; // Adjust path
 	import Cart from '$lib/components/floating-cart/cart.svelte';
 	import Header from '$lib/components/header.svelte';
@@ -37,13 +39,12 @@
 	// 	if (!('Notification' in window)) return;
 	// 	await Notification.requestPermission();
 	// }
-
 	// let iconify = $state('h-6 w-6 animate-ping');
-
 	$effect(() => {
 		if (!$flash) return;
 		if (page.data.flash?.type === 'success') toast.success($flash.message);
 		if (page.data.flash?.type === 'error') toast.error($flash?.message);
+
 		if (Notification.permission === 'granted') {
 			notifyBrowser(
 				page.data.flash?.type === 'success'
@@ -54,24 +55,20 @@
 				$flash.message
 			);
 		}
+
 		$flash = undefined;
 	});
 </script>
 
-<svelte:head>
-	<link rel="icon" href="/logo192.png" />
-</svelte:head>
+<svelte:head><link rel="icon" href="/logo192.png" /></svelte:head>
 <ModeWatcher />
-
 <Toaster position="bottom-right" richColors closeButton />
-
 <ProgressBar color="#bc3d00" zIndex={1000} />
 
 {#if updated.current}
 	<div class={toastmsg} transition:fly={{ x: 20, duration: 300 }}>
 		<p>
 			A new version of the app is available
-
 			<Button onclick={() => location.reload()}>Reload the page</Button>
 		</p>
 	</div>
@@ -80,7 +77,6 @@
 {#if !page.url.pathname.startsWith('/dashboard')}
 	<Header data={data?.user?.name ?? ''} />
 	{@render children()}
-
 	<Footer />
 	<Cart />
 {:else}

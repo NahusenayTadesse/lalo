@@ -50,15 +50,17 @@
 </svelte:head>
 
 <section
-	class="relative overflow-hidden bg-linear-to-br from-primary/20 via-accent/10 to-background px-4 py-20 sm:py-32"
+	class="relative -z-2 overflow-hidden bg-linear-to-br from-primary/20 via-accent/10 to-background bg-cover bg-center px-4 py-20 sm:py-32"
+	style="background-image: url('/bakery (11).webp')"
 >
+	<div class="absolute inset-0 -z-1 bg-background/60"></div>
 	<!-- Decorative elements -->
 	<div class="absolute inset-0 overflow-hidden">
 		<div class="absolute -top-40 -right-40 size-80 rounded-full bg-primary/10 blur-3xl"></div>
 		<div class="absolute -bottom-40 -left-40 size-80 rounded-full bg-accent/10 blur-3xl"></div>
 	</div>
 
-	<div class="relative mx-auto max-w-4xl">
+	<div class="backdrop-blur-sm/10 relative z-1 mx-auto max-w-4xl shadow-lg">
 		<div class="space-y-6 text-center">
 			<div
 				class="inline-block rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary"
@@ -223,16 +225,20 @@
 	</div>
 </section>
 
-<section class="px-4 py-20 sm:py-32">
-	<div class="mx-auto max-w-5xl">
+<section
+	class="relative bg-cover bg-center px-4 py-20 sm:py-32"
+	style="background-image: url('/bakery (8).webp')"
+>
+	<div class="absolute inset-0 -z-1 bg-black/60"></div>
+	<div class="z-1 mx-auto max-w-5xl">
 		<div class="mb-16 text-center">
-			<h2 class="mb-4 text-3xl font-bold sm:text-4xl">Our Product Portfolio</h2>
-			<p class="mx-auto max-w-2xl text-lg text-foreground/70">
+			<h2 class="mb-4 text-3xl font-bold text-white sm:text-4xl">Our Product Portfolio</h2>
+			<p class="mx-auto max-w-2xl text-lg text-white/70">
 				Comprehensive solutions for every stage of your baking production
 			</p>
 		</div>
 
-		<div class="grid gap-8 md:grid-cols-2">
+		<div class="z-1 grid gap-8 md:grid-cols-2">
 			<Card
 				class="hover:shadow-lg-lg hover:shadow-lg-primary/10 border-primary/20 transition-all duration-300"
 			>
@@ -419,17 +425,21 @@
 	</div>
 </section>
 
-<section class="px-4 py-20 sm:py-32">
-	<div class="mx-auto max-w-5xl">
+<section
+	class="relative z-0 px-4 py-20 sm:py-32"
+	style="background-image: url('/bakery (10).webp'); background-size: cover; background-position: center;"
+>
+	<div class="absolute inset-0 -z-1 bg-black/40"></div>
+	<div class="z-1 mx-auto max-w-5xl">
 		<div class="mb-16 text-center">
-			<h2 class="mb-4 text-3xl font-bold sm:text-4xl">Part of a Diversified Group</h2>
-			<p class="mx-auto max-w-2xl text-lg text-foreground/70">
+			<h2 class="mb-4 text-3xl font-bold text-white sm:text-4xl">Part of a Diversified Group</h2>
+			<p class="mx-auto max-w-2xl text-lg text-white/90">
 				Integrated solutions from our sister companies to support your business growth
 			</p>
 		</div>
 
 		<div class="mb-8">
-			<p class="mb-12 text-center text-foreground/70">
+			<p class="mb-12 text-center text-white/90">
 				As part of a diversified trading group, we work alongside industry leaders to deliver
 				integrated, cross-industry solutions that support business growth from the ground up.
 			</p>
@@ -495,10 +505,13 @@
 
 <FAQ />
 
-<section class="bg-linear-to-r from-primary/15 via-accent/10 to-primary/15 px-4 py-20 sm:py-32">
+<section
+	class="bg-linear-to-r from-primary/15 via-accent/10 to-primary/15 bg-cover bg-center px-4 py-20 sm:py-32"
+	style="background-image: url('/bakery (7).webp')"
+>
 	<div class="mx-auto max-w-4xl">
 		<div
-			class="space-y-8 rounded-2xl bg-linear-to-br from-primary to-accent p-8 text-center sm:p-12"
+			class="space-y-8 rounded-2xl bg-linear-to-br from-primary/40 to-accent/40 p-8 text-center sm:p-12"
 		>
 			<div class="flex flex-col gap-4">
 				<h2 class="text-3xl font-bold text-primary-foreground sm:text-4xl">

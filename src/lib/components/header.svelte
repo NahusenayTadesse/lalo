@@ -20,10 +20,10 @@
 
 		{ label: 'Products', href: '/shop' },
 		{ label: 'Recipes', href: '/recipes' },
-		{ label: 'Orders', href: '/orders' },
 
 		{ label: 'About Us', href: '/about-us' },
-		{ label: 'Contact Us', href: '/contact-us' }
+		{ label: 'Contact Us', href: '/contact-us' },
+		{ label: 'Orders', href: '/orders' }
 	];
 </script>
 

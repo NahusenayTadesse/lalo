@@ -73,13 +73,13 @@
 						<span>+251908454545</span>
 					</a>
 					<a
-						href="tel:+251908454545"
+						href="tel:+251902645724"
 						target="_blank"
 						rel="noopener noreferrer"
 						class="flex items-center gap-2 text-foreground/70"
 					>
 						<PhoneIcon class="size-4 shrink-0" />
-						<span>+251908454545</span>
+						<span>+251902645724</span>
 					</a>
 					<a
 						href="mailto:info@mohammedlaloie.com"

@@ -11,7 +11,7 @@
 	import { fly, fade } from 'svelte/transition';
 
 	const stats = [
-		{ label: 'Years Experience', value: '25+', icon: WheatIcon },
+		{ label: 'Years Experience', value: '8+', icon: WheatIcon },
 		{ label: 'Happy Bakeries', value: '100+', icon: ChefHatIcon },
 		{ label: 'Quality Products', value: '100+', icon: ShoppingBasketIcon }
 	];
@@ -22,7 +22,13 @@
 		'/bakery (2).webp',
 		'/bakery (3).webp',
 		'/bakery (4).webp',
-		'/bakery (5).webp'
+		'/bakery (5).webp',
+		'/bakery (6).webp',
+		'/bakery (7).webp',
+		'/bakery (8).webp',
+		'/bakery (9).webp',
+		'/bakery (10).webp',
+		'/bakery (11).webp'
 	];
 
 	let currentIndex = $state(0);
