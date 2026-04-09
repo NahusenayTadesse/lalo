@@ -12,34 +12,83 @@
 	import About from '$lib/components/about.svelte';
 	import Accordion from '$lib/components/accordion.svelte';
 	import Testimonial from '$lib/components/testimonial.svelte';
-	import { Coffee, Cog, Globe, Utensils, WashingMachine } from '@lucide/svelte';
+	import { Coffee, Cog, Globe, Utensils, WashingMachine, Building } from '@lucide/svelte';
 
-	// const groupedProducts = $derived(
-	// 	data?.productList.reduce((acc, product) => {
-	// 		const category = product.category || 'Uncategorized';
-	// 		if (!acc[category]) {
-	// 			acc[category] = [];
-	// 		}
-	// 		acc[category].push(product);
-	// 		return acc;
-	// 	}, {})
-	// );
-	//
-	const groupedProducts = $derived.by(() => {
-		const list = data?.productList ?? [];
-		const groups: Record<string, any[]> = {};
-
-		for (const item of list) {
-			const cat = item.category ?? 'Uncategorized';
-			if (!groups[cat]) groups[cat] = [];
-			groups[cat].push(item);
+	let partners = [
+		{
+			name: 'Lalo Coffee Exports',
+			description:
+				'Global commodity supply chain coordination and international logistics management.',
+			icon: Coffee,
+			short: 'LAL_EXP'
+		},
+		{
+			name: 'Fahem General Trading',
+			description:
+				'Diversified international trade operations across key industrial and material sectors.',
+			icon: Globe,
+			short: 'FAH_GEN'
+		},
+		{
+			name: 'Lalo Laundry',
+			description:
+				'Commercial-scale linen and textile services for major hospitality and industrial clients.',
+			icon: WashingMachine,
+			short: 'LAL_LAU'
+		},
+		{
+			name: 'Lalo Fixtec',
+			description:
+				'Professional-grade mechanical tools and bulk supply solutions for infrastructure, industrial, and distribution operations.',
+			icon: Cog,
+			short: 'LAL_FIX'
+		},
+		{
+			name: 'Lalo Cafe',
+			description:
+				'Curated beverage and food services integrated within corporate and commercial environments.',
+			icon: Utensils,
+			short: 'LAL_CAF'
+		},
+		{
+			name: 'Lalo Apartment',
+			description:
+				'Comprehensive residential property management services encompassing leasing, maintenance, and daily administrative operations.',
+			icon: Building,
+			short: 'LAL_APT'
 		}
-		return groups;
-	});
+	];
 </script>
 
 <svelte:head>
-	<title>Lalo Bakery</title>
+	<title>Lalo Bakery Solutions | Professional Bakery Supplies & Equipment</title>
+	<meta
+		name="description"
+		content="From MasterChef to Industry Leader. Lalo Bakery Solutions delivers excellence with a comprehensive portfolio of flours, yeasts, mixes, and equipment for professional bakeries."
+	/>
+	<meta
+		name="keywords"
+		content="Lalo Bakery Solutions, professional bakery supplies, wholesale flour, bakery equipment, MasterChef rebranding, industrial baking solutions"
+	/>
+
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content="Lalo Bakery Solutions: From MasterChef to Industry Leader" />
+	<meta
+		property="og:description"
+		content="Delivering excellence across every stage of production with premium ingredients and technical support."
+	/>
+	<meta property="og:image" content="/logo.webp" />
+
+	<meta property="twitter:card" content="summary_large_image" />
+	<meta
+		property="twitter:title"
+		content="Lalo Bakery Solutions | Industry-Leading Bakery Supplies"
+	/>
+	<meta
+		property="twitter:description"
+		content="Reliable supply chains and technical expertise for the modern bakery. Explore our journey from MasterChef to Lalo."
+	/>
+	<meta property="twitter:image" content="/logo.webp" />
 </svelte:head>
 
 <Hero />
@@ -60,151 +109,39 @@
 		</div>
 
 		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:gap-8">
-			<div
-				class="group relative flex flex-col gap-5 overflow-hidden rounded-2xl border border-border bg-card p-8 transition-all hover:border-primary/30 hover:shadow-xl"
-			>
+			{#each partners as p (p)}
 				<div
-					class="absolute inset-x-0 top-0 h-1 bg-primary opacity-0 transition group-hover:opacity-100"
-				></div>
-
-				<div class="flex items-center justify-between">
+					class="group relative flex flex-col gap-5 overflow-hidden rounded-2xl border border-border bg-card p-8 transition-all hover:border-primary/30 hover:shadow-xl"
+				>
 					<div
-						class="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary"
-					>
-						<Coffee class="size-7" />
+						class="absolute inset-x-0 top-0 h-1 bg-primary opacity-0 transition group-hover:opacity-100"
+					></div>
+
+					<div class="flex items-center justify-between">
+						<div
+							class="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary"
+						>
+							<p.icon class="size-7" />
+						</div>
+						<span class="text-xs font-bold tracking-widest text-muted-foreground/80 uppercase"
+							>{p.short}</span
+						>
 					</div>
-					<span class="text-xs font-bold tracking-widest text-muted-foreground/80 uppercase"
-						>LAL_EXP</span
-					>
-				</div>
 
-				<div class="flex-grow space-y-2">
-					<p class="text-2xl font-semibold tracking-tight text-foreground">Lalo Coffee Exports</p>
-					<p
-						class="line-clamp-2 text-sm leading-relaxed text-muted-foreground group-hover:line-clamp-none"
-					>
-						Global commodity supply chain coordination and international logistics management.
-					</p>
-				</div>
-			</div>
-
-			<div
-				class="group relative flex flex-col gap-5 overflow-hidden rounded-2xl border border-border bg-card p-8 transition-all hover:border-primary/30 hover:shadow-xl"
-			>
-				<div
-					class="absolute inset-x-0 top-0 h-1 bg-primary opacity-0 transition group-hover:opacity-100"
-				></div>
-
-				<div class="flex items-center justify-between">
-					<div
-						class="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary"
-					>
-						<Globe class="size-7" />
+					<div class="grow space-y-2">
+						<p class="text-2xl font-semibold tracking-tight text-foreground">{p.name}</p>
+						<p
+							class="line-clamp-2 text-sm leading-relaxed text-muted-foreground group-hover:line-clamp-none"
+						>
+							{p.description}
+						</p>
 					</div>
-					<span class="text-xs font-bold tracking-widest text-muted-foreground/80 uppercase"
-						>FAH_GEN</span
-					>
 				</div>
-
-				<div class="flex-grow space-y-2">
-					<p class="text-2xl font-semibold tracking-tight text-foreground">Fahem General Trading</p>
-					<p
-						class="line-clamp-2 text-sm leading-relaxed text-muted-foreground group-hover:line-clamp-none"
-					>
-						Diversified international trade operations across key industrial and material sectors.
-					</p>
-				</div>
-			</div>
-
-			<div
-				class="group relative flex flex-col gap-5 overflow-hidden rounded-2xl border border-border bg-card p-8 transition-all hover:border-primary/30 hover:shadow-xl"
-			>
-				<div
-					class="absolute inset-x-0 top-0 h-1 bg-primary opacity-0 transition group-hover:opacity-100"
-				></div>
-
-				<div class="flex items-center justify-between">
-					<div
-						class="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary"
-					>
-						<WashingMachine class="size-7" />
-					</div>
-					<span class="text-xs font-bold tracking-widest text-muted-foreground/80 uppercase"
-						>LAL_LAU</span
-					>
-				</div>
-
-				<div class="flex-grow space-y-2">
-					<p class="text-2xl font-semibold tracking-tight text-foreground">Lalo Laundry</p>
-					<p
-						class="line-clamp-2 text-sm leading-relaxed text-muted-foreground group-hover:line-clamp-none"
-					>
-						Commercial-scale linen and textile services for major hospitality and industrial
-						clients.
-					</p>
-				</div>
-			</div>
-
-			<div
-				class="group relative flex flex-col gap-5 overflow-hidden rounded-2xl border border-border bg-card p-8 transition-all hover:border-primary/30 hover:shadow-xl"
-			>
-				<div
-					class="absolute inset-x-0 top-0 h-1 bg-primary opacity-0 transition group-hover:opacity-100"
-				></div>
-
-				<div class="flex items-center justify-between">
-					<div
-						class="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary"
-					>
-						<Cog class="size-7" />
-					</div>
-					<span class="text-xs font-bold tracking-widest text-muted-foreground/80 uppercase"
-						>LAL_FIC</span
-					>
-				</div>
-
-				<div class="flex-grow space-y-2">
-					<p class="text-2xl font-semibold tracking-tight text-foreground">Lalo Fixtec</p>
-					<p
-						class="line-clamp-2 text-sm leading-relaxed text-muted-foreground group-hover:line-clamp-none"
-					>
-						Professional-grade mechanical tools and bulk supply solutions for infrastructure,
-						industrial, and distribution operations.
-					</p>
-				</div>
-			</div>
-
-			<div
-				class="group relative flex flex-col gap-5 overflow-hidden rounded-2xl border border-border bg-card p-8 transition-all hover:border-primary/30 hover:shadow-xl md:col-span-2 lg:col-span-1"
-			>
-				<div
-					class="absolute inset-x-0 top-0 h-1 bg-primary opacity-0 transition group-hover:opacity-100"
-				></div>
-
-				<div class="flex items-center justify-between">
-					<div
-						class="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary"
-					>
-						<Utensils class="size-7" />
-					</div>
-					<span class="text-xs font-bold tracking-widest text-muted-foreground/80 uppercase"
-						>LAL_CAF</span
-					>
-				</div>
-
-				<div class="flex-grow space-y-2">
-					<p class="text-2xl font-semibold tracking-tight text-foreground">Lalo Cafe</p>
-					<p
-						class="line-clamp-2 text-sm leading-relaxed text-muted-foreground group-hover:line-clamp-none"
-					>
-						Curated beverage and food services integrated within corporate and commercial
-						environments.
-					</p>
-				</div>
-			</div>
+			{/each}
 		</div>
 	</div>
 </section>
+
 {#if data?.allPaymentMethods.length > 0}
 	<main class="flex flex-col items-center justify-center px-4 py-12 md:py-20">
 		<!-- Section Header -->

@@ -73,7 +73,7 @@
 			<div class="mb-3 flex items-center justify-between">
 				<div class="flex items-center gap-3 overflow-hidden">
 					<div
-						class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
+						class="flex h-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
 					>
 						{#if image.toLowerCase().endsWith('.pdf')}
 							<FileText class="h-5 w-5" />

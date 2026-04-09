@@ -89,44 +89,55 @@
 </script>
 
 <svelte:head>
-	<title>Shop - Amy Bakes</title>
-
+	<title>Wholesale Catalog | Ingredients & Equipment | Lalo Bakery Solutions</title>
 	<meta
 		name="description"
-		content="Shop the Amy Bakes collection. From our signature 'Less Guilt' muffins to authentic American-style chewy cookies, experience quality baked with business precision."
+		content="Browse our professional portfolio: premium flours, yeasts, improvers, mixes, and specialty baking equipment designed for industrial excellence."
 	/>
 	<meta
 		name="keywords"
-		content="buy cookies online, healthy muffins, Amy Bakes shop, American style cookies, freshly baked goods, Melela Partners treats"
+		content="buy wholesale flour, bakery improvers, commercial yeast, bakery equipment supplier, bulk baking mixes"
 	/>
 
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="Shop Amy Bakes: The Business of Baking" />
+	<meta property="og:title" content="Shop Professional Bakery Supplies | Lalo Bakery Solutions" />
 	<meta
 		property="og:description"
-		content="Treat yourself to our 'Less Guilt' muffins and authentic American-style chewy cookies. Hand-crafted with heart and precision."
+		content="Equip your bakery with high-performance ingredients and machinery. Quality backed by technical support."
 	/>
-	<meta property="og:image" content="/files/cookie.webp" />
+	<meta property="og:image" content="/files/demo.webp" />
 
 	<meta property="twitter:card" content="summary_large_image" />
-	<meta property="twitter:title" content="Shop Amy Bakes | Freshly Baked Cookies & Muffins" />
-	<meta
-		property="twitter:description"
-		content="Experience the perfect balance of heart and precision. Shop our signature baked goods online."
-	/>
-	<meta property="twitter:image" content="/files/cookie.webp" />
+	<meta property="twitter:title" content="Lalo Bakery Solutions | Wholesale Product Catalog" />
+	<meta property="twitter:image" content="/files/demo.webp" />
 </svelte:head>
+
+<section
+	class="relative flex h-96 flex-col items-center justify-center overflow-hidden border-b bg-contain bg-center px-6 py-20 lg:px-8"
+	style="background-image: url('/files/demo.webp')"
+>
+	<div class="backdrop-blur-xm absolute inset-0 bg-black/40"></div>
+
+	<div class="relative mx-auto max-w-4xl text-center">
+		<h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-white lg:text-5xl">
+			Products & Solutions
+		</h1>
+		<p class="mt-6 text-2xl leading-8 font-bold text-gray-100 text-shadow-sm">
+			Browse our collection of bakery products and solutions.
+		</p>
+	</div>
+</section>
 
 <div class="min-h-dvh bg-background pb-8 text-foreground transition-colors duration-300">
 	<!-- Header -->
 	<header class="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-sm">
 		<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-			<div class="mb-6 flex items-center justify-between">
+			<!-- <div class="mb-6 flex items-center justify-between">
 				<div>
 					<h1 class="text-3xl font-bold">Shop</h1>
 					<p class="mt-1 text-muted-foreground">Browse our collection of Baked Goods</p>
 				</div>
-			</div>
+			</div> -->
 
 			<!-- Search Bar -->
 			<div class="relative">
@@ -249,7 +260,7 @@
 				{#if filteredProducts.length > 0}
 					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
 						{#each filteredProducts as product (product.productId)}
-							<div class="animate-in fade-in duration-300">
+							<div class="animate-in duration-300 fade-in">
 								<ProductCard {...product} />
 							</div>
 						{/each}

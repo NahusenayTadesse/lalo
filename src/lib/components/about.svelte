@@ -118,7 +118,7 @@
 		</div>
 
 		<!-- Lalo Business Group -->
-		<div
+		<!-- <div
 			transition:fly={{ y: 20, duration: 600, delay: 400 }}
 			class="shadow-lg-lg relative overflow-hidden rounded-lg border border-primary/20"
 			style="background-image: url('/bakery (4).webp'); background-size: contain; background-position: center;"
@@ -150,6 +150,6 @@
 					</div>
 				</CardContent>
 			</Card>
-		</div>
+		</div> -->
 	</div>
 </section>

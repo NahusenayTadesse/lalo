@@ -46,7 +46,34 @@
 </script>
 
 <svelte:head>
-	<title>About Us - Lalo Bakery</title>
+	<title>About Us | Professional Bakery Supplies & Equipment</title>
+	<meta
+		name="description"
+		content="From MasterChef to Industry Leader. Lalo Bakery Solutions delivers excellence with a comprehensive portfolio of flours, yeasts, mixes, and equipment for professional bakeries."
+	/>
+	<meta
+		name="keywords"
+		content="Lalo Bakery Solutions, professional bakery supplies, wholesale flour, bakery equipment, MasterChef rebranding, industrial baking solutions"
+	/>
+
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content="Lalo Bakery Solutions: From MasterChef to Industry Leader" />
+	<meta
+		property="og:description"
+		content="Delivering excellence across every stage of production with premium ingredients and technical support."
+	/>
+	<meta property="og:image" content="/logo.webp" />
+
+	<meta property="twitter:card" content="summary_large_image" />
+	<meta
+		property="twitter:title"
+		content="Lalo Bakery Solutions | Industry-Leading Bakery Supplies"
+	/>
+	<meta
+		property="twitter:description"
+		content="Reliable supply chains and technical expertise for the modern bakery. Explore our journey from MasterChef to Lalo."
+	/>
+	<meta property="twitter:image" content="/logo.webp" />
 </svelte:head>
 
 <section

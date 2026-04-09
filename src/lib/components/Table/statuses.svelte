@@ -25,6 +25,7 @@
 		/* pending */
 		pending: { icon: Loader, colour: 'bg-yellow-500' },
 		delivered: { icon: BadgeCheck, colour: 'bg-green-400' },
+		read: { icon: BadgeCheck, colour: 'bg-green-400' },
 
 		/* active */
 		active: { icon: BadgeCheck, colour: 'bg-green-400' },

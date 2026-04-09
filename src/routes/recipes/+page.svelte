@@ -40,29 +40,52 @@
 	};
 </script>
 
+<svelte:head>
+	<title>Recipes & Applications | Lalo Bakery Solutions</title>
+	<meta
+		name="description"
+		content="Expert-crafted recipes and technical guides using Lalo ingredients. Support your creation of products that meet market demands and stand out for excellence."
+	/>
+	<meta
+		name="keywords"
+		content="professional bakery recipes, industrial baking guides, technical baking support, commercial bread formulas"
+	/>
+
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content="Lalo Bakery Solutions | Technical Support & Recipes" />
+	<meta
+		property="og:description"
+		content="Master your production with our industry-tested formulas and specialty product applications."
+	/>
+	<meta property="og:image" content="/bakery (13).webp" />
+
+	<meta property="twitter:card" content="summary_large_image" />
+	<meta property="twitter:title" content="Professional Baking Formulas | Lalo Bakery Solutions" />
+	<meta property="twitter:image" content="/bakery (13).webp" />
+</svelte:head>
+
 <div class="min-h-dvh bg-background text-foreground transition-colors duration-300">
-	<!-- Header -->
-	<header class="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-sm">
-		<div
-			class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8"
-		>
-			<div class="flex items-center gap-2">
-				<div class="rounded-lg bg-primary p-2">
-					<ChefHat class="size-6 text-primary-foreground" />
-				</div>
-				<h1 class="text-2xl font-bold">RecipeHub</h1>
-			</div>
+	<section
+		class="relative flex h-96 flex-col items-center justify-center overflow-hidden border-b bg-contain bg-center px-6 py-20 lg:px-8"
+		style="background-image: url('/bakery (13).webp')"
+	>
+		<div class="backdrop-blur-xm absolute inset-0 bg-black/40"></div>
+
+		<div class="relative mx-auto max-w-4xl text-center">
+			<h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-white lg:text-5xl">
+				Recipes
+			</h1>
+			<p class="mt-6 text-2xl leading-8 font-bold text-gray-100 text-shadow-sm">
+				Browse our collection of delicious recipes
+			</p>
 		</div>
-	</header>
+	</section>
+	<!-- Header -->
 
 	<!-- Main Content -->
-	<main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+	<main class="mx-auto my-4 max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 		<!-- Search Section -->
 		<div class="mb-8 flex flex-col gap-4">
-			<div class="flex flex-col gap-2">
-				<h2 class="text-3xl font-bold">Discover Recipes</h2>
-				<p class="text-muted-foreground">Browse our collection of delicious recipes</p>
-			</div>
 			<div class="relative">
 				<SearchIcon class="absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground" />
 				<Input type="text" placeholder="Search recipes..." bind:value={searchQuery} class="pl-10" />

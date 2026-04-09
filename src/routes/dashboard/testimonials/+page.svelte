@@ -48,6 +48,7 @@
 					position: row.original.position,
 					testimonial: row.original.testimonial,
 					action: '?/edit',
+					avatar: row.original.avatar,
 					data: data.editForm,
 					icon: false
 				});
@@ -102,6 +103,7 @@
 					testimonial: row.original.testimonial,
 					action: '?/edit',
 					data: data.editForm,
+					avatar: row.original.avatar,
 					icon: true
 				});
 			}

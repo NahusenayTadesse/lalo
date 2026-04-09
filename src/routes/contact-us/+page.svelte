@@ -76,7 +76,27 @@
 </script>
 
 <svelte:head>
-	<title>Contact Us - Lalo Bakery</title>
+	<title>Partner With Us | Contact Lalo Bakery Solutions</title>
+	<meta
+		name="description"
+		content="Connect with Lalo Bakery Solutions for reliable supply, technical support, and tailored bakery business solutions. Let’s grow your bakery together."
+	/>
+	<meta
+		name="keywords"
+		content="contact Lalo Bakery Solutions, bakery supply partnership, wholesale inquiry, technical support for bakeries"
+	/>
+
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content="Contact Lalo Bakery Solutions | Expert Support" />
+	<meta
+		property="og:description"
+		content="Reach out to our team for industry knowledge, product inquiries, and dedicated customer satisfaction."
+	/>
+	<meta property="og:image" content="/logo.webp" />
+
+	<meta property="twitter:card" content="summary_large_image" />
+	<meta property="twitter:title" content="Lalo Bakery Solutions | Get in Touch" />
+	<meta property="twitter:image" content="/logo.webp" />
 </svelte:head>
 
 <div class="min-h-dvh w-full bg-background text-foreground transition-colors">
@@ -229,7 +249,6 @@
 							<span class="text-muted-foreground">Saturday</span>
 							<span class="font-semibold">8:30 AM - 4:00 PM</span>
 						</div>
-					
 					</CardContent>
 				</Card>
 			</div>
