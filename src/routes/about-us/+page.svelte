@@ -3,17 +3,12 @@
 	import { ArrowRightIcon } from '@lucide/svelte';
 	import { CheckCircleIcon, ShieldCheckIcon, HeartHandshakeIcon } from '@lucide/svelte';
 	import { WheatIcon, BadgeCheckIcon, ToolCase, BookOpenIcon } from '@lucide/svelte';
-	import { BuildingIcon, CoffeeIcon, LeafIcon, Send } from '@lucide/svelte';
+	import { LeafIcon, Send } from '@lucide/svelte';
 	import { PhoneIcon } from '@lucide/svelte';
 	import FAQ from '$lib/components/faq.svelte';
+	import { Coffee, Cog, Globe, Utensils, WashingMachine, Building } from '@lucide/svelte';
 
-	import {
-		Card,
-		CardContent,
-		CardDescription,
-		CardHeader,
-		CardTitle
-	} from '$lib/components/ui/card';
+	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 
 	import { IconBrandFacebook, IconBrandInstagram, IconBrandTiktok } from '@tabler/icons-svelte';
 
@@ -41,6 +36,51 @@
 			url: 'https://t.me/LaloBakery',
 			icon: Send,
 			color: 'hover:text-blue-400'
+		}
+	];
+
+	const partners = [
+		{
+			name: 'Lalo Coffee Exports',
+			description:
+				'Leading global commodity supply chain coordination specializing in premium coffee sourcing. We manage end-to-end international logistics, ensuring quality control and traceability from farm-gate to global markets.',
+			icon: Coffee,
+			short: 'LAL_EXP'
+		},
+		{
+			name: 'Fahem General Trading',
+			description:
+				'A powerhouse in diversified international trade, managing complex import-export operations across key industrial, material, and consumer sectors. We leverage a robust global network to bridge supply gaps in emerging markets.',
+			icon: Globe,
+			short: 'FAH_GEN'
+		},
+		{
+			name: 'Lalo Laundry',
+			description:
+				'High-capacity commercial textile solutions utilizing state-of-the-art cleaning technology. We provide specialized linen management and garment care for the hospitality, healthcare, and industrial sectors with a focus on hygiene and longevity.',
+			icon: WashingMachine,
+			short: 'LAL_LAU'
+		},
+		{
+			name: 'Lalo Fixtec',
+			description:
+				'A premier distributor of professional-grade mechanical tools and heavy-duty equipment. We provide bulk supply solutions and technical support for large-scale infrastructure, manufacturing, and industrial construction projects.',
+			icon: Cog,
+			short: 'LAL_FIX'
+		},
+		{
+			name: 'Lalo Cafe',
+			description:
+				'Elevating the corporate hospitality experience through curated beverage and artisanal food services. Our locations serve as high-end communal hubs integrated within commercial environments to foster networking and productivity.',
+			icon: Utensils,
+			short: 'LAL_CAF'
+		},
+		{
+			name: 'Lalo Apartment',
+			description:
+				'A full-service residential property management firm dedicated to optimizing asset value. We oversee the entire lifecycle of multi-family units, including strategic leasing, preventative maintenance, and premium tenant relations.',
+			icon: Building,
+			short: 'LAL_APT'
 		}
 	];
 </script>
@@ -397,7 +437,7 @@
 	</div>
 </section>
 
-<section class="bg-gradient-to-b from-transparent via-accent/5 to-transparent px-4 py-20 sm:py-32">
+<section class="bg-linear-to-b from-transparent via-accent/5 to-transparent px-4 py-20 sm:py-32">
 	<div class="mx-auto max-w-5xl">
 		<div class="mb-16 text-center">
 			<h2 class="mb-4 text-3xl font-bold sm:text-4xl">Certifications & Compliance</h2>
@@ -452,7 +492,7 @@
 	</div>
 </section>
 
-<section
+<!-- <section
 	class="relative z-0 px-4 py-20 sm:py-32"
 	style="background-image: url('/bakery (10).webp'); background-size: cover; background-position: center;"
 >
@@ -526,6 +566,54 @@
 					</p>
 				</CardContent>
 			</Card>
+		</div>
+	</div>
+</section> -->
+
+<section
+	class="relative z-0 mx-auto max-w-full border-t border-border/50 bg-background bg-cover bg-center px-6 py-24 md:py-32"
+	style="background-image: url('/bakery (8).webp');"
+>
+	<div class="absolute inset-0 -z-1 bg-black/60"></div>
+	<div class="mx-auto max-w-7xl">
+		<div class="mb-16 md:mb-20">
+			<h3
+				class="mt-4 max-w-4xl text-4xl font-semibold tracking-tighter text-white sm:text-5xl lg:text-6xl"
+			>
+				Our <span class="text-primary">Varied Partners</span>
+			</h3>
+		</div>
+
+		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:gap-8">
+			{#each partners as p (p)}
+				<div
+					class="group relative flex flex-col gap-5 overflow-hidden rounded-2xl border border-border bg-card p-8 transition-all hover:border-primary/30 hover:shadow-xl"
+				>
+					<div
+						class="absolute inset-x-0 top-0 h-1 bg-primary opacity-0 transition group-hover:opacity-100"
+					></div>
+
+					<div class="flex items-center justify-between">
+						<div
+							class="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary"
+						>
+							<p.icon class="size-7" />
+						</div>
+						<span class="text-xs font-bold tracking-widest text-muted-foreground/80 uppercase"
+							>{p.short}</span
+						>
+					</div>
+
+					<div class="grow space-y-2">
+						<p class="text-2xl font-semibold tracking-tight text-foreground">{p.name}</p>
+						<p
+							class=" text-sm leading-relaxed text-muted-foreground transition-all duration-300 ease-in-out"
+						>
+							{p.description}
+						</p>
+					</div>
+				</div>
+			{/each}
 		</div>
 	</div>
 </section>
