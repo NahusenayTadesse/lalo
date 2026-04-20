@@ -1,18 +1,23 @@
 <script lang="ts">
 	import { useCart } from '$lib/hooks/cart.svelte.js';
 
-	import ProductCard from '$lib/components/product-card.svelte';
-
 	// Set app and cart hooks
 	useCart();
 	let { data } = $props();
 
-	import * as Carousel from '$lib/components/ui/carousel/index.js';
 	import Hero from '$lib/components/hero.svelte';
 	import About from '$lib/components/about.svelte';
 	import Accordion from '$lib/components/accordion.svelte';
 	import Testimonial from '$lib/components/testimonial.svelte';
-	import { Coffee, Cog, Globe, Utensils, WashingMachine, Building } from '@lucide/svelte';
+	import {
+		Coffee,
+		Croissant,
+		Cog,
+		Globe,
+		Utensils,
+		WashingMachine,
+		Building
+	} from '@lucide/svelte';
 
 	let partners = [
 		{
@@ -21,6 +26,13 @@
 				'Global commodity supply chain coordination and international logistics management.',
 			icon: Coffee,
 			short: 'LAL_EXP'
+		},
+		{
+			name: 'Lalo Bakery',
+			description:
+				'A bakery experience focused on handcrafted pastries, expertly brewed coffee, and high-quality ingredients sourced with care.',
+			icon: Croissant,
+			short: 'LAL_BAK'
 		},
 		{
 			name: 'Fahem General Trading',

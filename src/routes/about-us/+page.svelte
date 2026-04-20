@@ -6,7 +6,15 @@
 	import { LeafIcon, Send } from '@lucide/svelte';
 	import { PhoneIcon } from '@lucide/svelte';
 	import FAQ from '$lib/components/faq.svelte';
-	import { Coffee, Cog, Globe, Utensils, WashingMachine, Building } from '@lucide/svelte';
+	import {
+		Coffee,
+		Microwave,
+		Croissant,
+		Globe,
+		Utensils,
+		WashingMachine,
+		Building
+	} from '@lucide/svelte';
 
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 
@@ -39,46 +47,53 @@
 		}
 	];
 
-	const partners = [
+	let partners = [
 		{
 			name: 'Lalo Coffee Exports',
 			description:
-				'Leading global commodity supply chain coordination specializing in premium coffee sourcing. We manage end-to-end international logistics, ensuring quality control and traceability from farm-gate to global markets.',
+				'A premier global commodity partner specializing in vertical supply chain coordination. We manage complex international logistics and quality assurance protocols to deliver high-grade coffee from origin to global roasters.',
 			icon: Coffee,
 			short: 'LAL_EXP'
 		},
 		{
+			name: 'Lalo Bakery',
+			description:
+				'A bakery experience centered on handcrafted pastries, expertly brewed coffee, and thoughtfully sourced, high-quality ingredients—bringing together rich flavors, warm aromas, and a simple moment to slow down and enjoy.',
+			icon: Croissant,
+			short: 'LAL_BAK'
+		},
+		{
 			name: 'Fahem General Trading',
 			description:
-				'A powerhouse in diversified international trade, managing complex import-export operations across key industrial, material, and consumer sectors. We leverage a robust global network to bridge supply gaps in emerging markets.',
+				'A diversified trade powerhouse managing cross-border operations for critical industrial materials and raw goods. We bridge international markets through strategic sourcing, risk management, and robust distribution networks.',
 			icon: Globe,
 			short: 'FAH_GEN'
 		},
 		{
 			name: 'Lalo Laundry',
 			description:
-				'High-capacity commercial textile solutions utilizing state-of-the-art cleaning technology. We provide specialized linen management and garment care for the hospitality, healthcare, and industrial sectors with a focus on hygiene and longevity.',
+				'Providing industrial-strength textile care and linen management solutions. We utilize high-capacity automation and eco-friendly processes to meet the rigorous hygiene and volume requirements of the hospitality and healthcare sectors.',
 			icon: WashingMachine,
 			short: 'LAL_LAU'
 		},
 		{
-			name: 'Lalo Fixtec',
+			name: 'Lalo Bakery Solutions',
 			description:
-				'A premier distributor of professional-grade mechanical tools and heavy-duty equipment. We provide bulk supply solutions and technical support for large-scale infrastructure, manufacturing, and industrial construction projects.',
-			icon: Cog,
-			short: 'LAL_FIX'
+				'End-to-end support for the commercial baking industry, offering advanced machinery, premium ingredients, and optimized production workflows designed to scale output while maintaining artisanal quality.',
+			icon: Microwave,
+			short: 'LAL_BAK'
 		},
 		{
 			name: 'Lalo Cafe',
 			description:
-				'Elevating the corporate hospitality experience through curated beverage and artisanal food services. Our locations serve as high-end communal hubs integrated within commercial environments to foster networking and productivity.',
+				'Specializing in the integration of premium food and beverage concepts within corporate ecosystems. We design and operate high-end social hubs that enhance workplace culture and provide superior hospitality experiences.',
 			icon: Utensils,
 			short: 'LAL_CAF'
 		},
 		{
 			name: 'Lalo Apartment',
 			description:
-				'A full-service residential property management firm dedicated to optimizing asset value. We oversee the entire lifecycle of multi-family units, including strategic leasing, preventative maintenance, and premium tenant relations.',
+				'A modern residential property management firm focused on asset optimization. We handle the full spectrum of operations, from strategic leasing and tenant retention to preventative maintenance and financial reporting.',
 			icon: Building,
 			short: 'LAL_APT'
 		}
