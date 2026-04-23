@@ -9,6 +9,7 @@
 	import About from '$lib/components/about.svelte';
 	import Accordion from '$lib/components/accordion.svelte';
 	import Testimonial from '$lib/components/testimonial.svelte';
+
 	import {
 		Coffee,
 		Croissant,
@@ -18,6 +19,8 @@
 		WashingMachine,
 		Building
 	} from '@lucide/svelte';
+	import Slider from '$lib/components/slider.svelte';
+	import Catalog from '$lib/components/catalog.svelte';
 
 	let partners = [
 		{
@@ -116,7 +119,7 @@
 			<h3
 				class="mt-4 max-w-4xl text-4xl font-semibold tracking-tighter text-white sm:text-5xl lg:text-6xl"
 			>
-				Our <span class="text-primary">Partners</span>
+				Our <span class="text-primary">Subsidiaries</span>
 			</h3>
 		</div>
 
@@ -154,6 +157,8 @@
 	</div>
 </section>
 
+<Slider imagesList={data?.imagesList} />
+
 {#if data?.allPaymentMethods.length > 0}
 	<main class="flex flex-col items-center justify-center px-4 py-12 md:py-20">
 		<!-- Section Header -->
@@ -170,3 +175,5 @@
 {/if}
 
 <Accordion />
+
+<Catalog files={data?.files} />

@@ -1,11 +1,21 @@
 import { db } from '$lib/server/db';
-import { user, roles } from '$lib/server/db/schema';
+import { user, roles, gallery, catalogManual } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	const currentUser = locals?.user;
 	let roleName = ''; // Initialize with a default value
+
+	const images = await db.select().from(gallery);
+
+	const imagesList = images.map((img) => img.imageUrl);
+
+	const files = await db
+		.select()
+		.from(catalogManual)
+		.limit(1)
+		.then((rows) => rows[0]);
 
 	// 1. Fetch the role name if a user exists
 	if (currentUser) {
@@ -53,6 +63,8 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	// 3. Return everything at once
 	return {
 		roleName,
-		user: currentUser
+		user: currentUser,
+		imagesList,
+		files
 	};
 };

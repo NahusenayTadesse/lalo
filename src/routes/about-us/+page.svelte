@@ -6,6 +6,7 @@
 	import { LeafIcon, Send } from '@lucide/svelte';
 	import { PhoneIcon } from '@lucide/svelte';
 	import FAQ from '$lib/components/faq.svelte';
+
 	import {
 		Coffee,
 		Microwave,
@@ -19,6 +20,8 @@
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
 
 	import { IconBrandFacebook, IconBrandInstagram, IconBrandTiktok } from '@tabler/icons-svelte';
+	import Slider from '$lib/components/slider.svelte';
+	import Catalog from '$lib/components/catalog.svelte';
 
 	const socialLinks = [
 		{
@@ -98,6 +101,8 @@
 			short: 'LAL_APT'
 		}
 	];
+
+	let { data } = $props();
 </script>
 
 <svelte:head>
@@ -507,84 +512,6 @@
 	</div>
 </section>
 
-<!-- <section
-	class="relative z-0 px-4 py-20 sm:py-32"
-	style="background-image: url('/bakery (10).webp'); background-size: cover; background-position: center;"
->
-	<div class="absolute inset-0 -z-1 bg-black/40"></div>
-	<div class="z-1 mx-auto max-w-5xl">
-		<div class="mb-16 text-center">
-			<h2 class="mb-4 text-3xl font-bold text-white sm:text-4xl">Part of a Diversified Group</h2>
-			<p class="mx-auto max-w-2xl text-lg text-white/90">
-				Integrated solutions from our sister companies to support your business growth
-			</p>
-		</div>
-
-		<div class="mb-8">
-			<p class="mb-12 text-center text-white/90">
-				As part of a diversified trading group, we work alongside industry leaders to deliver
-				integrated, cross-industry solutions that support business growth from the ground up.
-			</p>
-		</div>
-
-		<div class="grid gap-8 md:grid-cols-3">
-			<Card
-				class="hover:shadow-lg-lg hover:shadow-lg-primary/10 border-primary/20 transition-all duration-300"
-			>
-				<CardHeader>
-					<div class="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
-						<BuildingIcon class="size-6 text-primary" />
-					</div>
-					<CardTitle>Lalo General Trading</CardTitle>
-					<CardDescription>Parent Company</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<p class="text-sm text-foreground/70">
-						The esteemed foundation of our group, providing strategic direction and comprehensive
-						business solutions across multiple industries.
-					</p>
-				</CardContent>
-			</Card>
-
-			<Card
-				class="hover:shadow-lg-lg hover:shadow-lg-primary/10 border-primary/20 transition-all duration-300"
-			>
-				<CardHeader>
-					<div class="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
-						<BuildingIcon class="size-6 text-primary" />
-					</div>
-					<CardTitle>Fixtec</CardTitle>
-					<CardDescription>Hand & Bar Tools</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<p class="text-sm text-foreground/70">
-						Specializing in high-quality hand and bar tools, providing the equipment needed for
-						precision work across various industries.
-					</p>
-				</CardContent>
-			</Card>
-
-			<Card
-				class="hover:shadow-lg-lg hover:shadow-lg-primary/10 border-primary/20 transition-all duration-300"
-			>
-				<CardHeader>
-					<div class="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
-						<CoffeeIcon class="size-6 text-primary" />
-					</div>
-					<CardTitle>Fahem General Trading</CardTitle>
-					<CardDescription>Coffee & Agrochemicals</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<p class="text-sm text-foreground/70">
-						A leading name in coffee export, agrochemical, veterinary products, tires, inner tubes,
-						and coffee drying mesh imports.
-					</p>
-				</CardContent>
-			</Card>
-		</div>
-	</div>
-</section> -->
-
 <section
 	class="relative z-0 mx-auto max-w-full border-t border-border/50 bg-background bg-cover bg-center px-6 py-24 md:py-32"
 	style="background-image: url('/bakery (8).webp');"
@@ -595,7 +522,7 @@
 			<h3
 				class="mt-4 max-w-4xl text-4xl font-semibold tracking-tighter text-white sm:text-5xl lg:text-6xl"
 			>
-				Our <span class="text-primary">Varied Partners</span>
+				Our <span class="text-primary">Varied Subsidiaries</span>
 			</h3>
 		</div>
 
@@ -633,6 +560,9 @@
 	</div>
 </section>
 
+<Slider imagesList={data?.imagesList} />
+
+<Catalog files={data?.files} />
 <FAQ />
 
 <section

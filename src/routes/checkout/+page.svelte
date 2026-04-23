@@ -5,11 +5,9 @@
 	import {
 		ShoppingCartIcon,
 		CreditCard,
-		ShieldCheck,
 		Package,
 		ArrowLeft,
 		UserRoundPlus,
-		User2,
 		User
 	} from '@lucide/svelte';
 	import CartItem from '$lib/components/floating-cart/cart-item.svelte';
@@ -28,7 +26,7 @@
 	const formatPrice = (price: number) => {
 		return new Intl.NumberFormat('en-US', {
 			style: 'currency',
-			currency: 'USD'
+			currency: 'ETB'
 		}).format(price);
 	};
 

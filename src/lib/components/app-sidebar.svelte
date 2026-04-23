@@ -14,7 +14,9 @@
 		OctagonMinus,
 		ListOrdered,
 		CookingPot,
-		Star
+		Star,
+		Building2,
+		BookDown
 	} from '@lucide/svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
@@ -72,6 +74,18 @@
 			title: 'Testimonials  ',
 			url: '/dashboard/testimonials',
 			icon: Star
+		},
+
+		{
+			title: 'Partner Logos  ',
+			url: '/dashboard/logos',
+			icon: Building2
+		},
+
+		{
+			title: 'Catalog & Manual',
+			url: '/dashboard/catalog',
+			icon: BookDown
 		},
 		{
 			title: 'Reports',

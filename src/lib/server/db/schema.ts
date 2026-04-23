@@ -184,4 +184,14 @@ export const testimonials = mysqlTable('testimonials', {
 	...secureFields
 });
 
+export const gallery = mysqlTable('gallery', {
+	id: int('id').primaryKey().autoincrement(),
+	imageUrl: varchar('image_url', { length: 255 })
+});
+
+export const catalogManual = mysqlTable('catalog_manual', {
+	catalog: varchar('catalog', { length: 255 }),
+	manual: varchar('manual', { length: 255 })
+});
+
 export * from './auth.schema';
