@@ -171,6 +171,7 @@ export const contactMessages = mysqlTable('contact_messages', {
 	phone: varchar('phone', { length: 20 }),
 	subject: varchar('subject', { length: 255 }).notNull(),
 	message: text('message').notNull(),
+	address: varchar('address', { length: 255 }),
 	seen: boolean('seen').default(false),
 	createdAt: timestamp('created_at').defaultNow().notNull()
 });

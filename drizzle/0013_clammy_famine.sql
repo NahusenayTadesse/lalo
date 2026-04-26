@@ -1,0 +1,1 @@
+ALTER TABLE `contact_messages` ADD `address` varchar(255);

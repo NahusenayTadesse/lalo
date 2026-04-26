@@ -158,6 +158,14 @@
 								label="Subject"
 								placeholder="What is this about?"
 							/>
+							<InputComp
+								{form}
+								{errors}
+								type="text"
+								name="address"
+								label="Address"
+								placeholder="Enter your address"
+							/>
 
 							<InputComp
 								{form}

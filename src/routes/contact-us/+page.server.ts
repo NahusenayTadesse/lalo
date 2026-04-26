@@ -23,12 +23,12 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: 'Please check the form for Errors' });
 		}
 
-		const { name, phoneNumber, email, subject, contactMessage } = form.data;
+		const { name, phoneNumber, email, subject, contactMessage, address } = form.data;
 
 		try {
 			await db
 				.insert(contactMessages)
-				.values({ name, phone: phoneNumber, email, subject, message: contactMessage });
+				.values({ name, phone: phoneNumber, email, subject, message: contactMessage, address });
 
 			const adminMail = adminContactTemplate(form.data);
 			sendEmail(USER, adminMail.subject, adminMail.html);

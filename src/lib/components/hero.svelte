@@ -12,7 +12,7 @@
 
 	const stats = [
 		{ label: 'Years Experience', value: '8+', icon: WheatIcon },
-		{ label: 'Happy Bakeries', value: '100+', icon: ChefHatIcon },
+		{ label: 'Happy Bakeries', value: '150+', icon: ChefHatIcon },
 		{ label: 'Quality Products', value: '100+', icon: ShoppingBasketIcon }
 	];
 

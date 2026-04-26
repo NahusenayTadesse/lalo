@@ -5,16 +5,16 @@
 	// Svelte 5 uses runes for state
 
 	interface Props {
-		files: {
-			catalog: string | null;
-			manual: string | null;
+		files?: {
+			catalog?: string | null;
+			manual?: string | null;
 		};
 	}
 
 	let { files }: Props = $props();
 </script>
 
-{#if files.catalog || files.manual}
+{#if files}
 	<section class="flex min-h-[60vh] flex-col items-center justify-center px-4 py-12 text-center">
 		<div class="max-w-3xl space-y-6">
 			<div class="space-y-2">

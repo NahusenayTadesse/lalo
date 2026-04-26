@@ -560,9 +560,11 @@
 	</div>
 </section>
 
-<Slider imagesList={data?.imagesList} />
+{#if data?.imagesList?.length > 0}
+	<Slider imagesList={data.imagesList} />
+{/if}
+{#if data?.files}<Catalog files={data?.files} />{/if}
 
-<Catalog files={data?.files} />
 <FAQ />
 
 <section

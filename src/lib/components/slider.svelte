@@ -3,13 +3,13 @@
 	import Autoplay from 'embla-carousel-autoplay';
 	const plugin = Autoplay({ delay: 1000, stopOnInteraction: true });
 
-	let { imagesList = [] }: { imagesList: string[] } = $props();
+	let { imagesList = [] }: { imagesList: (string | null)[] } = $props();
 </script>
 
 <section
-	class="relative z-0 mx-auto max-w-full border-t border-border/50 bg-background bg-cover bg-center px-6 py-24 md:py-32"
+	class="relative z-0 mx-auto max-w-full border-t border-border/50 bg-background bg-cover bg-center py-24 md:py-32 lg:px-6"
 >
-	<div class="mx-auto max-w-7xl">
+	<div class="mx-auto lg:max-w-7xl">
 		<div class="mb-16 max-w-3xl justify-self-center md:mb-20">
 			<h3 class="text-center text-4xl font-semibold tracking-tighter sm:text-5xl lg:text-6xl">
 				Our Trusted <span class="text-primary">Partners</span>
@@ -21,7 +21,7 @@
 		</div>
 
 		<Carousel.Root
-			class="w-full"
+			class="w-[70%] justify-self-center lg:w-full"
 			opts={{
 				align: 'center',
 				loop: true
@@ -32,7 +32,7 @@
 		>
 			<Carousel.Content>
 				{#each imagesList as src (src)}
-					<Carousel.Item class="basis-1/2 px-4 md:basis-1/3 lg:basis-1/5">
+					<Carousel.Item class="basis-1/2 px-0 md:basis-1/3 lg:basis-1/5 lg:px-4">
 						<div class="flex w-full items-center justify-center">
 							<img
 								src="/files/{src}"

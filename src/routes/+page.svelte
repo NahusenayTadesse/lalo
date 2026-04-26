@@ -157,7 +157,9 @@
 	</div>
 </section>
 
-<Slider imagesList={data?.imagesList} />
+{#if data?.imagesList?.length > 0}
+	<Slider imagesList={data?.imagesList} />
+{/if}
 
 {#if data?.allPaymentMethods.length > 0}
 	<main class="flex flex-col items-center justify-center px-4 py-12 md:py-20">
@@ -176,4 +178,4 @@
 
 <Accordion />
 
-<Catalog files={data?.files} />
+{#if data?.files}<Catalog files={data?.files} />{/if}

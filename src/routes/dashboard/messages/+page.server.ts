@@ -21,6 +21,7 @@ export const load: PageServerLoad = async () => {
 			subject: paymentMethods.subject,
 			isRead: paymentMethods.seen,
 			message: paymentMethods.message,
+			address: paymentMethods.address,
 			submittedAt: paymentMethods.createdAt
 		})
 		.from(paymentMethods);
