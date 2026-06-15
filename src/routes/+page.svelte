@@ -37,13 +37,7 @@
 			icon: Croissant,
 			short: 'LAL_BAK'
 		},
-		{
-			name: 'Fahem General Trading',
-			description:
-				'Diversified international trade operations across key industrial and material sectors.',
-			icon: Globe,
-			short: 'FAH_GEN'
-		},
+
 		{
 			name: 'Lalo Laundry',
 			description:
@@ -66,11 +60,18 @@
 			short: 'LAL_CAF'
 		},
 		{
-			name: 'Lalo Apartment',
+			name: 'Lalo Apartments',
 			description:
 				'Comprehensive residential property management services encompassing leasing, maintenance, and daily administrative operations.',
 			icon: Building,
 			short: 'LAL_APT'
+		},
+		{
+			name: 'Fahem General Trading',
+			description:
+				'Diversified international trade operations across key industrial and material sectors.',
+			icon: Globe,
+			short: 'FAH_GEN'
 		}
 	];
 </script>
@@ -119,7 +120,7 @@
 			<h3
 				class="mt-4 max-w-4xl text-4xl font-semibold tracking-tighter text-white sm:text-5xl lg:text-6xl"
 			>
-				Our <span class="text-primary">Subsidiaries</span>
+				Our <span class="text-primary">Subsidiaries and Sister Companies</span>
 			</h3>
 		</div>
 

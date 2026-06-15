@@ -95,7 +95,7 @@
 			{/if}
 
 			{#if quantityInCart > 0}
-				<Badge variant="default" class="animate-in zoom-in-50 duration-200">
+				<Badge variant="default" class="animate-in duration-200 zoom-in-50">
 					{quantityInCart} in cart
 				</Badge>
 			{/if}
@@ -104,15 +104,15 @@
 
 	<CardContent class="grid gap-1 p-4">
 		<div class="flex flex-col">
-			<span class="mb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase"
+			<!-- <span class="mb-2 text-xs font-medium tracking-wider text-muted-foreground uppercase"
 				>Variation: {amount}</span
-			>
+			> -->
 			<h3 class="line-clamp-1 text-lg leading-tight font-bold" title={productName}>
 				{productName}
 			</h3>
 		</div>
 
-		<div class="space-y-3">
+		<!-- <div class="space-y-3">
 			<label class="flex items-center gap-2 text-sm font-semibold text-foreground/80">
 				<PackageIcon class="size-4" />
 				Package Options
@@ -164,10 +164,10 @@
 					{/each}
 				</SelectContent>
 			</Select>
-		</div>
+		</div> -->
 	</CardContent>
 
-	<CardFooter class="p-4 pt-0">
+	<!-- <CardFooter class="p-4 pt-0">
 		<Button
 			class="w-full transition-all active:scale-95"
 			onclick={addToCart}
@@ -182,5 +182,5 @@
 				Add to Cart
 			{/if}
 		</Button>
-	</CardFooter>
+	</CardFooter> -->
 </Card>

@@ -9,7 +9,7 @@
 	}
 
 	const { item, priceList, onPriceChange }: Props = $props();
-	// const priceList = $derived(item?.priceList ?? []);
+	// const priceList = $derived(item?.priceList ?? []);x
 	let selectedPrice = $derived(
 		priceList?.find((p) => p.amount === item?.amount && p.price === item?.price)
 	);

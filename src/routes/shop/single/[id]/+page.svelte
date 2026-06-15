@@ -14,7 +14,7 @@
 		description: data?.product.description,
 		brand: {
 			'@type': 'Brand',
-			name: 'Amy Bakes'
+			name: 'Lalo Bakery Solutions'
 		},
 		offers: {
 			'@type': 'AggregateOffer',
@@ -26,11 +26,11 @@
 </script>
 
 <svelte:head>
-	<title>{data?.product.productName} | Amy Bakes</title>
+	<title>{data?.product.productName} | Lalo Bakery Solutions</title>
 	<meta name="description" content={data?.product.description?.substring(0, 160)} />
 
 	<meta property="og:type" content="product" />
-	<meta property="og:title" content="{data?.product.productName} - Amy Bakes" />
+	<meta property="og:title" content="{data?.product.productName} - Lalo Bakery Solutions" />
 	<meta property="og:description" content={data?.product.description} />
 	<meta property="og:image" content="/files/{data?.product.image}" />
 	<meta property="product:price:amount" content={data?.product.price} />

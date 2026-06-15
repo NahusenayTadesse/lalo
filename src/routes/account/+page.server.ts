@@ -1,157 +1,150 @@
-import { message, setError, superValidate } from 'sveltekit-superforms';
-import { zod4 } from 'sveltekit-superforms/adapters';
+import { auth } from '$lib/server/auth';
+import type { Actions } from './$types';
 
-import { redirect, error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
-import { user, customers, orders } from '$lib/server/db/schema';
-import { eq, count, sql } from 'drizzle-orm';
-import type { Actions, PageServerLoad } from './$types';
-import { editUserSchema as schema } from './schema';
+import {
+	customers,
+	orders,
+	transactions,
+	orderItems,
+	products,
+	discounts
+} from '$lib/server/db/schema';
+import { eq, sql, desc, sum } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) return redirect(303, '/');
 
-	const form = await superValidate(zod4(schema));
+	try {
+		// 1. Resolve Customer ID
+		const customer = await db
+			.select({ id: customers.id, name: customers.name })
+			.from(customers)
+			.where(eq(customers.userId, locals.user.id))
+			.then((rows) => rows[0]);
 
-	const singleUser = await db
-		.select({
-			id: customers.id,
-			name: user.name,
-			phone: customers.phone,
-			email: user.email,
-			createdAt: user.createdAt,
+		if (!customer) throw error(404, 'Customer profile not found.');
 
-			numberOfOrders: count(orders.id)
-		})
-		.from(user)
-		.leftJoin(customers, eq(user.id, customers.userId))
-		.leftJoin(orders, eq(customers.id, orders.customerId))
-		.where(eq(user.id, locals?.user?.id))
-		.then((rows) => rows[0]);
+		// 2. Financial Aggregations (Paid vs Unpaid/Pending)
+		const financialStats = await db
+			.select({
+				status: transactions.paymentStatus,
+				totalAmount: sum(transactions.amount).mapWith(Number)
+			})
+			.from(orders)
+			.innerJoin(transactions, eq(orders.transactionId, transactions.id))
+			.where(eq(orders.customerId, customer.id))
+			.groupBy(transactions.paymentStatus);
 
-	if (!singleUser) {
-		error(404, { message: 'User not found, It has been Deleted or does not exist' });
+		// Calculate client-side totals out of database groupings
+		let totalSpent = 0;
+		let totalOutstanding = 0;
+
+		financialStats.forEach((stat) => {
+			if (stat.status === 'paid') {
+				totalSpent += stat.totalAmount;
+			} else if (['pending', 'unpaid', 'disputed'].includes(stat.status ?? '')) {
+				totalOutstanding += stat.totalAmount;
+			}
+		});
+
+		// 3. Simple Order Count Metrics
+		const orderCounts = await db
+			.select({
+				status: orders.status,
+				count: sql<number>`count(${orders.id})`.mapWith(Number)
+			})
+			.from(orders)
+			.where(eq(orders.customerId, customer.id))
+			.groupBy(orders.status);
+
+		// 4. Detailed Order Timeline Stream (Last 5 orders with items)
+		const rawRecentActivity = await db
+			.select({
+				orderId: orders.id,
+				orderStatus: orders.status,
+				amount: transactions.amount,
+				paymentStatus: transactions.paymentStatus,
+				receiptLink: transactions.recieptLink,
+				productName: products.name,
+				quantity: orderItems.quantity,
+				price: orderItems.price
+			})
+			.from(orders)
+			.leftJoin(transactions, eq(orders.transactionId, transactions.id))
+			.leftJoin(orderItems, eq(orders.id, orderItems.orderId))
+			.leftJoin(products, eq(orderItems.productId, products.id))
+			.where(eq(orders.customerId, customer.id))
+			.orderBy(desc(orders.id))
+			.limit(15); // Adjust based on maximum items limit
+
+		// Structure flat rows down to single orders containing item records
+		const activityMap = rawRecentActivity.reduce(
+			(acc, row) => {
+				if (!acc[row.orderId]) {
+					acc[row.orderId] = {
+						id: row.orderId,
+						status: row.orderStatus,
+						amount: Number(row.amount || 0),
+						paymentStatus: row.paymentStatus || 'pending',
+						receiptLink: row.receiptLink,
+						items: []
+					};
+				}
+				if (row.productName) {
+					acc[row.orderId].items.push({
+						name: row.productName,
+						qty: row.quantity,
+						price: Number(row.price)
+					});
+				}
+				return acc;
+			},
+			{} as Record<number, any>
+		);
+
+		// 5. Available Offers / Discount Campaigns for the customer
+		const activeDiscounts = await db
+			.select({
+				id: discounts.id,
+				name: discounts.name,
+				description: discounts.description,
+				amount: discounts.amount,
+				productName: products.name
+			})
+			.from(discounts)
+			.leftJoin(products, eq(discounts.productId, products.id))
+			.limit(3);
+
+		return {
+			customer,
+			metrics: {
+				totalSpent,
+				totalOutstanding,
+				counts: orderCounts
+			},
+			recentActivity: Object.values(activityMap),
+			activeDiscounts
+		};
+	} catch (err) {
+		console.error('Main Customer Dashboard error:', err);
+		return {
+			customer: null,
+			metrics: { totalSpent: 0, totalOutstanding: 0, counts: [] },
+			recentActivity: [],
+			activeDiscounts: [],
+			error: 'Failed to balance metrics summary snapshot.'
+		};
 	}
-
-	const orderCounts = await db
-		.select({
-			status: orders.status,
-			count: sql<number>`count(${orders.id})`.mapWith(Number)
-		})
-		.from(orders)
-		.where(eq(orders.customerId, Number(singleUser.id)))
-		.groupBy(orders.status);
-
-	// const permissionList = await db
-	// 	.select({
-	// 		id: permissions.id,
-	// 		name: permissions.name,
-	// 		description: permissions.description
-	// 	})
-	// 	.from(permissions)
-	// 	.innerJoin(rolePermissions, eq(permissions.id, rolePermissions.permissionId))
-	// 	.where(eq(rolePermissions.roleId, singleUser.roleId));
-
-	if (!singleUser) {
-		error(404, 'User with this ID not found');
-	}
-
-	return {
-		singleUser,
-		orderCounts,
-		form
-	};
 };
 
 export const actions: Actions = {
-	editUser: async ({ request, locals }) => {
-		const form = await superValidate(request, zod4(schema));
-		if (!locals.user) return redirect(303, '/');
-
-		const id = locals?.user?.id;
-
-		if (!form.valid) {
-			// Stay on the same page and set a flash message
-			return message(form, { type: 'error', text: 'Please check your form data.' });
-		}
-
-		const { name, phone, email } = form.data;
-
-		try {
-			const existingUser = await db
-				.select()
-				.from(user)
-				.where(eq(user.email, email))
-				.then((res) => res[0]);
-
-			if (existingUser) {
-				if (existingUser.id !== id) {
-					setError(form, 'email', 'User with this email already exists, change your email.');
-					return message(
-						form,
-						{
-							type: 'error',
-							text: 'User with this email already exists, change your email.'
-						},
-						{ status: 400 }
-					);
-				}
-			}
-
-			await db.transaction(async (tx) => {
-				await tx
-					.update(user)
-					.set({
-						name,
-						email
-					})
-					.where(eq(user.id, id));
-
-				const customer = await tx
-					.select({
-						id: customers.id
-					})
-					.from(customers)
-					.where(eq(customers.userId, id))
-					.then((res) => res[0]);
-
-				if (customer) {
-					await tx
-						.update(customers)
-						.set({
-							name,
-							phone,
-							email
-						})
-						.where(eq(customers.userId, id));
-				}
-			});
-
-			// Client-side (to sync the changes)
-
-			// Stay on the same page and set a flash message
-			return message(form, { type: 'success', text: 'Your Details have Updated Successfully' });
-		} catch (err) {
-			console.error(err);
-
-			if (err?.code === 'ER_DUP_ENTRY' || err?.errno === 1062) {
-				return message(
-					form,
-					{
-						type: 'error',
-						text: 'User with this email already exists, change your email.'
-					},
-					{ status: 400 }
-				);
-			}
-			return message(
-				form,
-				{
-					type: 'error',
-					text: 'Update Failed: ' + err?.message
-				},
-				{ status: 500 }
-			);
-		}
+	logout: async (event) => {
+		await auth.api.signOut({
+			headers: event.request.headers
+		});
+		redirect('/login', { type: 'success', message: 'Logout Successful' }, event.cookies);
 	}
 };

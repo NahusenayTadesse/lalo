@@ -65,13 +65,7 @@
 			icon: Croissant,
 			short: 'LAL_BAK'
 		},
-		{
-			name: 'Fahem General Trading',
-			description:
-				'A diversified trade powerhouse managing cross-border operations for critical industrial materials and raw goods. We bridge international markets through strategic sourcing, risk management, and robust distribution networks.',
-			icon: Globe,
-			short: 'FAH_GEN'
-		},
+
 		{
 			name: 'Lalo Laundry',
 			description:
@@ -94,11 +88,18 @@
 			short: 'LAL_CAF'
 		},
 		{
-			name: 'Lalo Apartment',
+			name: 'Lalo Apartments',
 			description:
 				'A modern residential property management firm focused on asset optimization. We handle the full spectrum of operations, from strategic leasing and tenant retention to preventative maintenance and financial reporting.',
 			icon: Building,
 			short: 'LAL_APT'
+		},
+		{
+			name: 'Fahem General Trading',
+			description:
+				'A diversified trade powerhouse managing cross-border operations for critical industrial materials and raw goods. We bridge international markets through strategic sourcing, risk management, and robust distribution networks.',
+			icon: Globe,
+			short: 'FAH_GEN'
 		}
 	];
 
@@ -522,7 +523,7 @@
 			<h3
 				class="mt-4 max-w-4xl text-4xl font-semibold tracking-tighter text-white sm:text-5xl lg:text-6xl"
 			>
-				Our <span class="text-primary">Varied Subsidiaries</span>
+				Our <span class="text-primary">Varied Subsidiaries and Sister Companies</span>
 			</h3>
 		</div>
 
