@@ -2,177 +2,223 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input/index';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import { BrushCleaning, X } from '@lucide/svelte';
+	import {
+		X,
+		CloudUpload as UploadCloud,
+		FileText,
+		Image as ImageIcon,
+		Loader,
+		BrushCleaning
+	} from '@lucide/svelte';
 	import { fade } from 'svelte/transition';
 	import { filesProxy } from 'sveltekit-superforms';
-	import { CloudUpload } from '@lucide/svelte';
+	import imageCompression from 'browser-image-compression';
+	import { toast } from 'svelte-sonner';
 
-	let { form, name, errors, title = 'Upload Image', images = $bindable() } = $props();
+	let {
+		form,
+		name,
+		title = 'Gallery Upload',
+		placeholder = 'Images or PDFs (Max 1MB per image)',
+		images = $bindable([])
+	} = $props();
 
+	// Use filesProxy for multi-file support with Superforms
 	let file = filesProxy(form, name);
 
-	function removeFile(index: number) {
-		const files = Array.from($file ?? []);
-		files.splice(index, 1);
-		$file = files;
-	}
-
 	let isDragging = $state(false);
+	let isProcessing = $state(false);
 
-	// Handle the drop event
-	function handleDrop(e: DragEvent) {
-		e.preventDefault();
-		isDragging = false;
+	async function handleFileSelection(newFiles: FileList | null) {
+		if (!newFiles || newFiles.length === 0) return;
 
-		if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-			// Update the fileProxy with the dropped files
-			file.set(e.dataTransfer.files);
+		isProcessing = true;
+
+		const options = {
+			maxSizeMB: 1,
+			maxWidthOrHeight: 1920,
+			useWebWorker: true,
+			initialQuality: 0.8
+		};
+
+		try {
+			const processed = await Promise.all(
+				Array.from(newFiles).map(async (f) => {
+					// Skip compression for PDFs or non-image types
+					if (f.type === 'application/pdf' || !f.type.startsWith('image/')) {
+						return f;
+					}
+					try {
+						const compressed = await imageCompression(f, options);
+						return new File([compressed], f.name, { type: compressed.type });
+					} catch (err) {
+						console.error('Compression error:', err);
+						return f;
+					}
+				})
+			);
+
+			// Append new files to existing ones in the proxy
+			const currentFiles = Array.from($file ?? []);
+			const dt = new DataTransfer();
+			[...currentFiles, ...processed].forEach((f) => dt.items.add(f));
+
+			$file = Array.from(dt.files);
+			toast.success(`${processed.length} file(s) added and optimized`);
+		} catch (err) {
+			console.error('Selection Error:', err);
+			toast.error('Failed to process files');
+		} finally {
+			isProcessing = false;
 		}
 	}
 
-	function handleDragOver(e: DragEvent) {
-		e.preventDefault();
-		isDragging = true;
+	function removeNewFile(index: number) {
+		const current = Array.from($file);
+		current.splice(index, 1);
+		$file = current;
 	}
 
-	function handleDragLeave() {
-		isDragging = false;
+	function removeExistingImage(index: number) {
+		images = images.filter((_, i) => i !== index);
 	}
-
-	import { toast } from 'svelte-sonner';
 </script>
 
-<div class="my-8 flex w-full flex-col justify-start gap-2">
-	<Label
-		for={name}
-		class="group  relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed py-2! transition-all
+<div class="flex w-full flex-col gap-6">
+	<!-- Upload Area -->
+	<div class="flex flex-col gap-2">
+		<Label
+			for={name}
+			class="group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed py-8 transition-all
 			{isDragging
-			? 'border-primary bg-primary/5'
-			: 'border-muted-foreground/25 bg-muted/50 hover:border-primary/50 hover:bg-muted'}"
-		ondragover={handleDragOver}
-		ondragleave={handleDragLeave}
-		ondrop={handleDrop}
-	>
-		<div class="flex flex-col items-center justify-center gap-2 text-center">
-			<div
-				class="rounded-full bg-background p-3 shadow-sm transition-transform group-hover:scale-110"
-			>
-				<CloudUpload class="h-6 w-6 {isDragging ? 'text-primary' : 'text-muted-foreground'}" />
-			</div>
-			<div class="px-4">
-				<p class="text-sm font-medium">
-					{isDragging ? 'Drop it here!' : 'Click to upload or drag and drop'}
-				</p>
-				<p class="text-[12px]! text-muted-foreground">{title}</p>
-			</div>
-		</div>
-
-		<Input
-			id={name}
-			type="file"
-			class="hidden"
-			{name}
-			accept="image/*,application/pdf"
-			bind:files={$file}
-			multiple={true}
-		/>
-		<!-- <Input type="file" {name} accept="image/*,application/pdf" bind:files={$file} multiple={true} /> -->
-
-		{#if $file.length > 0}
-			<div class="space-y-3">
-				<div class="flex items-center justify-between gap-2">
-					<Label>Uploaded Files ({$file.length})</Label>
-					<Button
-						variant="destructive"
-						size="sm"
-						onclick={() => {
-							$file = [];
-							toast.info('All files removed');
-						}}
-					>
-						<BrushCleaning /> Clear all
-					</Button>
+				? 'border-primary bg-primary/5'
+				: 'border-muted-foreground/25 bg-muted/50 hover:border-primary/50 hover:bg-muted'}"
+			ondragover={(e) => {
+				e.preventDefault();
+				isDragging = true;
+			}}
+			ondragleave={() => (isDragging = false)}
+			ondrop={(e) => {
+				e.preventDefault();
+				isDragging = false;
+				handleFileSelection(e.dataTransfer?.files);
+			}}
+		>
+			<div class="flex flex-col items-center justify-center gap-3 text-center">
+				<div
+					class="rounded-full bg-background p-4 shadow-sm transition-transform group-hover:scale-110"
+				>
+					{#if isProcessing}
+						<Loader class="h-6 w-6 animate-spin text-primary" />
+					{:else}
+						<UploadCloud class="h-6 w-6 {isDragging ? 'text-primary' : 'text-muted-foreground'}" />
+					{/if}
+				</div>
+				<div class="px-4">
+					<p class="text-sm font-medium">
+						{isProcessing
+							? 'Optimizing assets...'
+							: isDragging
+								? 'Drop them now!'
+								: 'Click to upload or drag gallery'}
+					</p>
+					<p class="text-xs text-muted-foreground">{placeholder}</p>
 				</div>
 			</div>
-		{/if}
 
-		<div class="flex flex-row gap-2">
-			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{#each $file as i, index (i)}
-					<div
-						class="group relative flex flex-col overflow-hidden rounded-xl border bg-card p-2 shadow-sm transition-all hover:shadow-md"
+			<Input
+				id={name}
+				type="file"
+				class="hidden"
+				{name}
+				accept="image/*,application/pdf"
+				multiple={true}
+				onchange={(e) => handleFileSelection(e.currentTarget.files)}
+			/>
+		</Label>
+	</div>
+
+	<!-- Gallery Grid -->
+	{#if $file.length > 0 || images.length > 0}
+		<div class="space-y-4">
+			<div class="flex items-center justify-between">
+				<h3 class="text-sm font-semibold tracking-tight">Gallery Preview</h3>
+				{#if $file.length > 0}
+					<Button
+						variant="ghost"
+						size="sm"
+						class="h-8 text-xs text-muted-foreground hover:text-destructive"
+						onclick={() => ($file = [])}
 					>
-						<div class="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
-							<img
-								src={URL.createObjectURL($file[index])}
-								class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-								alt={$file?.item(index)?.name}
-								transition:fade
-							/>
+						<BrushCleaning class="mr-2 h-3.5 w-3.5" /> Clear New
+					</Button>
+				{/if}
+			</div>
 
-							<div
-								class="absolute top-1 right-1 opacity-0 transition-opacity group-hover:opacity-100"
+			<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+				<!-- Existing Images (Server) -->
+				{#each images as img, i}
+					<div
+						class="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
+						transition:fade
+					>
+						<img src="/files/{img}" class="h-full w-full object-cover" alt="Server asset" />
+						<div
+							class="absolute inset-0 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+						>
+							<Button
+								variant="destructive"
+								size="icon"
+								class="absolute top-1 right-1 h-7 w-7 rounded-full"
+								onclick={() => removeExistingImage(i)}
 							>
-								<Button
-									variant="destructive"
-									size="icon"
-									type="button"
-									class="h-7 w-7 rounded-full shadow-lg"
-									onclick={() => removeFile(index)}
-								>
-									<X class="h-4 w-4" />
-								</Button>
+								<X class="h-4 w-4" />
+							</Button>
+						</div>
+						<div class="absolute right-0 bottom-0 left-0 bg-background/80 p-1 text-center">
+							<span class="text-[10px] font-medium text-muted-foreground uppercase">Existing</span>
+						</div>
+					</div>
+				{/each}
+
+				<!-- New Uploads (Compressed) -->
+				{#each $file as f, i}
+					<div
+						class="group relative aspect-square overflow-hidden rounded-lg border bg-card shadow-sm"
+						transition:fade
+					>
+						{#if f.type.startsWith('image/')}
+							<img
+								src={URL.createObjectURL(f)}
+								class="h-full w-full object-cover"
+								alt="Local preview"
+							/>
+						{:else}
+							<div class="flex h-full flex-col items-center justify-center gap-2 bg-muted/50">
+								<FileText class="h-8 w-8 text-muted-foreground" />
+								<span class="max-w-full truncate px-2 text-[10px]">{f.name}</span>
 							</div>
+						{/if}
+
+						<div
+							class="absolute inset-0 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+						>
+							<Button
+								variant="destructive"
+								size="icon"
+								class="absolute top-1 right-1 h-7 w-7 rounded-full"
+								onclick={() => removeNewFile(i)}
+							>
+								<X class="h-4 w-4" />
+							</Button>
 						</div>
 
-						<div class="px-1 py-2">
-							<p class="truncate text-xs font-medium text-foreground">
-								{$file?.item(index)?.name}
-							</p>
-							<p class="text-[10px] tracking-wider text-muted-foreground uppercase">
-								{(i.size / 1024).toFixed(1)} KB
-							</p>
+						<div class="absolute right-0 bottom-0 left-0 bg-primary/90 p-1 text-center text-white">
+							<span class="text-[10px] font-bold">{(f.size / 1024).toFixed(0)} KB</span>
 						</div>
 					</div>
 				{/each}
 			</div>
 		</div>
-
-		{#if images.length}
-			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-				{#each images as i}
-					<div
-						class="group relative flex flex-col overflow-hidden rounded-xl border bg-card p-2 shadow-sm transition-all hover:shadow-md"
-					>
-						<div class="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
-							<img
-								src="/files/{i}"
-								class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-								alt="Product Gallery"
-								transition:fade
-							/>
-
-							<div
-								class="absolute top-1 right-1 opacity-0 transition-opacity group-hover:opacity-100"
-							>
-								<Button
-									variant="destructive"
-									size="icon"
-									type="button"
-									class="h-7 w-7 rounded-full shadow-lg"
-									onclick={() => (images = images.filter((_, i) => i !== index))}
-								>
-									<X class="h-4 w-4" />
-								</Button>
-							</div>
-						</div>
-					</div>
-				{/each}
-			</div>
-		{/if}
-
-		{#if $errors[name]}
-			<p class="text-red-500">{$errors[name]._errors.join(', ')}</p>
-		{/if}
-	</Label>
+	{/if}
 </div>

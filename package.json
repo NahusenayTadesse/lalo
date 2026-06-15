@@ -63,6 +63,7 @@
 	},
 	"dependencies": {
 		"@tabler/icons-svelte": "^3.38.0",
+		"browser-image-compression": "^2.0.2",
 		"embla-carousel-autoplay": "^8.6.0",
 		"jspdf": "^4.2.0",
 		"jspdf-autotable": "^5.0.7",

@@ -2,30 +2,70 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input/index';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import { X, CloudUpload as UploadCloud, FileText, Image as ImageIcon } from '@lucide/svelte';
+	import {
+		X,
+		CloudUpload as UploadCloud,
+		FileText,
+		Image as ImageIcon,
+		Loader
+	} from '@lucide/svelte';
 	import { fileProxy } from 'sveltekit-superforms';
+	import imageCompression from 'browser-image-compression';
 
 	let { form, name, placeholder = 'PDF or Images (Max 10MB)', image = '' } = $props();
 
-	const file = fileProxy(form, name);
+	let file = $state(fileProxy(form, name));
 	let isDragging = $state(false);
+	let isProcessing = $state(false);
 
-	// Handle the drop event
-	function handleDrop(e: DragEvent) {
-		e.preventDefault();
-		isDragging = false;
+	async function handleFileSelection(files: FileList | null) {
+		if (!files || files.length === 0) return;
 
-		if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-			// Update the fileProxy with the dropped files
-			file.set(e.dataTransfer.files);
+		isProcessing = true;
+
+		const options = {
+			maxSizeMB: 1,
+			maxWidthOrHeight: 1920,
+			useWebWorker: true,
+			initialQuality: 0.8
+		};
+
+		try {
+			const processedFiles = await Promise.all(
+				Array.from(files).map(async (f) => {
+					if (f.type === 'application/pdf') return f;
+					try {
+						const compressed = await imageCompression(f, options);
+						// ✅ Convert Blob → File, preserving the original filename
+						return new File([compressed], f.name, { type: compressed.type });
+					} catch (err) {
+						console.error('Compression error:', err);
+						return f;
+					}
+				})
+			);
+			// ✅ Use DataTransfer to build a real FileList
+			const dt = new DataTransfer();
+			processedFiles.forEach((f) => dt.items.add(f));
+			file.set(dt.files as any);
+		} catch (err) {
+			console.error('FULL ERROR:', err);
+		} finally {
+			isProcessing = false;
 		}
 	}
 
-	function handleDragOver(e: DragEvent) {
+	function handleDrop(e: DragEvent) {
 		e.preventDefault();
+		isDragging = false; // ✅ already there, good
+		if (e.dataTransfer?.files) {
+			handleFileSelection(e.dataTransfer.files);
+		}
+	}
+	function handleDragOver(e: DragEvent) {
+		e.preventDefault(); // ✅ required to allow drop
 		isDragging = true;
 	}
-
 	function handleDragLeave() {
 		isDragging = false;
 	}
@@ -36,16 +76,18 @@
 		id={name}
 		type="file"
 		class="hidden"
+		bind:files={$file}
 		{name}
 		accept="image/*,application/pdf"
-		bind:files={$file}
+		onchange={(e) => handleFileSelection(e.currentTarget.files)}
 		multiple={false}
 	/>
+
 	{#if $file?.length === 0 && image === ''}
 		<Label
 			for={name}
-			class="group  relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed py-2! transition-all
-			{isDragging
+			class="group relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed py-2! transition-all
+            {isDragging
 				? 'border-primary bg-primary/5'
 				: 'border-muted-foreground/25 bg-muted/50 hover:border-primary/50 hover:bg-muted'}"
 			ondragover={handleDragOver}
@@ -56,24 +98,32 @@
 				<div
 					class="rounded-full bg-background p-3 shadow-sm transition-transform group-hover:scale-110"
 				>
-					<UploadCloud class="h-6 w-6 {isDragging ? 'text-primary' : 'text-muted-foreground'}" />
+					{#if isProcessing}
+						<Loader class="h-6 w-6 animate-spin text-primary" />
+					{:else}
+						<UploadCloud class="h-6 w-6 {isDragging ? 'text-primary' : 'text-muted-foreground'}" />
+					{/if}
 				</div>
 				<div class="px-4">
 					<p class="text-sm font-medium">
-						{isDragging ? 'Drop it here!' : 'Click to upload or drag and drop'}
+						{#if isProcessing}
+							Optimizing file...
+						{:else}
+							{isDragging ? 'Drop it here!' : 'Click to upload or drag and drop'}
+						{/if}
 					</p>
 					<p class="text-[12px]! text-muted-foreground">{placeholder}</p>
 				</div>
 			</div>
 		</Label>
-	{:else if image}
+	{:else if image && $file?.length === 0}
 		<div
 			class="relative animate-in overflow-hidden rounded-xl border bg-card p-4 shadow-sm duration-200 zoom-in-95 fade-in"
 		>
 			<div class="mb-3 flex items-center justify-between">
 				<div class="flex items-center gap-3 overflow-hidden">
 					<div
-						class="flex h-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
+						class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
 					>
 						{#if image.toLowerCase().endsWith('.pdf')}
 							<FileText class="h-5 w-5" />
@@ -82,7 +132,7 @@
 						{/if}
 					</div>
 					<div class="flex flex-col truncate">
-						<span class="truncate text-sm font-medium"> {image || 'No file selected'}</span>
+						<span class="truncate text-sm font-medium">{image}</span>
 					</div>
 				</div>
 				<Button
@@ -98,17 +148,12 @@
 				</Button>
 			</div>
 
-			<div class="overflow-hidden rounded-lg border bg-muted/30">
+			<div class="rounded-lg border bg-muted/30">
 				{#if image.toLowerCase().endsWith('.pdf')}
 					<iframe src="/files/{image}" class="h-64 w-full" frameborder="0" title="pdf-preview"
 					></iframe>
 				{:else}
-					<img
-						src="/files/{image}"
-						loading="lazy"
-						class="max-h-80 w-full object-contain"
-						alt="Preview"
-					/>
+					<img src="/files/{image}" alt="Preview" class="h-full w-full object-cover" />
 				{/if}
 			</div>
 		</div>
@@ -128,11 +173,9 @@
 						{/if}
 					</div>
 					<div class="flex flex-col truncate">
-						<span class="truncate text-sm font-medium">{$file[0]?.name || 'No file selected'}</span>
+						<span class="truncate text-sm font-medium">{$file[0]?.name}</span>
 						<span class="text-xs text-muted-foreground">
-							{$file[0]?.size
-								? ($file[0]?.size / 1024 / 1024).toFixed(2) + ' MB'
-								: 'No file selected'}
+							{($file[0]?.size / 1024 / 1024).toFixed(2)} MB (Optimized)
 						</span>
 					</div>
 				</div>
@@ -149,16 +192,16 @@
 			<div class="overflow-hidden rounded-lg border bg-muted/30">
 				{#if $file[0]?.type === 'application/pdf'}
 					<iframe
-						src={`${URL.createObjectURL($file[0])}#toolbar=0`}
+						src={URL.createObjectURL($file[0]) + '#toolbar=0'}
 						class="h-64 w-full"
 						frameborder="0"
 						title="pdf-preview"
 					></iframe>
-				{:else if $file[0]?.type?.startsWith('image')}
+				{:else if $file[0]?.type.startsWith('image/')}
 					<img
 						src={URL.createObjectURL($file[0])}
-						class="max-h-80 w-full object-contain"
 						alt="Preview"
+						class="h-full w-full object-cover"
 					/>
 				{/if}
 			</div>
