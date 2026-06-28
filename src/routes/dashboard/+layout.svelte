@@ -11,7 +11,7 @@
 
 <Sidebar.Provider>
 	<AppSidebar messageNumber={data?.messageNumber} ordersNumber={data?.ordersNumber} />
-	<main class="w-full px-2">
+	<main class="min-w-0 flex-1 px-2">
 		<div
 			class="absolute top-2 left-2 z-10 flex w-[95%] flex-row
 			justify-between rounded-lg p-2 pr-4 align-middle

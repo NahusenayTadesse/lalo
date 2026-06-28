@@ -42,6 +42,9 @@ export const edit = z.object({
 		.refine((file) => file.size <= MAX_FILE_SIZE, `Max file size is 10MB.`)
 		.refine((file) => ACCEPTED_FILE_TYPES.includes(file.type), 'Invalid file type.')
 		.optional(),
-	paymentMethod: z.number().optional()
+	paymentMethod: z.number().optional(),
+	address: z.string("Address is required").optional(),
+	deliveryAddress: z.string("Delivery address is required"),
+	fee: z.number().default(0)
 });
 export type Edit = z.infer<typeof edit>;

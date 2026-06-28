@@ -11,5 +11,5 @@
 </svelte:head>
 
 <div class="flex h-screen w-full items-center justify-center px-4">
-	<Signup data={data?.form} action="?/signup" />
+	<Signup data={data?.form} action="?/signup" placeList={data?.placeList} />
 </div>

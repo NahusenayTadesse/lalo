@@ -7,18 +7,25 @@ import { USER } from '$env/static/private';
 import { addUser, loginSchema } from '$lib/ZodSchema';
 import { add } from './schema';
 import { db } from '$lib/server/db';
-import { orders, orderItems, products, customers } from '$lib/server/db/schema';
+import { orders, orderItems, products, customers, placeNames } from '$lib/server/db/schema';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async () => {
 	const form = await superValidate(zod4(add));
 	const signupForm = await superValidate(zod4(addUser));
 	const loginForm = await superValidate(zod4(loginSchema));
-
+	const placeList = await db
+		.select({
+			value: placeNames.name,
+			name: placeNames.name
+		})
+		.from(placeNames)
+		.where(eq(placeNames.isActive, true));
 	return {
 		form,
 		signupForm,
-		loginForm
+		loginForm,
+		placeList
 	};
 };
 

@@ -116,9 +116,9 @@
 
 		<Button type="submit" form="main">
 			{#if $delayed}
-				<LoadingBtn name="Adding Department" />
+				<LoadingBtn name="Adding Category" />
 			{:else}
-				<Plus /> Add Position
+				<Plus /> Add Category
 			{/if}
 		</Button>
 	</form>

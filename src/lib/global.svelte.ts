@@ -147,15 +147,16 @@ export type Item = {
 	name: string;
 };
 
-export const formatEthiopianDate = (date: Date | undefined): string => {
+export const formatEthiopianDate = (date: Date | string | undefined): string => {
 	if (!date) return '';
 
-	const formatter = new Intl.DateTimeFormat('am-ET', {
+	 const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+	const formatter = new Intl.DateTimeFormat('en-CA', {
 		year: 'numeric',
 		month: 'long',
 		day: 'numeric',
-		calendar: 'ethiopic'
 	});
 
-	return formatter.format(date);
+	return formatter.format(dateObj);
 };

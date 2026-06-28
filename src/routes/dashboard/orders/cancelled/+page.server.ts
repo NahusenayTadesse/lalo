@@ -11,8 +11,13 @@ export const load: PageServerLoad = async () => {
 			name: customers.name,
 			customerId: customers.id,
 			phone: customers.phone,
-
-			status: orders.status
+            
+			status: orders.status,
+			email: customers.email,
+			createdAt: sql<string>`DATE_FORMAT(${orders.createdAt}, '%Y-%m-%d')`,	
+						address: customers.address,
+						deliveryAddress: customers.deliveryAddress,
+						fee: orders.fee,
 		})
 		.from(orders)
 		.leftJoin(customers, eq(orders.customerId, customers.id))

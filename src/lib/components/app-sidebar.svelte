@@ -16,7 +16,9 @@
 		CookingPot,
 		Star,
 		Building2,
-		BookDown
+		BookDown,
+		MapPin,
+		Truck
 	} from '@lucide/svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
@@ -63,6 +65,11 @@
 				{ title: 'All Recipes', url: '/dashboard/recipes', icon: Sheet },
 				{ title: 'Add Recipe', url: '/dashboard/recipes/add-recipes', icon: Plus }
 			]
+		},
+		{
+			title: 'Delivery Address',
+			url: '/dashboard/delivery-address',
+			icon: Truck
 		},
 		{
 			title: 'Messages',
@@ -136,9 +143,9 @@
 <Sidebar.Root collapsible="offcanvas" {...restProps}>
 	<Sidebar.Content
 		class="z-9999! h-full
-  overflow-y-scroll pt-4
-  [scrollbar-color:#a3a3a3_transparent]
-  [scrollbar-width:thin]
+  [scrollbar-width:thin] [scrollbar-color:#a3a3a3_transparent]
+  overflow-y-scroll
+  pt-4
   [&::-webkit-scrollbar]:w-2
   [&::-webkit-scrollbar-thumb]:bg-gray-400
   [&::-webkit-scrollbar-thumb:hover]:bg-gray-500 [&::-webkit-scrollbar-track]:bg-transparent

@@ -47,14 +47,14 @@ export const actions: Actions = {
 				createdBy: locals?.user?.id
 			});
 
-			return message(form, { type: 'success', text: 'Department Successfully Added' });
+			return message(form, { type: 'success', text: 'Category Successfully Added' });
 		} catch (err: any) {
-			if (err.code === 'ER_DUP_ENTRY') setError(form, 'name', 'Department already exists.');
+			if (err.code === 'ER_DUP_ENTRY') setError(form, 'name', 'Category already exists.');
 			return message(form, {
 				type: 'error',
 				text:
 					err.code === 'ER_DUP_ENTRY'
-						? 'Department is already exists. Please choose another one.'
+						? 'Category is already exists. Please choose another one.'
 						: err.message
 			});
 		}

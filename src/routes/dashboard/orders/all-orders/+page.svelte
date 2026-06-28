@@ -49,6 +49,79 @@
 				});
 			}
 		},
+			{
+			accessorKey: 'email',
+			header: 'Email',
+			sortable: true,
+			cell: ({ row }) => {
+				return renderComponent(Copy, {
+					data: row.original.email
+				});
+			}
+		},
+		
+		{
+			accessorKey: 'address',
+			header: 'Address',
+			sortable: true,
+			cell: ({ row }) => {
+				return renderComponent(Copy, {
+					data: row.original.address
+				});
+			}
+		},
+
+		{
+			accessorKey: 'deliveryAddress',
+			header: 'Delivery Address',
+			sortable: true,
+			cell: ({ row }) => {
+				return renderComponent(Copy, {
+					data: row.original.deliveryAddress
+				});
+			}
+		},
+
+		{
+			accessorKey: 'fee',
+			header: 'Fee',
+			sortable: true,
+			cell: ({ row }) => {
+				return  "ETB " + Number(row.original.fee);
+			}
+		},
+
+		{
+			accessorKey: 'paymentMethod',
+			header: 'Payment Method',
+			sortable: true,
+			cell: ({ row }) => {
+				return renderComponent(Copy, {
+					data: row.original.paymentMethod
+				});
+			}
+		},
+
+		{
+			accessorKey: 'total',
+			header: 'Total',
+			sortable: true,
+			cell: ({ row }) => {
+				return renderComponent(Copy, {
+					data: row.original.total
+				});
+			}
+		},
+
+		{
+			accessorKey: 'createdAt',
+			header: 'Created At',
+			sortable: true,
+			cell: ({ row }) => {
+				return  formatEthiopianDate(new Date(row.original.createdAt))
+				
+			}
+		},
 
 		{
 			accessorKey: 'items',
@@ -104,6 +177,7 @@
 
 	import Copy from '$lib/Copy.svelte';
 	import FilterMenu from '$lib/components/Table/FilterMenu.svelte';
+	import { formatEthiopianDate } from '$lib/global.svelte.js';
 
 	let filteredList = $derived(data?.allData);
 </script>

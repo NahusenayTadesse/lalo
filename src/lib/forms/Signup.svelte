@@ -10,18 +10,19 @@
 	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
 	import type { SignupSchema } from '$lib/ZodSchema';
-	import DarkMode from '$lib/components/DarkMode.svelte';
 	import { Eye, EyeOff } from '@lucide/svelte';
 	import Errors from '$lib/formComponents/Errors.svelte';
 
 	let {
 		data,
+		placeList,
 		action = '?/signup'
-	}: { data: SuperValidated<Infer<SignupSchema>>; action?: string } = $props();
+	}: { data: SuperValidated<Infer<SignupSchema>>; placeList: Item[]; action?: string } = $props();
 
 	const { form, errors, delayed, enhance, allErrors, message } = superForm(data, {});
 
 	import { toast } from 'svelte-sonner';
+	import type { Item } from '$lib/global.svelte';
 	$effect(() => {
 		if ($message) {
 			if ($message.type === 'error') {
@@ -75,7 +76,26 @@
 				{errors}
 				placeholder="+251 9-11-00-00-00"
 			/>
-			<div class="grid gap-2">
+			<InputComp
+				label="General Address"
+				name="address"
+				type="select"
+				{form}
+				{errors}
+				placeholder="+251 9-11-00-00-00"
+				,
+				items={placeList}
+			/>
+			<InputComp
+				label="Specific Delivery Address"
+				name="deliveryAddress"
+				type="text"
+				{form}
+				{errors}
+				placeholder="+251 9-11-00-00-00"
+			/>
+
+			<div class="mt-2 grid gap-2">
 				<div class="flex items-center">
 					<Label for="password">Password</Label>
 				</div>

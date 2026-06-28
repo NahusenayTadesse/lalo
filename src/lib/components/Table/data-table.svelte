@@ -26,7 +26,8 @@
 		columns,
 		search = true,
 		class: className = '',
-		fileName = 'File'
+		fileName = 'File',
+		selected = $bindable()
 	}: DataTableProps<TData, TValue> = $props();
 	// let filterSchema = $derived(
 	//   discoverFilterSchema(data).filter(meta => !filterBlacklist.includes(meta.key))
@@ -39,6 +40,7 @@
 	import * as Resizable from '$lib/components/ui/resizable/index.js';
 	import ResizableHandle from '../ui/resizable/resizable-handle.svelte';
 	import { isMobile } from '$lib/global.svelte';
+	import { get } from 'svelte/store';
 
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: data.length });
 	let columnFilters = $state<ColumnFiltersState>([]);
@@ -48,8 +50,8 @@
 		data: TData[];
 		search?: boolean;
 		class?: string;
-		filterBlacklist?: string[];
 		fileName?: string;
+		selected?: TData[];
 	};
 
 	let sorting = $state<SortingState>([]);
@@ -143,13 +145,97 @@
 
 		return breakpoints;
 	}
+	if (selected) {
+		$effect(() => {
+			const selectedRows = table.getSelectedRowModel().rows;
+
+			// Extract the original data from those rows
+			selected = selectedRows.map((row) => row.original);
+		});
+	}
+
+	function getTableData() {
+		if (!table) {
+			console.error('TanStack table instance was not provided to the export component.');
+			return null;
+		}
+
+		// 1. Get Headers (Skip index '#' and 'actions' columns automatically)
+		const headerGroups = table.getHeaderGroups();
+		const headers: string[] = [];
+		const validColumnIds: string[] = [];
+
+		headerGroups.forEach((headerGroup: any) => {
+			headerGroup.headers.forEach((header: any) => {
+				const id = header.id.toLowerCase();
+				if (id === 'index' || id === 'actions' || id.includes('select')) {
+					return;
+				}
+				validColumnIds.push(header.id);
+
+				const headerText =
+					typeof header.column.columnDef.header === 'string'
+						? header.column.columnDef.header
+						: header.id;
+
+				const cleanHeader = headerText
+					.replace(/([A-Z])/g, ' $1')
+					.replace(/^./, (str: string) => str.toUpperCase());
+				headers.push(cleanHeader.trim());
+			});
+		});
+
+		// 2. Get Rows (With automated currency/numeric cleansing)
+		const rowModel = table.getRowModel();
+		const rows = rowModel.rows.map((row: any) => {
+			return validColumnIds.map((columnId) => {
+				const cell = row.getAllCells().find((c: any) => c.column.id === columnId);
+				if (!cell) return '';
+
+				let value = cell.renderValue();
+
+				// Fallback to raw object if needed
+				if (typeof value === 'object' && value !== null) {
+					value = row.original[columnId] ?? '';
+				}
+
+				// If the value is undefined or null, keep it clean
+				if (value === undefined || value === null) {
+					return '';
+				}
+
+				// --- ERP NUMERIC & CURRENCY AUTO-FORMATTER ---
+				// Detects numbers or stringified long floats (e.g., 6000.000000)
+				const num = Number(value);
+				if (!isNaN(num) && typeof value !== 'boolean' && String(value).trim() !== '') {
+					// Format as a standard financial ledger string: 6,000.00
+					return num.toLocaleString('en-US', {
+						minimumFractionDigits: 2,
+						maximumFractionDigits: 2
+					});
+				}
+				// ---------------------------------------------
+
+				return String(value).trim();
+			});
+		});
+
+		return { headers, rows };
+	}
 </script>
 
 <!-- min-h-0 is required for flex-child overflow -->
+<!-- <div class="flex-1 text-sm text-muted-foreground">
+	{table.getFilteredSelectedRowModel().rows.length} of{''}
+	{table.getFilteredRowModel().rows.length} row(s) selected.
 
+	{#each table.getFilteredRowModel().rows as selected}
+		{selected?.id}
+	{/each}
+</div> -->
 <Resizable.PaneGroup
 	direction="horizontal"
-	class="lg:max-w-8xl mt-4 flex w-full min-w-full gap-0 rounded-lg lg:w-fit lg:min-w-2xl {className}"
+	class="mt-4 flex gap-0 rounded-lg lg:w-fit lg:min-w-2xl {className}"
 >
 	<Resizable.Pane
 		defaultSize={isMobile()
@@ -157,21 +243,18 @@
 			: table.getAllColumns().filter((col) => col.getIsVisible()).length * 20}
 		class="bg-background"
 	>
-		<ScrollArea orientation="vertical" class="w-full rounded-lg p-2">
+		<ScrollArea orientation="both" class="w-full rounded-lg p-2">
 			<div class="flex min-w-full flex-col gap-2 rounded-md border-0 px-1">
 				{#if search}
 					<ScrollArea
 						orientation="horizontal"
-						class="flex w-full flex-row rounded-md border whitespace-nowrap"
+						class="flex flex-row items-start justify-start rounded-md border"
 					>
-						<div
-							class="flex w-full space-x-4 p-4
-						"
-						>
+						<div class="flex max-w-4xl flex-row items-start justify-start gap-2 p-4">
 							<Input
 								type="search"
 								placeholder="Search Table..."
-								class="w-64 lg:w-full"
+								class="w-64 lg:w-xl"
 								bind:value={globalFilter}
 								oninput={() => table.setGlobalFilter(globalFilter)}
 							/>
@@ -226,7 +309,7 @@
 									{/each}
 								</DropdownMenu.Content>
 							</DropdownMenu.Root>
-							<Pdf {fileName} tableId="#{uniqueTableId}" {data} />
+							<Pdf {fileName} {table} />
 							<Button variant="outline">
 								<ListOrdered />
 								{table.getFilteredRowModel().rows.length} Results
@@ -234,18 +317,13 @@
 						</div>
 					</ScrollArea>
 				{/if}
-				<div class="max-h-96 rounded-md border">
-					<Table.Root id={uniqueTableId} class="relative max-h-96">
+				<div class="max-h-[45vh] rounded-md border">
+					<Table.Root id={uniqueTableId} class="relative overflow-x-auto">
 						<Table.Header>
 							{#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
 								<Table.Row>
 									{#each headerGroup.headers as header, index}
-										<Table.Head
-											colspan={header.colSpan}
-											class="{index === 1
-												? 'sticky left-0 z-10 bg-background'
-												: ''} p-0 px-2 text-start"
-										>
+										<Table.Head colspan={header.colSpan}>
 											{#if !header.isPlaceholder}
 												<FlexRender
 													content={header.column.columnDef.header}
@@ -261,11 +339,7 @@
 							{#each table.getRowModel().rows as row (row.id)}
 								<Table.Row data-state={row.getIsSelected() && 'selected'}>
 									{#each row.getVisibleCells() as cell, index}
-										<Table.Cell
-											class="word-break capitalize {index === 1
-												? 'sticky left-0 z-10 bg-background'
-												: ''}"
-										>
+										<Table.Cell>
 											<FlexRender
 												content={cell.column.columnDef.cell}
 												context={cell.getContext()}

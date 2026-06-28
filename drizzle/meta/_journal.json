@@ -99,6 +99,41 @@
       "when": 1777198023327,
       "tag": "0013_clammy_famine",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "5",
+      "when": 1782631309757,
+      "tag": "0014_skinny_scarlet_spider",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "5",
+      "when": 1782631888764,
+      "tag": "0015_round_maverick",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "5",
+      "when": 1782634967180,
+      "tag": "0016_narrow_otto_octavius",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1782638197566,
+      "tag": "0017_third_wild_child",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1782641929957,
+      "tag": "0018_daily_scalphunter",
+      "breakpoints": true
     }
   ]
 }

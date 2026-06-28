@@ -8,7 +8,10 @@ node_modules
 /.svelte-kit
 /build
 /.tempFiles
+/files
 
+build.tar
+build.tar.gz
 # OS
 .DS_Store
 Thumbs.db

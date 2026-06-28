@@ -12,7 +12,9 @@ export const addUser = z.object({
 	name: z.string('Name is Required').min(2).max(100),
 	phone: z.string('Phone is Required').min(10).max(15),
 	email: z.email('Email is Required'),
-	password: z.string('Password is required!')
+	password: z.string('Password is required!'),
+	address: z.string('General Address is required!'),
+	specificAddress: z.string('Specific Address is required!')
 });
 export type SignupSchema = typeof addUser;
 export const loginSchema = z.object({

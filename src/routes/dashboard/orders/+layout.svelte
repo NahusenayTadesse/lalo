@@ -163,6 +163,26 @@
 			</div>
 		{/each}
 
+ 
+		<InputComp
+			label="Delivery Address"
+			name="deliveryAddress"
+			type="text"
+			{form}
+			{errors}
+		/>
+		
+
+		<InputComp
+			label="Status"
+			name="status"
+				{ value: 'pending', name: 'Pending' },
+				{ value: 'delivered', name: 'Delivered' },
+				{ value: 'cancelled', name: 'Cancelled' }
+			]}
+		/>
+		
+
 		<InputComp
 			label="Status"
 			name="status"

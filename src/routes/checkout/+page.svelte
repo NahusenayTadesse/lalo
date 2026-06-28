@@ -91,7 +91,7 @@
 
 				{#if !data?.user}
 					<DialogComp title="Sign Up" variant="default" IconComp={UserRoundPlus}>
-						<Signup data={data?.signupForm} action="/signup/?/signup" />
+						<Signup data={data?.signupForm} action="/signup/?/signup" placeList={data?.placeList} />
 					</DialogComp>
 
 					<DialogComp title="Log In" variant="default" IconComp={User}>

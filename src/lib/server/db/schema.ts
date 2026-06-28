@@ -16,6 +16,17 @@ export const paymentMethods = mysqlTable('payment_methods', {
 	description: varchar('description', { length: 255 }),
 	...secureFields
 });
+export const freeDelivery = mysqlTable('free_delivery', {
+	suggestionThreshold: decimal('suggestion_threshold', { precision: 10, scale: 2 }).notNull(),
+	threshold: decimal('threshold', { precision: 10, scale: 2 }).notNull()
+});
+
+export const placeNames = mysqlTable('place_names', {
+	id: int('id').primaryKey().autoincrement(),
+	name: varchar('name', { length: 100 }).notNull().unique(),
+	fee: decimal('fee', { precision: 10, scale: 2 }).notNull(),
+	...secureFields
+});
 
 export const products = mysqlTable('products', {
 	id: int('id').primaryKey().autoincrement(),
@@ -52,6 +63,7 @@ export const customers = mysqlTable('customers', {
 		.notNull()
 		.references(() => user.id),
 	address: varchar('address', { length: 255 }),
+	deliveryAddress: varchar('delivery_address', { length: 255 }),
 	...secureFields
 });
 
@@ -107,7 +119,10 @@ export const orders = mysqlTable('orders', {
 	id: int('id').autoincrement().primaryKey(),
 	customerId: int('customer_id').references(() => customers.id),
 	status: mysqlEnum('status', ['pending', 'delivered', 'cancelled']),
-	transactionId: int('transaction_id').references(() => transactions.id), // Link directly to the sale that caused the adjustment
+	transactionId: int('transaction_id').references(() => transactions.id),
+	address: varchar('address', { length: 255 }),
+	deliveryAddress: varchar('delivery_address', { length: 255 }),
+	fee: decimal('fee', { precision: 10, scale: 2 }),
 	...secureFields
 });
 

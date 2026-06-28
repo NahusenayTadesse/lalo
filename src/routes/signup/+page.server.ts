@@ -11,7 +11,7 @@ import { customerWelcomeTemplate, sendEmail } from '$lib/server/email';
 
 import { db } from '$lib/server/db';
 import { APIError } from 'better-auth';
-import { orders, orderItems, roles, user, products, customers } from '$lib/server/db/schema';
+import { roles, user, customers, placeNames } from '$lib/server/db/schema';
 
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
@@ -28,7 +28,15 @@ export const load: PageServerLoad = async (event) => {
 	}
 	const form = await superValidate(zod4(add));
 
-	return { form };
+	const placeList = await db
+		.select({
+			value: placeNames.name,
+			name: placeNames.name
+		})
+		.from(placeNames)
+		.where(eq(placeNames.isActive, true));
+
+	return { form, placeList };
 };
 
 export const actions: Actions = {
@@ -47,7 +55,7 @@ export const actions: Actions = {
 			);
 		}
 
-		const { name, email, password, phone } = form.data;
+		const { name, email, password, phone, address, specificAddress } = form.data;
 
 		try {
 			await db.transaction(async (tx) => {
@@ -65,7 +73,9 @@ export const actions: Actions = {
 						roleId: 2
 					})
 					.where(eq(user.id, newCustomer?.user.id));
-				await tx.insert(customers).values({ email, name, phone, userId: newCustomer?.user.id });
+				await tx
+					.insert(customers)
+					.values({ email, name, phone, userId: newCustomer?.user.id, address, specificAddress });
 			});
 			const { subject, html } = customerWelcomeTemplate(name);
 

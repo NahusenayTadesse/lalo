@@ -1,0 +1,1 @@
+ALTER TABLE `orders` ADD `delivery_address` varchar(255);
