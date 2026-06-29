@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { productCategories, products, prices, productImages } from '$lib/server/db/schema';
-import { eq, sql, min } from 'drizzle-orm';
+import { eq, sql, min, and, ne } from 'drizzle-orm';
 import type { LayoutServerLoad } from './$types';
 
 import { error } from '@sveltejs/kit';
@@ -24,17 +24,36 @@ export const load: LayoutServerLoad = async ({ params }) => {
 			price: min(prices.price),
 			description: products.description,
 			category: productCategories.name,
-			image: products.featuredImage
+			image: products.featuredImage,
+			categoryId: products.categoryId
 		})
 		.from(products)
 		.leftJoin(productCategories, eq(productCategories.id, products.categoryId))
 		.leftJoin(prices, eq(prices.productId, products.id))
-		.where(eq(products.id, Number(id)))
+		.where(and(eq(products.id, Number(id)), eq(products.isActive, true)))
+		.limit(1)
 		.then((rows) => rows[0]);
 
 	if (!product) {
 		error(404, 'Product not found');
 	}
+
+	  	const catProducts = await db
+		.select({
+			productId: products.id,
+			productName: products.name,
+			price: sql<number>`min(${prices.price})`,
+			amount: sql<number>`min(${prices.amount})`,
+			image: products.featuredImage,
+			category: productCategories.name
+		})
+		.from(products)
+		.leftJoin(productCategories, eq(productCategories.id, products.categoryId))
+		.innerJoin(prices, eq(prices.productId, products.id))
+		.where(and(eq(products.categoryId, product.categoryId), eq(products.isActive, true), ne(products.id, Number(id))))
+		.limit(10)
+		.groupBy(products.id, productCategories.name)
+	  
 
 	const priceList = await db
 		.select({
@@ -48,6 +67,7 @@ export const load: LayoutServerLoad = async ({ params }) => {
 		product,
 		priceList,
 		images,
-		result
+		result,
+		catProducts
 	};
 };

@@ -78,7 +78,7 @@
 	<Header data={data?.user?.name ?? ''} />
 	{@render children()}
 	<Footer />
-	<Cart />
+	<Cart freeDeliveryThreshold={data?.freeData?.threshold} suggestionThreshold={data?.freeData?.suggestionThreshold} />
 {:else}
 	{@render children()}
 {/if}

@@ -28,6 +28,7 @@
 		year = false,
 		futureDays = false,
 		image = '',
+		disabled = false,
 		images = $bindable()
 	} = $props();
 </script>
@@ -60,7 +61,7 @@
 			<input type="hidden" {name} bind:value={$form[name]} />
 		</div>
 	{:else}
-		<Input {type} {name} step="any" bind:value={$form[name]} {max} {min} {placeholder} {required} />
+		<Input {type} {disabled} {name} step="any" bind:value={$form[name]} {max} {min} {placeholder} {required} />
 	{/if}
 
 	{#if $errors[name]}

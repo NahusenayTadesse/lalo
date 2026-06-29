@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
-	import { ShareIcon, PlusIcon, CheckIcon } from '@lucide/svelte';
+	import { ShareIcon, PlusIcon, CheckIcon, Plus, Minus } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 
 	type Props = {
@@ -18,7 +18,7 @@
 	const { productId, productName, price, description, image, category, images, priceList }: Props =
 		$props();
 
-	let quantity = $state(1);
+	
 
 	import { useCart } from '$lib/hooks/cart.svelte.js';
 
@@ -27,7 +27,7 @@
 	let justAdded = $state(false);
 
 	let currentPrice = $state(typeof price === 'string' ? parseFloat(price) : price);
-	let currentAmount = $state(priceList?.[0]?.amount ?? '');
+	let currentAmount = $derived(priceList?.[0]?.amount ?? '');
 
 	// Reusable formatter (performance friendly)
 	const formatter = new Intl.NumberFormat('en-US', {
@@ -42,10 +42,12 @@
 	const formattedPrice = $derived(formatter.format(numericPrice));
 	const quantityInCart = $derived(cart.items.find((i) => i.productId === productId)?.quantity ?? 0);
 
+	let quantity = $state(1);
+
 	function addToCart() {
 		if (justAdded) return; // Prevent double-clicks during animation
 
-		cart.addItem({ productId, productName, price: numericPrice, amount: currentAmount });
+		cart.addItem({ productId, productName, price: numericPrice, amount: currentAmount}, quantity);
 		justAdded = true;
 
 		toast.success(`${productName} added to cart`, {
@@ -63,20 +65,30 @@
 
 	const incrementQuantity = () => {
 		quantity += 1;
+		cart.updateQuantity(productId, currentAmount, quantity);
 	};
 
 	const decrementQuantity = () => {
 		if (quantity > 1) {
 			quantity -= 1;
 		}
+		cart.updateQuantity(productId, currentAmount, quantity);
+
 	};
 
-	let displayImage = $state(image);
+
+
+	let displayImage = $derived(image);
 
 	function changePrice(product: { price: number | string; amount: number | string }) {
 		currentPrice = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
 		currentAmount = product.amount;
 	}
+
+    $effect(() => {
+	     
+	});
+
 </script>
 
 <div class="min-h-dvh bg-linear-to-b from-background via-background to-muted/20">
@@ -191,13 +203,14 @@
 							<button
 								onclick={decrementQuantity}
 								class="flex size-8 items-center justify-center rounded transition-colors hover:bg-muted"
-								aria-label="Decrease quantity">−</button
+								aria-label="Decrease quantity"><Minus class="size-4" /></button
 							>
-							<span class="w-8 text-center font-semibold">{quantity}</span>
+							<!-- <span class="w-8 text-center font-semibold">{quantity}</span> -->
+							<input type="number" class="w-12 text-center font-semibold"  bind:value={quantity} min="1" />
 							<button
 								onclick={incrementQuantity}
 								class="flex size-8 items-center justify-center rounded transition-colors hover:bg-muted"
-								aria-label="Increase quantity">+</button
+								aria-label="Increase quantity"><Plus  class="size-4" /></button
 							>
 						</div>
 					</div>

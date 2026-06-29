@@ -7,11 +7,20 @@ import { user, customers, orders } from '$lib/server/db/schema';
 import { eq, count, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { editUserSchema as schema } from './schema';
+import { placeNames } from '$lib/server/db/schema';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) return redirect(303, '/');
 
 	const form = await superValidate(zod4(schema));
+
+		const placeList = await db
+			.select({
+				value: placeNames.name,
+				name: placeNames.name
+			})
+			.from(placeNames)
+			.where(eq(placeNames.isActive, true));
 
 	const singleUser = await db
 		.select({
@@ -21,7 +30,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			email: user.email,
 			createdAt: user.createdAt,
 
-			numberOfOrders: count(orders.id)
+			numberOfOrders: count(orders.id),
+			address: customers.address,
+			deliveryAddress: customers.deliveryAddress
 		})
 		.from(user)
 		.leftJoin(customers, eq(user.id, customers.userId))
@@ -42,15 +53,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.where(eq(orders.customerId, Number(singleUser.id)))
 		.groupBy(orders.status);
 
-	// const permissionList = await db
-	// 	.select({
-	// 		id: permissions.id,
-	// 		name: permissions.name,
-	// 		description: permissions.description
-	// 	})
-	// 	.from(permissions)
-	// 	.innerJoin(rolePermissions, eq(permissions.id, rolePermissions.permissionId))
-	// 	.where(eq(rolePermissions.roleId, singleUser.roleId));
+
 
 	if (!singleUser) {
 		error(404, 'User with this ID not found');
@@ -59,7 +62,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		singleUser,
 		orderCounts,
-		form
+		form,
+		placeList
 	};
 };
 
@@ -75,7 +79,7 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: 'Please check your form data.' });
 		}
 
-		const { name, phone, email } = form.data;
+		const { name, phone, email, address, deliveryAddress } = form.data;
 
 		try {
 			const existingUser = await db
@@ -121,9 +125,12 @@ export const actions: Actions = {
 						.set({
 							name,
 							phone,
-							email
+							email,
+							address,
+							deliveryAddress
 						})
 						.where(eq(customers.userId, id));
+	
 				}
 			});
 

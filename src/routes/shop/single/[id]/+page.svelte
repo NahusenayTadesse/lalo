@@ -1,6 +1,11 @@
 <script lang="ts">
 	import ProductDetail from '$lib/components/product-detail.svelte';
 	import Gallery from '$lib/components/gallery.svelte';
+		import ProductCard from '$lib/components/product-card.svelte';
+	import * as Carousel from '$lib/components/ui/carousel/index.js';
+	import { ArrowBigRight } from '@lucide/svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
+
 
 	// Set app hook
 
@@ -67,3 +72,58 @@
 		</div>
 	{/if}
 </div>
+
+{#if data?.catProducts?.length}
+<section
+	class="relative mx-auto flex max-w-7xl flex-col items-center justify-center overflow-hidden px-4 py-16 sm:px-6 lg:px-8"
+>
+	<div
+		class="absolute top-0 left-1/2 -z-10 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/5 opacity-60 blur-3xl"
+	></div>
+
+	<div class="mb-12 flex flex-col items-center gap-3 text-center">
+		
+		<h2
+			class="bg-linear-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl"
+		>
+				Related Products
+		</h2>
+	
+	</div>
+
+	<div class="relative w-full px-2 sm:px-8">
+		<Carousel.Root
+			opts={{
+				align: 'start',
+				loop: true
+			}}
+			class="mx-auto w-full max-w-6xl"
+		>
+			<Carousel.Content class="-ml-4 pb-6">
+				{#each data?.catProducts as product (product.productId)}
+					<Carousel.Item class="pl-4 sm:basis-1/2 lg:basis-1/3 xl:basis-1/3">
+						<div
+							class="group h-full rounded-2xl border border-primary/5 bg-card/40 p-1 backdrop-blur-md transition-all duration-500 hover:-translate-y-2 hover:border-primary/20 hover:bg-card/70 hover:shadow-[0_12px_30px_rgba(var(--primary),0.08)]"
+						>
+							<ProductCard {...product} />
+						</div>
+					</Carousel.Item>
+				{/each}
+			</Carousel.Content>
+
+			<div class="hidden sm:block">
+				<Carousel.Previous
+					class="absolute top-1/2 -left-4 h-11 w-11 -translate-y-1/2 border-primary/10 bg-background/80 text-foreground shadow-md backdrop-blur-md transition-all duration-300 hover:scale-105 hover:border-primary/30 hover:bg-primary hover:text-primary-foreground"
+				/>
+				<Carousel.Next
+					class="absolute top-1/2 -right-4 h-11 w-11 -translate-y-1/2 border-primary/10 bg-background/80 text-foreground shadow-md backdrop-blur-md transition-all duration-300 hover:scale-105 hover:border-primary/30 hover:bg-primary hover:text-primary-foreground"
+				/>
+			</div>
+		</Carousel.Root>
+	</div>
+	<Button href="/shop" size="lg" class="justify-self-center!">
+		See All Products
+		<ArrowBigRight />
+	</Button>
+</section>
+{/if}

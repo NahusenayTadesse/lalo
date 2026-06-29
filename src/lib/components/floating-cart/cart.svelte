@@ -3,9 +3,14 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
-	import { ShoppingCartIcon, Cookie, TrashIcon } from '@lucide/svelte';
+	import { ShoppingCartIcon, Cookie, TrashIcon, PartyPopper } from '@lucide/svelte';
 	import CartItem from './cart-item.svelte';
-	import * as Popover from '$lib/components/ui/sheet/index.js';
+	import * as Sheet from '$lib/components/ui/sheet/index.js';
+
+	let {
+		freeDeliveryThreshold,
+		suggestionThreshold
+	}: { freeDeliveryThreshold?: number | string; suggestionThreshold?: number | string } = $props();
 
 	const cart = $derived(useCart());
 
@@ -22,8 +27,8 @@
 
 <svelte:body style:overflow={cart.isOpen ? 'hidden' : 'auto'} />
 
-<Popover.Root bind:open>
-	<Popover.Trigger
+<Sheet.Root bind:open>
+	<Sheet.Trigger
 		class="fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
 	>
 		<div class="relative">
@@ -37,8 +42,8 @@
 				</Badge>
 			{/if}
 		</div>
-	</Popover.Trigger>
-	<Popover.Content>
+	</Sheet.Trigger>
+	<Sheet.Content>
 		<!-- Header -->
 		<div class="flex items-center justify-between border-b border-border bg-muted/30 p-4">
 			<div class="flex items-center gap-2">
@@ -59,6 +64,25 @@
 
 			<!-- Footer -->
 			<div class="z-100 space-y-3 border-t border-border bg-muted p-4">
+			   <div>
+				 {#if cart.totalPrice > Number(suggestionThreshold)}
+				     {#if cart.totalPrice < Number(freeDeliveryThreshold)}
+					<p class="text-sm text-muted-foreground">
+						You are {formatPrice(Number(freeDeliveryThreshold) - cart.totalPrice)} away from free delivery
+					</p>
+					{/if}
+					{#if cart.totalPrice >= Number(freeDeliveryThreshold)}
+					<p class="text-sm text-muted-foreground flex flex-row items-center gap-2">
+						
+						<span class="flex items-center gap-1">
+							<PartyPopper class="size-5 text-amber-400 animate-bounce" />
+							You have qualified for free delivery!
+							<span class="text-lg animate-pulse">✨</span>
+						</span>
+					</p>
+					{/if}
+				 {/if}
+			   </div>
 				<div class="flex items-center justify-between">
 					<span class="text-sm text-muted-foreground">Total ({cart.totalItems} items)</span>
 					<span class="text-lg font-bold text-primary">{formatPrice(cart.totalPrice)}</span>
@@ -80,5 +104,5 @@
 				<p class="mt-1 text-xs text-muted-foreground/70">Add some products to get started</p>
 			</div>
 		{/if}
-	</Popover.Content>
-</Popover.Root>
+	</Sheet.Content>
+</Sheet.Root>

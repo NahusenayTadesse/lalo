@@ -23,6 +23,9 @@
 		{ name: 'Name', value: data.singleUser?.name },
 		{ name: 'Email', value: data.singleUser?.email },
 		{ name: 'Phone', value: data.singleUser?.phone },
+		{ name: 'General Address', value: data.singleUser?.address ?? 'N/A' },
+		{ name: 'Delivery Address', value: data.singleUser?.deliveryAddress ?? 'N/A' },
+
 		{ name: 'Life Time Orders', value: data.singleUser?.numberOfOrders } + 'Orders',
 
 		{
@@ -129,6 +132,25 @@
 					placeholder="Enter the email of new admin user"
 					required
 				/>
+
+					<InputComp
+				label="General Address"
+				name="address"
+				type="select"
+				{form}
+				{errors}
+				placeholder="+251 9-11-00-00-00"
+				
+				items={data?.placeList}
+			/>
+			<InputComp
+				label="Specific Delivery Address"
+				name="deliveryAddress"
+				type="text"
+				{form}
+				{errors}
+				placeholder="+251 9-11-00-00-00"
+			/>
 
 				<Button form="edit" type="submit" class="mt-4">
 					{#if $delayed}
