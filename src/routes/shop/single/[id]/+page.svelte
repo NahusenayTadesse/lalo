@@ -48,13 +48,13 @@
 	<!-- {@html `<script type="application/ld+json">${JSON.stringify(jsonLd)}<\/script>`} -->
 </svelte:head>
 
-<div class="min-h-screen w-full bg-slate-50 pb-16 text-slate-900">
-	<section class="border-b bg-white shadow-sm">
+<div class="min-h-screen w-full pb-16">
+	<section class="border-b shadow-sm">
 		<ProductDetail {...data?.product} priceList={data?.priceList} images={data?.images} />
 	</section>
 	{#if data?.images?.length}
 		<div class="mx-auto mt-12 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-			<div class="mb-8 flex items-end justify-between border-b border-slate-200 pb-4">
+			<div class="mb-8 flex items-end justify-between border-b pb-4">
 				<div>
 					<h2 class="text-3xl font-bold tracking-tight text-slate-900">Product Gallery</h2>
 					<p class="mt-2 text-sm text-slate-500">

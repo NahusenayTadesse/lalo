@@ -21,6 +21,7 @@
 	
 
 	import { useCart } from '$lib/hooks/cart.svelte.js';
+	import Input from './ui/input/input.svelte';
 
 	const cart = useCart();
 
@@ -91,7 +92,7 @@
 
 </script>
 
-<div class="min-h-dvh bg-linear-to-b from-background via-background to-muted/20">
+<div class="min-h-dvh bg-background">
 	<div class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
 		<div class="grid gap-8 lg:grid-cols-2 lg:gap-12">
 			<!-- Product Image Section -->
@@ -200,17 +201,17 @@
 					<div class="flex items-center gap-4">
 						<span class="text-sm font-medium text-muted-foreground">Quantity</span>
 						<div class="flex items-center gap-2 rounded-lg border border-input bg-background p-1">
-							<button
+							<Button
 								onclick={decrementQuantity}
-								class="flex size-8 items-center justify-center rounded transition-colors hover:bg-muted"
-								aria-label="Decrease quantity"><Minus class="size-4" /></button
+								size="icon"
+								aria-label="Decrease quantity"><Minus class="size-4" /></Button
 							>
 							<!-- <span class="w-8 text-center font-semibold">{quantity}</span> -->
-							<input type="number" class="w-12 text-center font-semibold"  bind:value={quantity} min="1" />
-							<button
+							<Input type="number" class="w-12 text-center text-black dark:text-white font-semibold"  bind:value={quantity} min="1" />
+							<Button
 								onclick={incrementQuantity}
-								class="flex size-8 items-center justify-center rounded transition-colors hover:bg-muted"
-								aria-label="Increase quantity"><Plus  class="size-4" /></button
+								size="icon"
+								aria-label="Increase quantity"><Plus  class="size-4" /></Button
 							>
 						</div>
 					</div>

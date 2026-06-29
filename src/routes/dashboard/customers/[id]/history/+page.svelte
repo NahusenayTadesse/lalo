@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { zod4Client } from 'sveltekit-superforms/adapters';
-	import { editCustomer } from '$lib/Zodschema';
 
 	let { data } = $props();
 

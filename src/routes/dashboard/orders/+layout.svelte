@@ -176,6 +176,10 @@
 		<InputComp
 			label="Status"
 			name="status"
+			type="select"
+			{form}
+			{errors}
+			items={[
 				{ value: 'pending', name: 'Pending' },
 				{ value: 'delivered', name: 'Delivered' },
 				{ value: 'cancelled', name: 'Cancelled' }

@@ -19,6 +19,7 @@
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
 	import Signup from '$lib/forms/Signup.svelte';
 	import Login from '$lib/forms/Login.svelte';
+	import { onMount } from 'svelte';
 
 	const cart = useCart();
 	let { data } = $props();
@@ -30,6 +31,9 @@
 		}).format(price);
 	};
 		let saveInfo = $state(false);
+		let freeDelivery = $derived(cart.totalPrice >= Number(data?.freeData?.threshold));
+	const fee = $derived(freeDelivery ? 0 : data?.placeList?.find((item) => item.name === $form.address)?.fee);
+
 
 	const { form, errors, enhance, allErrors, delayed, message } = superForm(data.form, {
 		dataType: 'json',
@@ -37,6 +41,9 @@
 		onChange: (event) => {
   	if (event.paths.includes('address') || event.paths.includes('deliveryAddress')) {
 				 saveInfo = true;
+           				 $form.fee = Number(fee) ?? 0;
+
+
 		}
 	},
 
@@ -44,7 +51,7 @@
 			// 2. Only clear cart if the server actually says 'success'
 			if (result.type === 'success') {
 				cart.clearCart();
-				// Optional: Add a toast notification here
+				
 			}
 		}
 	});
@@ -68,14 +75,19 @@
 	});
 
 
-	$form.address = data?.customerInfo?.address ?? '';
-	$form.deliveryAddress = data?.customerInfo?.deliveryAddress ?? '';
-	
+	onMount(() => {
+		if (data?.user) {
+			$form.address = data?.customerInfo?.address ?? '';
+			$form.deliveryAddress = data?.customerInfo?.deliveryAddress ?? '';
+			$form.fee = Number(fee) ?? 0;
+		}
+	});
+
+
 
 
 	$effect(() => {
 		$form.selectedProducts = formattedData;
-		$form.fee = cart.totalPrice >= data?.freeData?.threshold ? 0 : data?.placeList?.find((item) => item.name === $form.address)?.fee;
 	});
 </script>
 
@@ -298,8 +310,8 @@
 							</div>
 							<div class="flex justify-between text-sm">
 								<span class="text-muted-foreground">Shipping</span>
-								{#if data?.user || $form.fee}
-	<span class="font-medium text-green-600">{$form.fee === 0 ? formatPrice($form.fee) : 'Free'}</span>
+								{#if data?.user && $form.fee !== undefined}
+	<span class="font-medium text-green-600">{$form.fee !== 0 ? formatPrice($form.fee) : 'Free'}</span>
 								 {:else}
 								  <span>Uncalculated.</span>
 {/if}

@@ -66,16 +66,22 @@ export const actions: Actions = {
 
 		try {
 			await db.transaction(async (tx) => {
-				const customer = await tx
+				const [customer] = await tx
 					.select({ value: customers.id, email: customers.email })
 					.from(customers)
 					.where(eq(customers.userId, locals?.user?.id))
-					.then((rows) => rows[0]);
+					.limit(1)
 				customerInfo = customer;
+				if (saveInfo) {
+					await tx
+						.update(customers)
+						.set({ address, deliveryAddress })
+						.where(eq(customers.id, customer.value));
+				}
 
 				const [orderId] = await tx
 					.insert(orders)
-					.values({ customerId: customer.value, status: 'pending' })
+					.values({ customerId: customer.value, status: 'pending', address, deliveryAddress, fee })
 					.$returningId();
 				newOrderId = orderId.id;
 

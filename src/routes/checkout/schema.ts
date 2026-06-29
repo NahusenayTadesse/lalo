@@ -10,6 +10,6 @@ export const add = z.object({
 		.array(),
 	address: z.string('Address is required').min(5).max(200),
 	deliveryAddress: z.string('Delivery Address is required').min(5).max(200),
-	fee: z.number({ message: 'Delivery Fee is required' }).positive('Delivery Fee is required'),
+	fee: z.number( 'Delivery Fee is required' ).positive('Delivery Fee is required'),
 	saveInfo: z.boolean().default(false)
 });
