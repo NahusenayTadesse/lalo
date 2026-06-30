@@ -153,9 +153,14 @@
 							<InputComp
 								{form}
 								{errors}
-								type="text"
+								type="select"
 								name="subject"
 								label="Subject"
+								items={[
+									 { value: 'Wholesale Inquiry', name: 'Wholesale Inquiry' },
+									 { value: 'Technical Support', name: 'Technical Support' },
+									 { value: 'General Inquiry', name: 'General Inquiry' }
+								]}
 								placeholder="What is this about?"
 							/>
 							<InputComp

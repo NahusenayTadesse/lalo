@@ -83,7 +83,7 @@
 				{form}
 				{errors}
 				placeholder="+251 9-11-00-00-00"
-				,
+				
 				items={placeList}
 			/>
 			<InputComp
@@ -92,7 +92,7 @@
 				type="text"
 				{form}
 				{errors}
-				placeholder="+251 9-11-00-00-00"
+				placeholder="Mexico, Edna Mall, 2nd Floor, Apt 201"
 			/>
 
 			<div class="mt-2 grid gap-2">

@@ -81,6 +81,9 @@
 	$form.name = data.singleUser?.name;
 	$form.phone = data.singleUser?.phone;
 	$form.email = data.singleUser?.email;
+	$form.address = data.singleUser?.address;
+	$form.deliveryAddress = data.singleUser?.deliveryAddress;
+
 </script>
 
 <svelte:head>
@@ -149,7 +152,7 @@
 				type="text"
 				{form}
 				{errors}
-				placeholder="+251 9-11-00-00-00"
+				placeholder="Mexico, Edna Mall, 2nd Floor, Apt 201"
 			/>
 
 				<Button form="edit" type="submit" class="mt-4">

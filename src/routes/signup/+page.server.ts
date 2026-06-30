@@ -55,7 +55,7 @@ export const actions: Actions = {
 			);
 		}
 
-		const { name, email, password, phone, address, specificAddress } = form.data;
+		const { name, email, password, phone, address, deliveryAddress } = form.data;
 
 		try {
 			await db.transaction(async (tx) => {
@@ -75,7 +75,7 @@ export const actions: Actions = {
 					.where(eq(user.id, newCustomer?.user.id));
 				await tx
 					.insert(customers)
-					.values({ email, name, phone, userId: newCustomer?.user.id, address, specificAddress });
+					.values({ email, name, phone, userId: newCustomer?.user.id, address, deliveryAddress });
 			});
 			const { subject, html } = customerWelcomeTemplate(name);
 

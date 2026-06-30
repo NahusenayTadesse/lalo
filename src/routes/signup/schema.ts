@@ -5,6 +5,6 @@ export const add = z.object({
 	phone: z.string('Phone is Required').min(10).max(15),
 	email: z.email('Email is Required'),
 	password: z.string('Password is required!'),
-	address: z.string('Address is Required').min(5).max(200),
-	specificAddress: z.string('Specific Address is Required').min(5).max(200)
+	address: z.string('Address is Required'),
+	deliveryAddress: z.string('Delivery Address is Required')
 });
