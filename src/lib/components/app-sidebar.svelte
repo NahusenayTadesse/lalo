@@ -9,9 +9,6 @@
 		Plus,
 		Sheet,
 		Mail,
-		Loader,
-		CircleCheckBig,
-		OctagonMinus,
 		ListOrdered,
 		CookingPot,
 		Star,
@@ -36,13 +33,7 @@
 			title: 'Orders',
 			url: '/dashboard/orders',
 			icon: ListOrdered,
-			counter: ordersNumber,
-			items: [
-				{ title: 'All Orders', url: '/dashboard/orders/all-orders', icon: Sheet },
-				{ title: 'Pending Orders', url: '/dashboard/orders', icon: Loader },
-				{ title: 'Delivered Orders', url: '/dashboard/orders/delivered', icon: CircleCheckBig },
-				{ title: 'Cancelled Orders', url: '/dashboard/orders/cancelled', icon: OctagonMinus }
-			]
+			counter: ordersNumber
 		},
 
 		{

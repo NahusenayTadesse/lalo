@@ -10,21 +10,27 @@
 
 	let {
 		title,
+		dialogTitle = title,
 		children,
 		variant,
 		IconComp,
+		open = $bindable(false),
 
 		class: className = ''
 	}: {
 		title: string;
+		/** Header shown inside the dialog; defaults to `title` (the trigger button's label). */
+		dialogTitle?: string;
 		children: Snippet;
 		variant: ButtonVariant;
 		IconComp?: Component<IconProps>;
+		/** Bindable so a caller can close the dialog itself, e.g. after a successful form submit. */
+		open?: boolean;
 		class?: string;
 	} = $props();
 </script>
 
-<Dialog.Root>
+<Dialog.Root bind:open>
 	<Dialog.Trigger class="w-auto border-0">
 		{#snippet child({ props })}
 			<Button size="sm" class="border-0" {variant} {...props}>
@@ -40,7 +46,7 @@
 	</Dialog.Trigger>
 	<Dialog.Content class="w-lg! {className}">
 		<Dialog.Header>
-			<Dialog.Title>{title}</Dialog.Title>
+			<Dialog.Title>{dialogTitle}</Dialog.Title>
 		</Dialog.Header>
 		<ScrollArea class="h-auto w-full! min-w-0!  px-2 pr-4" orientation="both">
 			<div class="h-auto max-h-96 w-full lg:max-h-[calc(100vh-10rem)]">

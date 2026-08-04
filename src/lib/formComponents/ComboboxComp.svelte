@@ -51,7 +51,6 @@
 			triggerRef.focus();
 		});
 	}
-	$inspect(value, items);
 </script>
 
 <Popover.Root bind:open>
@@ -60,18 +59,19 @@
 			<Button
 				{...props}
 				variant="outline"
-				class="w-full justify-between capitalize"
+				title={selectedValue}
+				class="w-full min-w-0 justify-between capitalize"
 				role="combobox"
 				aria-expanded={open}
 			>
-				{triggerContent}
-				<ChevronsUpDownIcon class="opacity-50" />
+				<span class="truncate">{triggerContent}</span>
+				<ChevronsUpDownIcon class="shrink-0 opacity-50" />
 			</Button>
 		{/snippet}
 	</Popover.Trigger>
 	<input type="hidden" bind:value {name} {required} />
 
-	<Popover.Content class="w-full p-0">
+	<Popover.Content class="w-full min-w-64 p-0">
 		<Command.Root>
 			<Command.Input
 				placeholder="Search {name
@@ -89,10 +89,11 @@
 								value = item.value;
 								closeAndFocusTrigger();
 							}}
-							class={selectItem}
+							title={item.name}
+							class={cn(selectItem, 'gap-2')}
 						>
-							<CheckIcon class={cn(value !== item.value && 'text-transparent')} />
-							{item.name}
+							<CheckIcon class={cn('shrink-0', value !== item.value && 'text-transparent')} />
+							<span class="truncate">{item.name}</span>
 						</Command.Item>
 					{/each}
 				</Command.Group>

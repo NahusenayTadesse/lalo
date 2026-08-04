@@ -17,17 +17,22 @@
 		data: SuperValidated<Infer<EditPrice>>;
 		price: number | string;
 		id: number;
+		amount: string;
 	} = $props();
 	const { form, errors, enhance, delayed, message } = superForm(data, {});
 	import { toast } from 'svelte-sonner';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
 	import { formatETB } from '$lib/global.svelte';
+
+	let open = $state(false);
+
 	$effect(() => {
 		if ($message) {
 			if ($message.type === 'error') {
 				toast.error($message.text);
 			} else {
 				toast.success($message.text);
+				open = false;
 			}
 		}
 	});
@@ -35,7 +40,7 @@
 	$form.id = id;
 </script>
 
-<DialogComp title="" variant="destructive">
+<DialogComp bind:open title="" dialogTitle="Delete Price" variant="destructive">
 	<div class="flex flex-col items-center justify-center gap-4 pt-4">
 		<form
 			method="post"

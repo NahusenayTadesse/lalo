@@ -1,17 +1,15 @@
 <script lang="ts">
 	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import { SquarePen, Plus, X, Save } from '@lucide/svelte';
+	import { SquarePen, Plus, Save } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import type { Edit } from './schema';
 
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
 	import Errors from '$lib/formComponents/Errors.svelte';
-	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 
-	import ComboboxComp from '$lib/formComponents/ComboboxComp.svelte';
-	import { fly } from 'svelte/transition';
+	import ProductLineItem from './product-line-item.svelte';
 
 	type Item = {
 		value: number;
@@ -67,8 +65,15 @@
 	let open = $state(false);
 
 	function addProduct() {
-		$form.selectedProducts = [...$form.selectedProducts, { product: 0, quantity: 1 }];
+		$form.selectedProducts = [...$form.selectedProducts, { product: 0, quantity: 1, amount: '' }];
 	}
+
+	const grandTotal = $derived(
+		$form.selectedProducts.reduce((sum, item) => {
+			const price = parseFloat(String(item.amount ?? '').split(' ')[0]);
+			return sum + (Number.isFinite(price) ? price * (item.quantity ?? 0) : 0);
+		}, 0)
+	);
 
 	interface SimpleProduct {
 		product: number; // This is the productId
@@ -110,156 +115,101 @@
 	});
 </script>
 
+<DialogComp
+	bind:open
+	IconComp={icon ? SquarePen : undefined}
+	title={icon ? '' : customerName}
+	dialogTitle={`Edit ${customerName}`}
+	variant="ghost"
+>
+	<form
+		action="/dashboard/orders/?/edit"
+		use:enhance
+		method="post"
+		id="edit"
+		class="mt-4 flex flex-col gap-4"
+		enctype="multipart/form-data"
+	>
+		<Errors allErrors={$allErrors} />
+		<input type="hidden" name="id" value={$form.id} />
+		<InputComp label="Customer" name="customer" type="combo" {form} {errors} items={customerList} />
 
-			<DialogComp IconComp={icon ? SquarePen : undefined} title={icon ? '' : customerName} variant="ghost">
-			<form
-				action="/dashboard/orders/?/edit"
-				use:enhance
-				method="post"
-				id="edit"
-				class="mt-4 flex flex-col gap-4"
-				enctype="multipart/form-data"
-			>
-				<Errors allErrors={$allErrors} />
-				<input type="hidden" name="id" value={$form.id} />
-				<InputComp
-					label="Customer"
-					name="customer"
-					type="combo"
-					{form}
-					{errors}
-					items={customerList}
-				/>
-				<div class="mb-4 flex justify-end">
-					<Button type="button" size="sm" class="gap-2" onclick={() => addProduct()}>
-						<Plus class="h-4 w-4" />
-						<span>Add Product</span>
-					</Button>
-				</div>
+		<div class="flex items-center justify-between">
+			<Label class="text-sm font-semibold">Order Items</Label>
+			<Button type="button" size="sm" class="gap-2" onclick={() => addProduct()}>
+				<Plus class="h-4 w-4" />
+				<span>Add Product</span>
+			</Button>
+		</div>
 
-				{#each $form.selectedProducts as product, i (product)}
-					<div
-						class="group relative mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all dark:border-white/10 dark:bg-white/5"
-						transition:fly={{ y: 20, duration: 200 }}
-					>
-						<div
-							class="mb-4 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-white/5"
-						>
-							<span class="text-xs font-bold tracking-widest text-muted-foreground uppercase">
-								Product Entry #{i + 1}
-							</span>
+		{#if $form.selectedProducts.length === 0}
+			<p class="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
+				No products on this order yet. Click "Add Product" to add one.
+			</p>
+		{/if}
 
-							<Button
-								type="button"
-								variant="ghost"
-								size="sm"
-								class="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-								onclick={() => {
-									$form.selectedProducts.splice(i, 1);
-									$form.selectedProducts = $form.selectedProducts;
-								}}
-							>
-								<X class="h-4 w-4" />
-								<span class="sr-only">Remove item</span>
-							</Button>
-						</div>
+		{#each $form.selectedProducts as _, i (i)}
+			<ProductLineItem
+				index={i}
+				bind:item={$form.selectedProducts[i]}
+				{productList}
+				{priceList}
+				errors={$errors.selectedProducts?.[i]}
+				onremove={() => {
+					$form.selectedProducts.splice(i, 1);
+					$form.selectedProducts = $form.selectedProducts;
+				}}
+			/>
+		{/each}
 
-						<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-							<div class="space-y-1.5">
-								<Label class="text-xs font-medium text-slate-500">Selling Product</Label>
-								<ComboboxComp
-									items={productList}
-									name="selectedProducts"
-									required={true}
-									bind:value={$form.selectedProducts[i].product}
-								/>
-								{#if $errors.selectedProducts?.[i]?.product}
-									<p class="text-[11px] font-medium text-destructive">
-										{$errors.selectedProducts[i].product}
-									</p>
-								{/if}
-							</div>
+		{#if grandTotal > 0}
+			<p class="text-right text-sm text-muted-foreground">
+				Order Total: <span class="font-semibold text-foreground">ETB {grandTotal.toLocaleString()}</span>
+			</p>
+		{/if}
 
-							<div class="space-y-1.5">
-								<Label class="text-xs font-medium text-slate-500">Price Amount</Label>
-								<ComboboxComp
-									items={$form.selectedProducts[i].product
-										? priceList.filter(
-												(p) => Number(p.productId) === $form.selectedProducts[i].product
-											)
-										: [{ value: '', name: 'Select a product first' }]}
-									name="selectedProducts"
-									required={true}
-									bind:value={$form.selectedProducts[i].amount}
-								/>
-								{#if $errors.selectedProducts?.[i]?.amount}
-									<p class="text-[11px] font-medium text-destructive">
-										{$errors.selectedProducts[i].amount}
-									</p>
-								{/if}
-							</div>
+		<InputComp
+			label="Status"
+			name="status"
+			type="select"
+			{form}
+			{errors}
+			items={[
+				{ value: 'pending', name: 'Pending' },
+				{ value: 'delivered', name: 'Delivered' },
+				{ value: 'cancelled', name: 'Cancelled' }
+			]}
+		/>
 
-							<div class="space-y-1.5 lg:col-span-2">
-								<Label class="text-xs font-medium text-slate-500">Quantity</Label>
-								<Input
-									type="number"
-									min="1"
-									placeholder="Enter quantity..."
-									bind:value={$form.selectedProducts[i].quantity}
-								/>
-								{#if $errors.selectedProducts?.[i]?.quantity}
-									<p class="text-[11px] font-medium text-destructive">
-										{$errors.selectedProducts[i].quantity}
-									</p>
-								{/if}
-							</div>
-						</div>
-					</div>
-				{/each}
+		{#if $form.status === 'delivered'}
+			<InputComp
+				label="Payment Method"
+				name="paymentMethod"
+				type="combo"
+				{form}
+				{errors}
+				items={paymentMethodList}
+			/>
 
-				<InputComp
-					label="Status"
-					name="status"
-					type="select"
-					{form}
-					{errors}
-					items={[
-						{ value: 'pending', name: 'Pending' },
-						{ value: 'delivered', name: 'Delivered' },
-						{ value: 'cancelled', name: 'Cancelled' }
-					]}
-				/>
+			<InputComp
+				label="Reciept"
+				name="reciept"
+				type="file"
+				{form}
+				{image}
+				{errors}
+				placeholder="Upload Screenshot or PDF of Reciept"
+			/>
+		{/if}
 
-				{#if $form.status === 'delivered'}
-					<InputComp
-						label="Payment Method"
-						name="paymentMethod"
-						type="combo"
-						{form}
-						{errors}
-						items={paymentMethodList}
-					/>
+		<Button type="submit" class="mt-4" form="edit">
+			{#if $delayed}
+				<LoadingBtn name="Saving Changes" />
+			{:else}
+				<Save class="h-4 w-4" />
 
-					<InputComp
-						label="Reciept"
-						name="reciept"
-						type="file"
-						{form}
-						{image}
-						{errors}
-						placeholder="Upload Screenshot or PDF of Reciept"
-					/>
-				{/if}
-
-				<Button type="submit" class="mt-4" form="edit">
-					{#if $delayed}
-						<LoadingBtn name="Saving Changes" />
-					{:else}
-						<Save class="h-4 w-4" />
-
-						Save Changes
-					{/if}
-				</Button>
-			</form>
-			</DialogComp>	
-
+				Save Changes
+			{/if}
+		</Button>
+	</form>
+</DialogComp>

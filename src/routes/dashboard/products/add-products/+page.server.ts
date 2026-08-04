@@ -46,7 +46,6 @@ import { saveUploadedFile } from '$lib/server/upload.js';
 export const actions: Actions = {
 	addProduct: async ({ request, cookies, locals }) => {
 		const form = await superValidate(request, zod4(add));
-		console.log(form);
 
 		if (!form.valid) {
 			// Stay on the same page and set a flash message
@@ -84,6 +83,9 @@ export const actions: Actions = {
 					supplierId: supplier,
 					reorderLevel,
 					featuredImage,
+					// Commission is hidden from the add-product form for now; default to 0
+					// rather than leaving this NOT NULL decimal column unset.
+					commissionAmount: '0',
 					createdBy: locals?.user?.id
 				})
 				.$returningId();
@@ -127,15 +129,13 @@ export const actions: Actions = {
 const uploadGallery = async (gallery: File[] | undefined) => {
 	try {
 		// 1. Map each file to the upload promise
-		const uploadPromises = gallery.map(async (file) => {
+		const uploadPromises = (gallery ?? []).map(async (file) => {
 			const address = await saveUploadedFile(file);
 			return address; // This is the string returned by your function
 		});
 
 		// 2. Wait for all uploads to complete and store results in an array
 		const uploadedAddresses: string[] = await Promise.all(uploadPromises);
-
-		console.log('All files uploaded:', uploadedAddresses);
 
 		return uploadedAddresses;
 	} catch (error) {

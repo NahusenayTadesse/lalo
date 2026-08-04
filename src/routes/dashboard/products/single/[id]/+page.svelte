@@ -12,14 +12,20 @@
 	import InputComp from '$lib/formComponents/InputComp.svelte';
 
 	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import { ArrowLeft, Pencil, Save, History, X, Plus, ArrowDown, Tag } from '@lucide/svelte';
+	import { ArrowLeft, Pencil, Save, History, X, Plus, ArrowDown, Tag, TriangleAlert } from '@lucide/svelte';
 	import type { Snapshot } from '@sveltejs/kit';
-	import { getCurrentMonthRange } from '$lib/global.svelte';
 	import Delete from '$lib/forms/Delete.svelte';
 	import SingleView from '$lib/components/SingleView.svelte';
 	import Errors from '$lib/formComponents/Errors.svelte';
 	import Adjustment from '$lib/forms/Adjustment.svelte';
 	import Damaged from '$lib/forms/Damaged.svelte';
+	import { Badge } from '$lib/components/ui/badge/index.js';
+
+	const isLowStock = $derived(
+		data.product?.reorderLevel != null &&
+			data.product?.quantity != null &&
+			data.product.quantity <= data.product.reorderLevel
+	);
 
 	function scrollToPrices() {
 		const element = document.getElementById('price-section-anchor');
@@ -58,13 +64,10 @@
 
 	(($form.productName = data.product.name),
 		($form.category = data.product.categoryId),
-		($form.commission = data.product.commission),
 		($form.description = data.product.description),
-		($form.productId = data.product.id),
-		($form.prices = data?.priceList),
 		($form.quantity = data.product.quantity),
 		($form.reorderLevel = data.product.reorderLevel),
-		($form.supplier = data.product.supplier));
+		($form.supplier = data.product.supplierId));
 
 	export const snapshot: Snapshot = { capture, restore };
 
@@ -156,6 +159,12 @@
 </svelte:head>
 
 <SingleView title={data?.product?.name} photo={String(data?.product?.image)} class="w-full!">
+	{#if isLowStock}
+		<Badge variant="secondary" class="ml-4 gap-1 bg-amber-500 text-white">
+			<TriangleAlert class="h-3.5 w-3.5" /> Low stock: {data.product?.quantity} left (reorder at {data
+				.product?.reorderLevel})
+		</Badge>
+	{/if}
 	<div class="mt-4 flex w-full flex-row flex-wrap items-start justify-start gap-2 pl-4">
 		<Button onclick={() => (editForm = !editForm)}>
 			{#if !editForm}
@@ -170,11 +179,11 @@
 		{#key data?.product}
 			<Adjustment data={data.adjustForm} name={data.product?.name} />
 		{/key}
-		<Button href="/dashboard/products/single/{page.params.id}/ranges/{getCurrentMonthRange()}">
+		<Button href="/dashboard/products/single/{page.params.id}/ranges">
 			<History /> See Change History
 		</Button>
 		<Damaged data={data.damagedForm} name={data.product?.name} />
-		<Button href={`/dashboard/products/single/${page.params.id}/damaged/${getCurrentMonthRange()}`}>
+		<Button href="/dashboard/products/single/{page.params.id}/damaged">
 			<History /> See Damaged History
 		</Button>
 

@@ -23,12 +23,16 @@
 	import { toast } from 'svelte-sonner';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
 	import { formatETB } from '$lib/global.svelte';
+
+	let open = $state(false);
+
 	$effect(() => {
 		if ($message) {
 			if ($message.type === 'error') {
 				toast.error($message.text);
 			} else {
 				toast.success($message.text);
+				open = false;
 			}
 		}
 	});
@@ -38,7 +42,7 @@
 	$form.id = id;
 </script>
 
-<DialogComp title={formatETB(Number(price))} variant="ghost" IconComp={SquarePen}>
+<DialogComp bind:open title={formatETB(Number(price))} variant="ghost" IconComp={SquarePen}>
 	<div class="flex flex-col items-center justify-center gap-4 pt-4">
 		<form
 			method="post"

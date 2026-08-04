@@ -13,7 +13,7 @@ import {
 	prices,
 	productImages
 } from '$lib/server/db/schema';
-import { eq, and, sql, isNotNull, desc, min } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ params, locals }) => {
@@ -51,11 +51,24 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 
 	const images = result.map((img) => img.url);
 
+	// Computed as separate scalar queries rather than joined into the product row —
+	// joining `prices` (one row per variant) and `orderItems` (one row per sale) onto a
+	// single product row fans out before the GROUP BY, inflating both aggregates.
+	const [priceRange] = await db
+		.select({ price: sql<number>`MIN(${prices.price})` })
+		.from(prices)
+		.where(eq(prices.productId, Number(id)));
+
+	const [saleStats] = await db
+		.select({ saleCount: sql<number>`COALESCE(SUM(${orderItems.quantity}), 0)` })
+		.from(orderItems)
+		.innerJoin(orders, eq(orderItems.orderId, orders.id))
+		.where(and(eq(orderItems.productId, Number(id)), eq(orders.status, 'delivered')));
+
 	const product = await db
 		.select({
 			id: products.id,
 			name: products.name,
-			price: min(prices.price),
 			description: products.description,
 			category: productCategories.name,
 			categoryId: productCategories.id,
@@ -64,30 +77,18 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 			supplier: suppliers.name,
 			supplierId: suppliers.id,
 			image: products.featuredImage,
-			saleCount: sql<number>`SUM(${orderItems.quantity})`,
 			createdBy: user.name,
 			createdAt: sql<string>`DATE_FORMAT(${products.createdAt}, '%Y-%m-%d')`
 		})
 		.from(products)
 		.leftJoin(productCategories, eq(productCategories.id, products.categoryId))
-		.leftJoin(prices, eq(prices.productId, products.id))
 		.leftJoin(suppliers, eq(suppliers.id, products.supplierId))
-		.leftJoin(orderItems, eq(products.id, orderItems.productId))
-		.leftJoin(orders, and(eq(orderItems.orderId, orders.id), eq(orders.status, 'delivered')))
 		.leftJoin(user, eq(products.createdBy, user.id))
 		.where(eq(products.id, Number(id)))
-		.groupBy(
-			products.id,
-			products.name,
-			prices.price,
-			orderItems.quantity,
-			products.description,
-			productCategories.name,
-			products.quantity,
-			suppliers.name,
-			products.reorderLevel
-		)
-		.then((rows) => rows[0]);
+		.then((rows) => rows[0])
+		.then((row) =>
+			row ? { ...row, price: priceRange?.price ?? null, saleCount: saleStats?.saleCount ?? 0 } : row
+		);
 
 	const priceList = await db
 		.select({

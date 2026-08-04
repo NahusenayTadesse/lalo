@@ -16,18 +16,22 @@
 	const { form, errors, enhance, delayed, message } = superForm(data, {});
 	import { toast } from 'svelte-sonner';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
+
+	let open = $state(false);
+
 	$effect(() => {
 		if ($message) {
 			if ($message.type === 'error') {
 				toast.error($message.text);
 			} else {
 				toast.success($message.text);
+				open = false;
 			}
 		}
 	});
 </script>
 
-<DialogComp title="Add New Variant Pricing" variant="default" IconComp={Plus}>
+<DialogComp bind:open title="Add New Variant Pricing" variant="default" IconComp={Plus}>
 	<div class="flex flex-col items-center justify-center gap-4 pt-4">
 		<form
 			method="post"

@@ -5,7 +5,7 @@
 	import { ExternalLink } from '@lucide/svelte';
 	import { dropdownClass } from '$lib/global.svelte';
 
-	let { id, name }: { id: string; name: string } = $props();
+	let { id, name }: { id: number; name: string } = $props();
 </script>
 
 <DropdownMenu.Root>

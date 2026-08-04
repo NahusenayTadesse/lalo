@@ -3,9 +3,10 @@
 	import { Button } from '$lib/components/ui/button';
 	import { ChevronDownIcon } from '@lucide/svelte';
 
+	// Pre-formatted for display by the loader (e.g. "5 Pieces", "ETB 120"), not raw numbers.
 	type PriceItem = {
-		amount: number;
-		price: number;
+		amount: string;
+		price: string;
 	};
 
 	const { priceList = [] }: { priceList: PriceItem[] } = $props();

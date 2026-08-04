@@ -4,7 +4,6 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import type { EditPaymentMethod as schema } from './schema';
 	import { buttonVariants } from '$lib/components/ui/button/index.js';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
 
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
@@ -62,8 +61,10 @@
 	<Tooltip.Root>
 		<Tooltip.Trigger class="{buttonVariants({ variant: 'ghost' })} justify-self-start p-0!">
 			<DialogComp
+				bind:open
 				variant="ghost"
-				title={icon ? 'Edit ' : name}
+				title={icon ? 'Edit' : name}
+				dialogTitle={`Edit ${name}`}
 				IconComp={icon ? SquarePen : undefined}
 			>
 				<form

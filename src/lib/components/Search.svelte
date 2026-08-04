@@ -13,9 +13,7 @@
 		{ label: 'Customers', path: '/dashboard/customers' },
 
 		// Orders
-		{ label: 'All Orders', path: '/dashboard/orders/all-orders' },
-		{ label: 'Cancelled Orders', path: '/dashboard/orders/cancelled' },
-		{ label: 'Delivered Orders', path: '/dashboard/orders/delivered' },
+		{ label: 'Orders', path: '/dashboard/orders' },
 
 		// Products
 		{ label: 'Products', path: '/dashboard/products' },

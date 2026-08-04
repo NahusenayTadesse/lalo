@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 
 import { add, edit } from '../schema';
 import { db } from '$lib/server/db';
-import { productSuppliers as supplySuppliers, supplies } from '$lib/server/db/schema';
+import { productSuppliers as supplySuppliers } from '$lib/server/db/schema';
 import type { Actions } from './$types';
 import type { PageServerLoad } from './$types.js';
 export const load: PageServerLoad = async () => {
@@ -39,7 +39,7 @@ export const actions: Actions = {
 
 		const {
 			name,
-
+			email,
 			phone,
 			description,
 			status
@@ -48,6 +48,7 @@ export const actions: Actions = {
 		try {
 			await db.insert(supplySuppliers).values({
 				name,
+				email,
 				phone,
 				description,
 				isActive: status,

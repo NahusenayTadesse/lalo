@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { add, edit } from './schema';
 import { db } from '$lib/server/db';
 import { productCategories as department } from '$lib/server/db/schema';
+import { duplicateField } from '$lib/server/crud';
 import type { Actions } from './$types';
 import type { PageServerLoad } from './$types.js';
 
@@ -48,15 +49,17 @@ export const actions: Actions = {
 			});
 
 			return message(form, { type: 'success', text: 'Category Successfully Added' });
-		} catch (err: any) {
-			if (err.code === 'ER_DUP_ENTRY') setError(form, 'name', 'Category already exists.');
-			return message(form, {
-				type: 'error',
-				text:
-					err.code === 'ER_DUP_ENTRY'
-						? 'Category is already exists. Please choose another one.'
-						: err.message
-			});
+		} catch (err) {
+			const field = duplicateField(err, department);
+			if (field) {
+				setError(form, field as never, `This ${field} is already in use`);
+				return message(form, { type: 'error', text: 'Category already exists' }, { status: 400 });
+			}
+			return message(
+				form,
+				{ type: 'error', text: 'Error: ' + (err as Error)?.message },
+				{ status: 500 }
+			);
 		}
 	},
 	edit: async ({ request, locals }) => {
@@ -73,16 +76,17 @@ export const actions: Actions = {
 				.set({ name, description, isActive: status, updatedBy: locals?.user?.id })
 				.where(eq(department.id, Number(id)));
 			return message(form, { type: 'success', text: 'Category Successfully Updated' });
-		} catch (err: any) {
-			if (err.code === 'ER_DUP_ENTRY') return;
-			setError(form, 'name', 'Category name already exists.');
-			return message(form, {
-				type: 'error',
-				text:
-					err.code === 'ER_DUP_ENTRY'
-						? 'Category name is already taken. Please choose another one.'
-						: err.message
-			});
+		} catch (err) {
+			const field = duplicateField(err, department);
+			if (field) {
+				setError(form, field as never, `This ${field} is already in use`);
+				return message(form, { type: 'error', text: 'Category already exists' }, { status: 400 });
+			}
+			return message(
+				form,
+				{ type: 'error', text: 'Error: ' + (err as Error)?.message },
+				{ status: 500 }
+			);
 		}
 	}
 };

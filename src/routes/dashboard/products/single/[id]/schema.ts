@@ -47,7 +47,7 @@ export const adjust = z.object({
 		.min(0, 'Cost per unit must be greater than 0'),
 
 	employeeResponsible: z.coerce.string('Employee is required'),
-	quantity: z.coerce.string('Quantity must be greater than 0'),
+	quantity: z.coerce.number('Quantity is required').int().positive('Quantity must be greater than 0'),
 
 	reason: z.string().max(255).optional(),
 	reciept: z
@@ -60,7 +60,7 @@ export type AdjustForm = z.infer<typeof adjust>;
 
 export const damaged = z.object({
 	damagedBy: z.coerce.string('Employee is required'),
-	quantity: z.coerce.string('Quantity must be greater than 0'),
+	quantity: z.coerce.number('Quantity is required').int().positive('Quantity must be greater than 0'),
 
 	reason: z.string().max(255).optional()
 });

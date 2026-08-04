@@ -11,7 +11,6 @@ export const add = z.object({
 // To use this for a single row result
 
 export const edit = z.object({
-	addressId: z.coerce.string(),
 	name: z.string().min(1, 'Name is required'),
 	phone: z.string().min(10, 'Phone is required').max(15),
 	email: z.email().optional(),

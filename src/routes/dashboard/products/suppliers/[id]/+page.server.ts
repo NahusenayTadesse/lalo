@@ -1,4 +1,4 @@
-import { setError, superValidate, message, fail } from 'sveltekit-superforms';
+import { superValidate, message, fail } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { eq, count } from 'drizzle-orm';
 
@@ -43,7 +43,7 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: 'Please check the form for Errors' });
 		}
 
-		const { name, subcity, email, phone, description, status } = form.data;
+		const { name, email, phone, description, status } = form.data;
 
 		try {
 			await db
@@ -63,6 +63,28 @@ export const actions: Actions = {
 				type: 'error',
 				text: 'Error: ' + err?.message
 			});
+		}
+	},
+
+	delete: async ({ params }) => {
+		const { id } = params;
+
+		// `products.supplierId` has no ON DELETE clause — a supplier still linked to
+		// products would hit a raw FK error. The UI already hides the delete button in
+		// that case; this re-checks server-side so a direct POST can't bypass it.
+		const [{ linkedProducts }] = await db
+			.select({ linkedProducts: count(products.id) })
+			.from(products)
+			.where(eq(products.supplierId, Number(id)));
+
+		if (linkedProducts > 0) {
+			return fail(400, { message: 'Cannot delete a supplier with linked products.' });
+		}
+
+		try {
+			await db.delete(supplySuppliers).where(eq(supplySuppliers.id, Number(id)));
+		} catch (err: any) {
+			return fail(500, { message: 'Error: ' + err?.message });
 		}
 	}
 };

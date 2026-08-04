@@ -56,17 +56,30 @@ export function extractUsername(email: string) {
 	return email.substring(0, atIndex);
 }
 
-export function getCurrentMonthRange(): string {
+/** First-of-month through today, as a `{ start, end }` pair — the default history-page range. */
+export function getCurrentMonthRangeDates(): { start: string; end: string } {
 	const today = new SvelteDate();
 
 	const year = today.getFullYear();
 	const month = String(today.getMonth() + 1).padStart(2, '0');
 	const day = String(today.getDate()).padStart(2, '0');
 
-	const firstOfMonth = `${year}-${month}-01`;
-	const todayStr = `${year}-${month}-${day}`;
+	return { start: `${year}-${month}-01`, end: `${year}-${month}-${day}` };
+}
 
-	return `${firstOfMonth}-${todayStr}`;
+export function getCurrentMonthRange(): string {
+	const { start, end } = getCurrentMonthRangeDates();
+	return `${start}-${end}`;
+}
+
+/**
+ * True if `value` is a real, parseable calendar date (`YYYY-MM-DD`) — used to validate
+ * `start`/`end` query params before they reach a date-range DB query, so a malformed or
+ * missing param 400s instead of silently producing a garbage range.
+ */
+export function isValidDateString(value: string | null | undefined): value is string {
+	if (!value) return false;
+	return !isNaN(new Date(value).getTime());
 }
 
 export const currentMonthFilter = (dateField: MySqlColumn, start?: string, end?: string) => {

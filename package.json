@@ -4,7 +4,7 @@
 	"version": "0.0.1",
 	"type": "module",
 	"overrides": {
-	  "typebox": "1.1.6"
+		"typebox": "1.1.6"
 	},
 	"scripts": {
 		"dev": "vite dev",
@@ -67,6 +67,7 @@
 	"dependencies": {
 		"@tabler/icons-svelte": "^3.38.0",
 		"browser-image-compression": "^2.0.2",
+		"chart.js": "^4.5.1",
 		"embla-carousel-autoplay": "^8.6.0",
 		"jspdf": "^4.2.0",
 		"jspdf-autotable": "^5.0.7",

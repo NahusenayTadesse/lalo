@@ -1,18 +1,24 @@
+import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { transactions, user, productAdjustments } from '$lib/server/db/schema';
 import { and, asc, eq, sql } from 'drizzle-orm';
 
-import { currentMonthFilter } from '$lib/global.svelte';
+import { currentMonthFilter, getCurrentMonthRangeDates, isValidDateString } from '$lib/global.svelte';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, url }) => {
 	const id = Number(params.id);
-	const { range } = params as { range: string };
 
-	const [y1, m1, d1, y2, m2, d2] = range.split('-');
+	const startParam = url.searchParams.get('start');
+	const endParam = url.searchParams.get('end');
 
-	const start = `${y1}-${m1}-${d1}`;
-	const end = `${y2}-${m2}-${d2}`;
+	if ((startParam || endParam) && (!isValidDateString(startParam) || !isValidDateString(endParam))) {
+		error(400, 'Invalid date range');
+	}
+
+	const defaults = getCurrentMonthRangeDates();
+	const start = startParam ?? defaults.start;
+	const end = endParam ?? defaults.end;
 
 	const allTransactions = await db
 		.select({
@@ -26,7 +32,6 @@ export const load: PageServerLoad = async ({ params }) => {
 		})
 		.from(productAdjustments)
 		.leftJoin(transactions, eq(transactions.id, productAdjustments.transactionId))
-
 		.leftJoin(user, eq(productAdjustments.createdBy, user.id))
 		.where(
 			and(

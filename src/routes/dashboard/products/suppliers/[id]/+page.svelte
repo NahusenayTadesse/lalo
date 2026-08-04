@@ -41,7 +41,6 @@
 	);
 
 	import { toast } from 'svelte-sonner';
-	import ComboboxComp from '$lib/formComponents/ComboboxComp.svelte';
 
 	$effect(() => {
 		if ($message) {
@@ -83,11 +82,11 @@
 		{#if data.single?.userCount > 0}
 			<Button
 				variant="destructive"
-				onclick={() => toast.error('Cannot delete role with users')}
-				title="Cannot delete role with users"><Trash /> Delete</Button
+				onclick={() => toast.error('Cannot delete a supplier with linked products')}
+				title="Cannot delete a supplier with linked products"><Trash /> Delete</Button
 			>
 		{:else}
-			<Delete redirect="/dashboard/admin-panel/roles" />
+			<Delete redirect="/dashboard/products/suppliers" />
 		{/if}
 	</div>
 	{#if edit === false}
@@ -98,7 +97,6 @@
 			<form use:enhance action="?/edit" id="main" class="flex flex-col gap-4" method="POST">
 				<Errors allErrors={$allErrors} />
 
-				<InputComp {form} {errors} label="" type="hidden" name="addressId" required={true} />
 				<InputComp {form} {errors} label="name" type="text" name="name" required={true} />
 				<InputComp {form} {errors} label="phone" type="tel" name="phone" required={true} />
 				<InputComp {form} {errors} label="email" type="email" name="email" required={false} />

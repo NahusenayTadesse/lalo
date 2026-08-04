@@ -23,7 +23,6 @@ export const actions: Actions = {
 	editProduct: async ({ request, cookies, locals, params }) => {
 		const { id } = params;
 		const form = await superValidate(request, zod4(edit));
-		console.log(form.data);
 
 		if (!form.valid) {
 			// Stay on the same page and set a flash message
@@ -73,65 +72,86 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: 'Product Update Failed' + err?.message });
 		}
 	},
-	adjust: async ({ request, cookies, params, locals }) => {
+	adjust: async ({ request, params, locals }) => {
 		const { id } = params;
 		const form = await superValidate(request, zod4(adjust));
 
-		const { intent, quantity, reason, reciept } = form.data;
+		if (!id) {
+			return message(form, { type: 'error', text: 'Product ID not provided' }, { status: 400 });
+		}
+
+		if (!form.valid) {
+			return message(
+				form,
+				{ type: 'error', text: 'Please check the form for errors' },
+				{ status: 400 }
+			);
+		}
+
+		const { intent, quantity, reason, employeeResponsible, costPerItem, reciept } = form.data;
+		const productId = Number(id);
+		const adjustment = intent === 'add' ? quantity : -quantity;
+		// `productAdjustments` has no columns for these yet, so they're folded into `reason`
+		// rather than silently discarded.
+		const fullReason = [reason, `Employee: ${employeeResponsible}`, `Cost/unit: ${costPerItem}`]
+			.filter(Boolean)
+			.join(' — ');
 
 		try {
-			if (!id) {
-				setFlash({ type: 'error', message: `Unexpected Error: ${err?.message}` }, cookies);
-				return fail(400);
-			}
-			const adjustment = intent === 'add' ? Number(quantity) : -Number(quantity);
+			await db.transaction(async (tx) => {
+				if (adjustment < 0) {
+					const [current] = await tx
+						.select({ quantity: products.quantity })
+						.from(products)
+						.where(eq(products.id, productId));
 
-			if (reciept) {
-				const recieptLink = await saveUploadedFile(reciept);
+					if (!current || current.quantity + adjustment < 0) {
+						throw new Error(
+							`Cannot remove ${quantity} — only ${current?.quantity ?? 0} in stock.`
+						);
+					}
+				}
 
-				const [transactionId] = await db
-					.insert(transactions)
-					.values({
-						amount: adjustment,
-						recieptLink,
-						createdBy: locals.user?.id
-					})
-					.$returningId();
+				let transactionId: number | undefined;
 
-				await db.insert(productAdjustments).values({
-					productsId: Number(id),
+				if (reciept) {
+					const recieptLink = await saveUploadedFile(reciept);
+
+					const [tranId] = await tx
+						.insert(transactions)
+						.values({
+							amount: String(adjustment),
+							recieptLink,
+							createdBy: locals.user?.id
+						})
+						.$returningId();
+					transactionId = tranId.id;
+				}
+
+				await tx.insert(productAdjustments).values({
+					productsId: productId,
 					adjustment,
-					reason,
-					transactionId: transactionId.id,
+					reason: fullReason,
+					transactionId,
 					createdBy: locals.user?.id
 				});
-				await db
+
+				await tx
 					.update(products)
 					.set({
 						quantity: sql`quantity + ${adjustment}`,
 						updatedBy: locals.user?.id
 					})
-					.where(eq(products.id, Number(id)));
-			} else {
-				await db.insert(productAdjustments).values({
-					productsId: id,
-					adjustment,
-					reason,
-					createdBy: locals.user?.id
-				});
-
-				await db
-					.update(products)
-					.set({
-						quantity: sql`quantity + ${adjustment}`,
-						updatedBy: locals?.user?.id
-					})
-					.where(eq(products.id, Number(id)));
-			}
+					.where(eq(products.id, productId));
+			});
 
 			return message(form, { type: 'success', text: 'Product Updated Successfully' });
 		} catch (err) {
-			return message(form, { type: 'error', text: 'Unexpected Error' + err?.message });
+			return message(
+				form,
+				{ type: 'error', text: (err as Error)?.message ?? 'Unexpected error' },
+				{ status: 400 }
+			);
 		}
 	},
 	delete: async ({ cookies, params }) => {
@@ -139,7 +159,7 @@ export const actions: Actions = {
 
 		try {
 			if (!id) {
-				setFlash({ type: 'error', message: `Unexpected Error: ${err?.message}` }, cookies);
+				setFlash({ type: 'error', message: 'Product ID not provided' }, cookies);
 				return fail(400);
 			}
 
@@ -156,18 +176,38 @@ export const actions: Actions = {
 		const { id } = params;
 		const form = await superValidate(request, zod4(damaged));
 
+		if (!id) {
+			return message(form, { type: 'error', text: 'Product ID not provided' }, { status: 400 });
+		}
+
+		if (!form.valid) {
+			return message(
+				form,
+				{ type: 'error', text: 'Please check the form for errors' },
+				{ status: 400 }
+			);
+		}
+
 		const { quantity, damagedBy, reason } = form.data;
+		const productId = Number(id);
 
 		try {
-			if (!id) {
-				return message(form, { type: 'error', text: 'Unexpected Error: Product ID not provided' });
-			}
-
 			await db.transaction(async (tx) => {
+				const [current] = await tx
+					.select({ quantity: products.quantity })
+					.from(products)
+					.where(eq(products.id, productId));
+
+				if (!current || current.quantity - quantity < 0) {
+					throw new Error(
+						`Cannot mark ${quantity} damaged — only ${current?.quantity ?? 0} in stock.`
+					);
+				}
+
 				// 1. Update damaged products record
 				await tx.insert(damagedProducts).values({
-					productId: Number(id),
-					quantity: Number(quantity),
+					productId,
+					quantity,
 					createdBy: locals.user?.id,
 					damagedBy,
 					reason
@@ -177,16 +217,20 @@ export const actions: Actions = {
 				await tx
 					.update(products)
 					.set({
-						quantity: sql`quantity - ${Number(quantity)}`,
+						quantity: sql`quantity - ${quantity}`,
 						updatedBy: locals.user?.id
 					})
-					.where(eq(products.id, Number(id)));
+					.where(eq(products.id, productId));
 			});
 
 			return message(form, { type: 'success', text: 'Damaged supply added Successfully!' });
 		} catch (err) {
 			console.error('Error marking adding damaged supply:', err);
-			return message(form, { type: 'error', text: `Unexpected Error: ${err?.message}` });
+			return message(
+				form,
+				{ type: 'error', text: (err as Error)?.message ?? 'Unexpected error' },
+				{ status: 400 }
+			);
 		}
 	},
 	editGallery: async ({ params, locals, request }) => {
@@ -311,15 +355,13 @@ export const actions: Actions = {
 const uploadGallery = async (gallery: File[] | undefined) => {
 	try {
 		// 1. Map each file to the upload promise
-		const uploadPromises = gallery.map(async (file) => {
+		const uploadPromises = (gallery ?? []).map(async (file) => {
 			const address = await saveUploadedFile(file);
 			return address; // This is the string returned by your function
 		});
 
 		// 2. Wait for all uploads to complete and store results in an array
 		const uploadedAddresses: string[] = await Promise.all(uploadPromises);
-
-		console.log('All files uploaded:', uploadedAddresses);
 
 		return uploadedAddresses;
 	} catch (error) {
