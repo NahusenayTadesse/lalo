@@ -33,6 +33,8 @@ export const columns = [
 		sortable: true
 	},
 	{
+		// `damagedBy` is a freetext name entered on the damage form, not a user
+		// account — there's no id to link it to, so it's rendered as plain text.
 		accessorKey: 'damagedBy',
 		header: ({ column }) =>
 			renderComponent(DataTableSort, {
@@ -40,15 +42,7 @@ export const columns = [
 				onclick: column.getToggleSortingHandler()
 			}),
 
-		sortable: true,
-		cell: ({ row }) => {
-			return renderComponent(DataTableLinks, {
-				id: row.original.damagedById,
-				name: row.original.damagedBy,
-				link: `/dashboard/staff`,
-				target: '_blank'
-			});
-		}
+		sortable: true
 	},
 
 	{
@@ -67,26 +61,6 @@ export const columns = [
 				link: `/dashboard/users/${row.original.changedById}`,
 				target: '_blank'
 			});
-		}
-	},
-
-	{
-		accessorKey: 'reciept',
-		header: 'Reciept',
-		sortable: true,
-		cell: ({ row }) => {
-			// You can pass whatever you need from `row.original` to the component
-			//
-			if (row.original.reciept) {
-				return renderComponent(DataTableLinks, {
-					id: row.original.extraSettings,
-					name: 'View Reciept',
-					link: `/dashboard/files/${row.original.reciept}`,
-					target: '_blank'
-				});
-			} else {
-				return 'No Reciept';
-			}
 		}
 	}
 

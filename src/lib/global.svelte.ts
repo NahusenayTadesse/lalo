@@ -72,6 +72,96 @@ export function getCurrentMonthRange(): string {
 	return `${start}-${end}`;
 }
 
+function toDateString(d: Date): string {
+	const year = d.getFullYear();
+	const month = String(d.getMonth() + 1).padStart(2, '0');
+	const day = String(d.getDate()).padStart(2, '0');
+	return `${year}-${month}-${day}`;
+}
+
+export type DatePreset =
+	| 'today'
+	| 'yesterday'
+	| 'thisWeek'
+	| 'lastWeek'
+	| 'thisMonth'
+	| 'lastMonth'
+	| 'thisYear'
+	| 'allTime';
+
+export const DATE_PRESETS: { value: DatePreset; label: string }[] = [
+	{ value: 'today', label: 'Today' },
+	{ value: 'yesterday', label: 'Yesterday' },
+	{ value: 'thisWeek', label: 'This Week' },
+	{ value: 'lastWeek', label: 'Last Week' },
+	{ value: 'thisMonth', label: 'This Month' },
+	{ value: 'lastMonth', label: 'Last Month' },
+	{ value: 'thisYear', label: 'This Year' },
+	{ value: 'allTime', label: 'All Time' }
+];
+
+/**
+ * Resolves a named date preset (e.g. "lastWeek") to a concrete `{ start, end }` pair —
+ * used to drive one-click report ranges. Weeks are Monday-start. `allTime` returns
+ * `null`, meaning "no date filter", rather than a range.
+ */
+export function getPresetDateRange(preset: DatePreset): { start: string; end: string } | null {
+	const now = new SvelteDate();
+
+	switch (preset) {
+		case 'today':
+			return { start: toDateString(now), end: toDateString(now) };
+
+		case 'yesterday': {
+			const yesterday = new SvelteDate(now);
+			yesterday.setDate(now.getDate() - 1);
+			return { start: toDateString(yesterday), end: toDateString(yesterday) };
+		}
+
+		case 'thisWeek': {
+			const diffToMonday = (now.getDay() + 6) % 7;
+			const monday = new SvelteDate(now);
+			monday.setDate(now.getDate() - diffToMonday);
+			return { start: toDateString(monday), end: toDateString(now) };
+		}
+
+		case 'lastWeek': {
+			const diffToMonday = (now.getDay() + 6) % 7;
+			const thisMonday = new SvelteDate(now);
+			thisMonday.setDate(now.getDate() - diffToMonday);
+			const lastMonday = new SvelteDate(thisMonday);
+			lastMonday.setDate(thisMonday.getDate() - 7);
+			const lastSunday = new SvelteDate(thisMonday);
+			lastSunday.setDate(thisMonday.getDate() - 1);
+			return { start: toDateString(lastMonday), end: toDateString(lastSunday) };
+		}
+
+		case 'thisMonth':
+			return getCurrentMonthRangeDates();
+
+		case 'lastMonth': {
+			const firstOfThisMonth = new SvelteDate(now.getFullYear(), now.getMonth(), 1);
+			const lastOfPrevMonth = new SvelteDate(firstOfThisMonth);
+			lastOfPrevMonth.setDate(0);
+			const firstOfPrevMonth = new SvelteDate(
+				lastOfPrevMonth.getFullYear(),
+				lastOfPrevMonth.getMonth(),
+				1
+			);
+			return { start: toDateString(firstOfPrevMonth), end: toDateString(lastOfPrevMonth) };
+		}
+
+		case 'thisYear': {
+			const firstOfYear = new SvelteDate(now.getFullYear(), 0, 1);
+			return { start: toDateString(firstOfYear), end: toDateString(now) };
+		}
+
+		case 'allTime':
+		default:
+			return null;
+	}
+}
+
 /**
  * True if `value` is a real, parseable calendar date (`YYYY-MM-DD`) — used to validate
  * `start`/`end` query params before they reach a date-range DB query, so a malformed or
