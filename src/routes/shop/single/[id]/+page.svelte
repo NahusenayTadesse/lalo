@@ -38,8 +38,12 @@
 	<meta property="og:title" content="{data?.product.productName} - Lalo Bakery Solutions" />
 	<meta property="og:description" content={data?.product.description} />
 	<meta property="og:image" content="/files/{data?.product.image}" />
-	<meta property="product:price:amount" content={data?.product.price} />
-	<meta property="product:price:currency" content="ETB" />
+	<!-- Only advertise a price when there is one: a product with no variants would
+	     otherwise publish an empty `product:price:amount`. -->
+	{#if data?.product.price != null}
+		<meta property="product:price:amount" content={String(data.product.price)} />
+		<meta property="product:price:currency" content="ETB" />
+	{/if}
 
 	<meta property="twitter:card" content="summary_large_image" />
 	<meta property="twitter:title" content={data?.product.productName} />

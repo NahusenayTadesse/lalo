@@ -7,12 +7,12 @@
 	type Props = {
 		productId: number;
 		productName: string;
-		price: number | string;
-		description: string;
-		image?: string;
-		category?: string;
+		price: number | string | null;
+		description: string | null;
+		image?: string | null;
+		category?: string | null;
 		images?: string[];
-		priceList?: { price: number | string; amount: number | string }[];
+		priceList?: { id: number; price: number | string; amount: string }[];
 	};
 
 	const { productId, productName, price, description, image, category, images, priceList }: Props =
@@ -27,8 +27,17 @@
 
 	let justAdded = $state(false);
 
-	let currentPrice = $state(typeof price === 'string' ? parseFloat(price) : price);
-	let currentAmount = $derived(priceList?.[0]?.amount ?? '');
+	/**
+	 * The selected variant, tracked by `prices.id`.
+	 *
+	 * Previously the price came from the `price` prop — `MIN(prices.price)` — while
+	 * the amount came from `priceList[0]`, an unordered row. The two were different
+	 * variants often enough to matter, so the page displayed one price and added
+	 * another to the cart. Everything shown and added now comes from one row.
+	 */
+	const variants = $derived(priceList ?? []);
+	let currentPriceId = $state<number | undefined>(undefined);
+	const selected = $derived(variants.find((v) => v.id === currentPriceId) ?? variants[0]);
 
 	// Reusable formatter (performance friendly)
 	const formatter = new Intl.NumberFormat('en-US', {
@@ -37,22 +46,41 @@
 	});
 
 	// Derived values for clarity
-	const numericPrice = $derived(
-		typeof price === 'string' ? parseFloat(currentPrice) : currentPrice
-	);
+	const numericPrice = $derived(Number(selected?.price ?? 0));
 	const formattedPrice = $derived(formatter.format(numericPrice));
-	const quantityInCart = $derived(cart.items.find((i) => i.productId === productId)?.quantity ?? 0);
+	const quantityInCart = $derived(
+		cart.items.find((i) => i.priceId === selected?.id)?.quantity ?? 0
+	);
 
 	let quantity = $state(1);
 
-	function addToCart() {
-		if (justAdded) return; // Prevent double-clicks during animation
+	/**
+	 * `min="1"` on a number input only styles the spinner — it does not stop the
+	 * customer typing `-5` or clearing the box, either of which binds to `null`.
+	 * That used to reach the cart as `quantity: null`, showing a line with a blank
+	 * quantity and a zero total.
+	 */
+	const safeQuantity = $derived(Math.max(1, Math.floor(Number(quantity)) || 1));
 
-		cart.addItem({ productId, productName, price: numericPrice, amount: currentAmount}, quantity);
+	function addToCart() {
+		if (justAdded || !selected) return; // Prevent double-clicks during animation
+
+		cart.addItem(
+			{
+				priceId: selected.id,
+				productId,
+				productName,
+				price: numericPrice,
+				amount: selected.amount
+			},
+			safeQuantity
+		);
 		justAdded = true;
 
 		toast.success(`${productName} added to cart`, {
-			description: `Total in cart: ${quantityInCart + quantity - 1}`
+			// `quantityInCart` is the value from before this add, so the new total is
+			// the two summed. The old `- 1` here was simply wrong.
+			description: `Total in cart: ${quantityInCart + safeQuantity}`
 		});
 
 		setTimeout(() => {
@@ -64,31 +92,26 @@
 		toast.success('Link copied to clipboard');
 	};
 
+	// These choose *how many to add*; they must not touch the cart. Writing to it
+	// here meant nudging the stepper silently overwrote the quantity of a line
+	// already in the cart, and then "Add to Cart" added that number again on top —
+	// setting the stepper to 3 and pressing Add once ended up with six. The cart's
+	// own +/- controls in `cart-item.svelte` are the place to edit a cart line.
 	const incrementQuantity = () => {
-		quantity += 1;
-		cart.updateQuantity(productId, currentAmount, quantity);
+		quantity = safeQuantity + 1;
 	};
 
 	const decrementQuantity = () => {
-		if (quantity > 1) {
-			quantity -= 1;
-		}
-		cart.updateQuantity(productId, currentAmount, quantity);
-
+		quantity = Math.max(1, safeQuantity - 1);
 	};
 
 
 
 	let displayImage = $derived(image);
 
-	function changePrice(product: { price: number | string; amount: number | string }) {
-		currentPrice = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
-		currentAmount = product.amount;
+	function changePrice(product: { id: number }) {
+		currentPriceId = product.id;
 	}
-
-    $effect(() => {
-	     
-	});
 
 </script>
 
@@ -136,9 +159,15 @@
 							{productName}
 						</h1>
 						<div class="flex items-baseline gap-3">
-							<span class="text-3xl font-bold text-primary">
-								{formattedPrice}
-							</span>
+							<!-- A product with no variants has no price to show; the old markup
+							     printed "ETB 0.00", which is not the same thing. -->
+							{#if selected}
+								<span class="text-3xl font-bold text-primary">{formattedPrice}</span>
+							{:else}
+								<span class="text-lg font-medium text-muted-foreground">
+									Currently unavailable
+								</span>
+							{/if}
 						</div>
 					</div>
 
@@ -150,16 +179,16 @@
 					</div>
 				</div>
 
-				<div class="max-w-xl p-4">
+				<div class="max-w-xl p-4" class:hidden={!variants.length}>
 					<h3 class="mb-4 text-sm font-semibold tracking-wider text-gray-500 uppercase">
 						Select Package
 					</h3>
 
 					<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-						{#each priceList as product (product)}
-							{@const numericPrice =
-								typeof product.price === 'string' ? parseFloat(product.price) : product.price}
-							{@const isActive = currentPrice === numericPrice}
+						{#each variants as product (product.id)}
+							<!-- Compared by variant id, not by price: two variants at the same
+							     price used to both render as selected. -->
+							{@const isActive = selected?.id === product.id}
 
 							<button
 								onclick={() => changePrice(product)}
@@ -207,7 +236,16 @@
 								aria-label="Decrease quantity"><Minus class="size-4" /></Button
 							>
 							<!-- <span class="w-8 text-center font-semibold">{quantity}</span> -->
-							<Input type="number" class="w-12 text-center text-black dark:text-white font-semibold"  bind:value={quantity} min="1" />
+							<!-- Snapped on blur so the box can't keep showing a value that isn't
+							     the one being added. `min` alone is not enforcement. -->
+							<Input
+								type="number"
+								class="w-12 text-center font-semibold text-black dark:text-white"
+								bind:value={quantity}
+								onblur={() => (quantity = safeQuantity)}
+								min="1"
+								aria-label="Quantity"
+							/>
 							<Button
 								onclick={incrementQuantity}
 								size="icon"
@@ -218,15 +256,19 @@
 
 					<!-- Main Buttons -->
 					<div class="flex gap-3">
+						<!-- `addToCart` already refuses to act without a variant; without
+						     `!selected` here the button stayed enabled and did nothing at all. -->
 						<Button
 							class="w-full transition-all active:scale-95"
 							onclick={addToCart}
 							variant={justAdded ? 'outline' : 'default'}
-							disabled={justAdded}
+							disabled={justAdded || !selected}
 						>
 							{#if justAdded}
 								<CheckIcon class="mr-2 size-4 text-green-500" />
 								Added to Cart
+							{:else if !selected}
+								Unavailable
 							{:else}
 								<PlusIcon class="mr-2 size-4" />
 								Add to Cart

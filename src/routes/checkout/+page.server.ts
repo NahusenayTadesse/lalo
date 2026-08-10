@@ -1,17 +1,16 @@
 import { superValidate, message } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { sendEmail, customerCheckoutTemplate, adminCheckoutTemplate } from '$lib/server/email';
 import { USER } from '$env/static/private';
 
 import { addUser, loginSchema } from '$lib/ZodSchema';
 import { add } from './schema';
 import { db } from '$lib/server/db';
-import { orders, orderItems, products, customers, placeNames } from '$lib/server/db/schema';
+import { orders, orderItems, customers, placeNames, prices, freeDelivery } from '$lib/server/db/schema';
 import type { PageServerLoad, Actions } from './$types';
 
-export const load: PageServerLoad = async ( { locals }) => {
-
+export const load: PageServerLoad = async ({ locals }) => {
 	const signupForm = await superValidate(zod4(addUser));
 	const loginForm = await superValidate(zod4(loginSchema));
 	const placeList = await db
@@ -35,13 +34,12 @@ export const load: PageServerLoad = async ( { locals }) => {
 				deliveryAddress: customers.deliveryAddress
 			})
 			.from(customers)
-			.leftJoin(orders, eq(customers.id, orders.customerId))
-			.where(eq(customers.userId, locals?.user?.id))
+			.where(eq(customers.userId, locals.user.id))
 			.limit(1)
 			.then((rows) => rows[0]);
 	}
 
-		const form = await superValidate(zod4(add));
+	const form = await superValidate(zod4(add));
 
 	return {
 		form,
@@ -55,76 +53,203 @@ export const load: PageServerLoad = async ( { locals }) => {
 export const actions: Actions = {
 	add: async ({ request, locals }) => {
 		const form = await superValidate(request, zod4(add));
-		console.log(form.data);
+
+		// Actions run *before* any `load`, so a guard in a load function would only
+		// affect the re-render. The check has to happen here.
+		if (!locals.user) {
+			return message(form, { type: 'error', text: 'Please sign in to place an order' }, { status: 401 });
+		}
+
 		if (!form.valid) {
 			return message(form, { type: 'error', text: 'Please check the form for Errors' });
 		}
 
-		const { selectedProducts, address, deliveryAddress, fee, saveInfo } = form.data;
-		let customerInfo;
+		// `fee` and each item's `price` are deliberately *not* read out of the form —
+		// they are display values the browser computed, and both are recomputed below.
+		const { selectedProducts, address, deliveryAddress, saveInfo } = form.data;
+
+		if (!selectedProducts.length) {
+			return message(form, { type: 'error', text: 'Your cart is empty' });
+		}
+
+		const customer = await db
+			.select({ value: customers.id, email: customers.email })
+			.from(customers)
+			.where(eq(customers.userId, locals.user.id))
+			.limit(1)
+			.then((rows) => rows[0]);
+
+		if (!customer) {
+			return message(form, { type: 'error', text: 'No customer profile found' }, { status: 403 });
+		}
+
+		let lineItems;
+		try {
+			lineItems = await resolveLineItems(selectedProducts);
+		} catch (err) {
+			console.error('Checkout: could not price the cart:', err);
+			return message(form, {
+				type: 'error',
+				text: 'One of the items in your cart is no longer available'
+			});
+		}
+
+		const subtotal = sumLineItems(lineItems);
+		const fee = await resolveFee(address, subtotal);
+
+		if (fee === undefined) {
+			return message(form, { type: 'error', text: 'We do not deliver to that area' });
+		}
+
+		const total = subtotal + Number(fee);
 		let newOrderId;
 
 		try {
 			await db.transaction(async (tx) => {
-				const [customer] = await tx
-					.select({ value: customers.id, email: customers.email })
-					.from(customers)
-					.where(eq(customers.userId, locals?.user?.id))
-					.limit(1)
-				customerInfo = customer;
 				if (saveInfo) {
 					await tx
 						.update(customers)
-						.set({ address, deliveryAddress })
+						.set({ address, deliveryAddress, updatedBy: locals.user?.id })
 						.where(eq(customers.id, customer.value));
 				}
 
 				const [orderId] = await tx
 					.insert(orders)
-					.values({ customerId: customer.value, status: 'pending', address, deliveryAddress, fee })
+					.values({
+						customerId: customer.value,
+						status: 'pending',
+						address,
+						deliveryAddress,
+						fee,
+						createdBy: locals.user?.id
+					})
 					.$returningId();
 				newOrderId = orderId.id;
 
-				if (selectedProducts.length) {
-					await tx.insert(orderItems).values(
-						selectedProducts.map((product) => ({
-							orderId: orderId.id,
-							productId: Number(product.product),
-							amount: product.amount,
-							quantity: Number(product.quantity),
-							price: Number(product.price)
-						}))
-					);
-				}
+				await tx.insert(orderItems).values(
+					lineItems.map((item) => ({
+						orderId: orderId.id,
+						...item,
+						createdBy: locals.user?.id
+					}))
+				);
 			});
-
-			const total = selectedProducts.reduce((acc, p) => acc + p.price * p.quantity, 0);
-
-			// Send to Customer
-			sendEmail(
-				customerInfo?.email,
-				customerCheckoutTemplate(newOrderId, selectedProducts, total).subject,
-				customerCheckoutTemplate(newOrderId, selectedProducts, total).html
-			).catch((err) => console.error('Email Error (Customer):', err));
-
-			// Send to Admin
-			sendEmail(
-				USER,
-				adminCheckoutTemplate(newOrderId, selectedProducts, total).subject,
-				adminCheckoutTemplate(newOrderId, selectedProducts, total).html
-			).catch((err) => console.error('Email Error (Admin):', err));
-
-			return message(form, { type: 'success', text: 'Order Successfully Added' });
 		} catch (err) {
-			return message(form, {
-				type: 'error',
-				text: 'Error Adding Orders: ' + err?.message
-			});
+			console.error('Checkout: failed to place order:', err);
+			return message(form, { type: 'error', text: 'Could not place your order' }, { status: 500 });
 		}
+
+		// Priced from `lineItems`, so the confirmation email can never quote a
+		// figure that differs from what was written to the order.
+		const emailItems = lineItems.map((item) => ({
+			product: item.productId,
+			quantity: item.quantity,
+			amount: item.amount,
+			price: Number(item.price)
+		}));
+
+		// Send to Customer
+		sendEmail(
+			customer.email,
+			customerCheckoutTemplate(newOrderId, emailItems, total).subject,
+			customerCheckoutTemplate(newOrderId, emailItems, total).html
+		).catch((err) => console.error('Email Error (Customer):', err));
+
+		// Send to Admin
+		sendEmail(
+			USER,
+			adminCheckoutTemplate(newOrderId, emailItems, total).subject,
+			adminCheckoutTemplate(newOrderId, emailItems, total).html
+		).catch((err) => console.error('Email Error (Admin):', err));
+
+		return message(form, { type: 'success', text: 'Order Successfully Added' });
 	}
 };
 
-function getPrice(list: Array<{ value: number; price: string }>, value: number): number {
-	const item = list.find((i) => i.value === value);
-	return item ? Number(item.price) : 0;
+/**
+ * Re-prices the posted cart from the `prices` table.
+ *
+ * The browser sends a `price` alongside every line so it can render a running
+ * total, but that number is display data. Taking it at face value let a customer
+ * post `price: 1` and have it written straight into `order_items`.
+ *
+ * Lookup is by `prices.id`. Matching on `(product_id, amount)` was wrong: that
+ * pair is not unique — two variants of the same product can carry an identical
+ * `amount` — so `find` returned whichever row came back first and a customer who
+ * picked the cheaper package was billed for the dearer one.
+ *
+ * Throws if a variant doesn't exist, which rolls the caller's transaction back.
+ */
+async function resolveLineItems(
+	selectedProducts: Array<{ priceId: number; product: number; quantity: number }>
+) {
+	const priceIds = [...new Set(selectedProducts.map((p) => Number(p.priceId)))];
+
+	const variants = await db
+		.select({
+			id: prices.id,
+			productId: prices.productId,
+			amount: prices.amount,
+			price: prices.price
+		})
+		.from(prices)
+		.where(inArray(prices.id, priceIds));
+
+	return selectedProducts.map((item) => {
+		const variant = variants.find((v) => v.id === Number(item.priceId));
+
+		if (!variant) {
+			throw new Error(`No price found for variant ${item.priceId}`);
+		}
+
+		// The product is taken from the variant row too, so a payload pairing one
+		// product's id with another product's variant cannot mislabel the order.
+		return {
+			productId: variant.productId,
+			quantity: Number(item.quantity),
+			amount: variant.amount,
+			// `price` is a decimal column — mysql2 wants a string, and a JS number
+			// would silently lose precision.
+			price: variant.price
+		};
+	});
+}
+
+/** Sums in whole cents so repeated decimal addition can't drift. */
+function sumLineItems(lineItems: Array<{ quantity: number; price: string }>): number {
+	const cents = lineItems.reduce(
+		(acc, item) => acc + Math.round(Number(item.price) * 100) * item.quantity,
+		0
+	);
+	return cents / 100;
+}
+
+/**
+ * The delivery fee for `placeName` as a decimal string, or `undefined` if we
+ * don't deliver there.
+ *
+ * `address` is a select bound to `place_names.name`; `deliveryAddress` is the
+ * free-text street address and carries no fee. Orders at or above the
+ * free-delivery threshold ship free — the same rule the page shows, applied
+ * here so the posted fee never has to be trusted.
+ */
+async function resolveFee(placeName: string, subtotal: number): Promise<string | undefined> {
+	const place = await db
+		.select({ fee: placeNames.fee })
+		.from(placeNames)
+		.where(and(eq(placeNames.name, placeName), eq(placeNames.isActive, true)))
+		.limit(1)
+		.then((rows) => rows[0]);
+
+	if (!place) return undefined;
+
+	const threshold = await db
+		.select({ value: freeDelivery.threshold })
+		.from(freeDelivery)
+		.limit(1)
+		.then((rows) => rows[0]);
+
+	if (threshold && subtotal >= Number(threshold.value)) return '0.00';
+
+	return place.fee;
 }

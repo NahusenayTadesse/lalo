@@ -107,9 +107,8 @@
 			{errors}
 			type="select"
 			name="supplier"
-			label="Product Category"
+			label="Product Supplier"
 			placeholder="Enter Product Name"
-			required
 			items={data?.supplierList}
 		/>
 

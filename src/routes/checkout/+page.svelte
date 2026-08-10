@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { useCart } from '$lib/hooks/cart.svelte.js';
+	import { useCart, cartKey } from '$lib/hooks/cart.svelte.js';
 	import { Button } from '$lib/components/ui/button';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import {
@@ -30,22 +30,39 @@
 			currency: 'ETB'
 		}).format(price);
 	};
-		let saveInfo = $state(false);
-		let freeDelivery = $derived(cart.totalPrice >= Number(data?.freeData?.threshold));
-	const fee = $derived(freeDelivery ? 0 : data?.placeList?.find((item) => item.name === $form.address)?.fee);
+	let saveInfo = $state(false);
+	let freeDelivery = $derived(cart.totalPrice >= Number(data?.freeData?.threshold));
+	const fee = $derived(
+		freeDelivery ? 0 : data?.placeList?.find((item) => item.name === $form.address)?.fee
+	);
+
+	/**
+	 * The fee as a usable number.
+	 *
+	 * `fee` is `undefined` until a delivery area is chosen, and `Number(undefined)`
+	 * is `NaN` — which `??` does not catch, so the old `Number(fee) ?? 0` left
+	 * `NaN` in the form and rendered "Delivery Fee: NaN" and "ETBNaN".
+	 */
+	const feeAmount = $derived(Number.isFinite(Number(fee)) ? Number(fee) : 0);
+
+	/** Whether we can quote a fee yet, as opposed to defaulting it to zero. */
+	const feeKnown = $derived(
+		freeDelivery || Boolean(data?.placeList?.some((item) => item.name === $form.address))
+	);
+
+	/** What the customer will actually be charged: goods plus delivery. */
+	const orderTotal = $derived(cart.totalPrice + feeAmount);
 
 
 	const { form, errors, enhance, allErrors, delayed, message } = superForm(data.form, {
 		dataType: 'json',
 		resetForm: true,
 		onChange: (event) => {
-  	if (event.paths.includes('address') || event.paths.includes('deliveryAddress')) {
-				 saveInfo = true;
-           				 $form.fee = Number(fee) ?? 0;
-
-
-		}
-	},
+			if (event.paths.includes('address') || event.paths.includes('deliveryAddress')) {
+				saveInfo = true;
+				$form.fee = feeAmount;
+			}
+		},
 
 		onResult: ({ result }) => {
 			// 2. Only clear cart if the server actually says 'success'
@@ -58,6 +75,7 @@
 
 	const formattedData = $derived(
 		cart?.items.map((item) => ({
+			priceId: item.priceId,
 			product: item.productId,
 			quantity: item.quantity,
 			amount: item.amount,
@@ -79,8 +97,10 @@
 		if (data?.user) {
 			$form.address = data?.customerInfo?.address ?? '';
 			$form.deliveryAddress = data?.customerInfo?.deliveryAddress ?? '';
-			$form.fee = Number(fee) ?? 0;
+			$form.fee = feeAmount;
 		}
+
+		reconcileCart();
 	});
 
 
@@ -89,6 +109,64 @@
 	$effect(() => {
 		$form.selectedProducts = formattedData;
 	});
+
+	/**
+	 * Bring the cart in line with the catalogue before anything can be submitted.
+	 *
+	 * Cart lines are a snapshot: price and label are stored when the item is added
+	 * and never revisited, while the checkout action prices the order from the
+	 * database. Without this the page can quote one figure and the order — and the
+	 * confirmation email — record another, with nothing said to the customer.
+	 */
+	let reconciled = $state(false);
+	let repricedItems = $state<{ name: string; from: number; to: number }[]>([]);
+	let removedItems = $state<string[]>([]);
+
+	async function reconcileCart() {
+		repricedItems = [];
+		removedItems = [];
+
+		const priceIds = cart.items.map((item) => item.priceId);
+		if (!priceIds.length) {
+			reconciled = true;
+			return;
+		}
+
+		let current: { id: number; price: string; amount: string }[];
+		try {
+			const res = await fetch('/checkout/prices', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ priceIds })
+			});
+			if (!res.ok) throw new Error(`Price check failed: ${res.status}`);
+			current = await res.json();
+		} catch (err) {
+			// Leave the cart untouched and let the customer through — the server
+			// prices the order regardless, so the worst case is the old behaviour.
+			console.error('Could not re-check cart prices:', err);
+			reconciled = true;
+			return;
+		}
+
+		for (const item of [...cart.items]) {
+			const row = current.find((c) => c.id === item.priceId);
+
+			if (!row) {
+				removedItems.push(item.productName);
+				cart.removeItem(item.priceId);
+				continue;
+			}
+
+			const price = Number(row.price);
+			if (price !== item.price) {
+				repricedItems.push({ name: item.productName, from: item.price, to: price });
+			}
+			cart.syncVariant(item.priceId, price, row.amount);
+		}
+
+		reconciled = true;
+	}
 </script>
 
 <svelte:head>
@@ -241,14 +319,6 @@
 							{errors}
 							placeholder=""
 						/>
-						<InputComp
-							label=""
-							name="selectedProducts"
-							type="hidden"
-							{form}
-							{errors}
-							placeholder=""
-						/>
 						<div
 							class="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
 						>
@@ -257,7 +327,7 @@
 								<p class="text-sm text-gray-600">{cart.totalItems} items</p>
 							</div>
 							<div class="text-right">
-								<p class="text-lg font-bold text-gray-900">{formatPrice(cart.totalPrice)}</p>
+								<p class="text-lg font-bold text-gray-900">{formatPrice(orderTotal)}</p>
 							</div>
 						</div>
 
@@ -266,12 +336,14 @@
 								type="submit"
 								form="main"
 								class="h-12 w-full text-lg shadow-md"
-								disabled={cart.items.length === 0 || $delayed}
+								disabled={cart.items.length === 0 || $delayed || !reconciled}
 							>
 								{#if $delayed}
 									<LoadingBtn name="Processing..." />
+								{:else if !reconciled}
+									<LoadingBtn name="Checking prices..." />
 								{:else}
-									Complete Order — {formatPrice(cart.totalPrice)}
+									Complete Order — {formatPrice(orderTotal)}
 								{/if}
 							</Button>
 						</div>
@@ -295,7 +367,11 @@
 					{#if cart.items.length > 0}
 						<ScrollArea class="max-h-100 pr-4">
 							<div class="divide-y divide-border">
-								{#each cart.items as item (item.productId)}
+								<!-- Keyed on the variant, not the product: the cart holds one line per
+								     variant, so keying on `productId` alone produced duplicate keys and
+								     a fatal `each_key_duplicate` as soon as someone picked two
+								     packages of the same product. -->
+								{#each cart.items as item (cartKey(item))}
 									<div class="py-3">
 										<CartItem {item} />
 									</div>
@@ -310,17 +386,44 @@
 							</div>
 							<div class="flex justify-between text-sm">
 								<span class="text-muted-foreground">Shipping</span>
-								{#if data?.user && $form.fee !== undefined}
-	<span class="font-medium text-green-600">{$form.fee !== 0 ? formatPrice($form.fee) : 'Free'}</span>
-								 {:else}
-								  <span>Uncalculated.</span>
-{/if}
+								{#if data?.user && feeKnown}
+									<span class="font-medium text-green-600">
+										{feeAmount !== 0 ? formatPrice(feeAmount) : 'Free'}
+									</span>
+								{:else}
+									<span class="text-muted-foreground">Select a delivery area</span>
+								{/if}
 							</div>
+							<!-- Delivery is part of what gets charged, so it belongs in the total.
+							     This used to repeat the subtotal, quoting the customer a figure
+							     that was short by the whole delivery fee. -->
 							<div class="flex justify-between border-t pt-3 text-lg font-bold">
 								<span>Total</span>
-								<span class="text-primary">{formatPrice(cart.totalPrice)}</span>
+								<span class="text-primary">{formatPrice(orderTotal)}</span>
 							</div>
 						</div>
+
+						{#if repricedItems.length || removedItems.length}
+							<div
+								class="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm"
+								role="status"
+							>
+								<p class="font-medium">Your cart was updated</p>
+								<ul class="mt-1 space-y-0.5 text-muted-foreground">
+									{#each repricedItems as change (change.name + change.to)}
+										<li>
+											{change.name} is now {formatPrice(change.to)} (was {formatPrice(change.from)})
+										</li>
+									{/each}
+									{#each removedItems as name (name)}
+										<li>{name} is no longer available and was removed</li>
+									{/each}
+								</ul>
+								<p class="mt-2 text-xs text-muted-foreground">
+									The total above is what you will be charged.
+								</p>
+							</div>
+						{/if}
 					{:else}
 						<div class="py-12 text-center">
 							<Package class="mx-auto mb-3 size-10 text-muted-foreground/40" />

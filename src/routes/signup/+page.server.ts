@@ -79,7 +79,11 @@ export const actions: Actions = {
 			});
 			const { subject, html } = customerWelcomeTemplate(name);
 
-			sendEmail(email, subject, html);
+			// Not awaited, so the surrounding try/catch can't see a rejection — without
+			// this handler an unreachable mail server crashes the whole process.
+			sendEmail(email, subject, html).catch((err) =>
+				console.error('Email Error (Welcome):', err)
+			);
 			return message(form, {
 				type: 'success',
 				text: 'Sign Up Successful!'

@@ -23,7 +23,7 @@ export const add = z.object({
 		.positive({ message: 'Quantity must be a positive number.' })
 		.default(0),
 
-	supplier: z.coerce.number('Supplier is required'),
+	supplier: z.coerce.number('Supplier is required').optional(),
 	reorderLevel: z.coerce
 		.number()
 		.int({ message: 'Reorder Level can only be full numbers, no decimals.' })

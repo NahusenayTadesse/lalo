@@ -30,11 +30,17 @@ export const actions: Actions = {
 				.insert(contactMessages)
 				.values({ name, phone: phoneNumber, email, subject, message: contactMessage, address });
 
+			// Not awaited, so the surrounding try/catch can't see a rejection — without
+			// these handlers an unreachable mail server crashes the whole process.
 			const adminMail = adminContactTemplate(form.data);
-			sendEmail(USER, adminMail.subject, adminMail.html);
+			sendEmail(USER, adminMail.subject, adminMail.html).catch((err) =>
+				console.error('Email Error (Admin):', err)
+			);
 
 			const userMail = customerContactTemplate(name, subject);
-			sendEmail(email, userMail.subject, userMail.html);
+			sendEmail(email, userMail.subject, userMail.html).catch((err) =>
+				console.error('Email Error (Customer):', err)
+			);
 
 			return message(form, { type: 'success', text: 'Message Successfully Sent!' });
 		} catch (err) {

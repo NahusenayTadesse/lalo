@@ -16,19 +16,19 @@
 		}).format(price);
 	};
 
-	/** Decrease quantity - Now passing amount */
+	/** Decrease quantity — the line is identified by its variant. */
 	const decreaseQuantity = () => {
-		cart.updateQuantity(item.productId, item.amount, item.quantity - 1);
+		cart.updateQuantity(item.priceId, item.quantity - 1);
 	};
 
-	/** Increase quantity - Fixed: Now passing amount and correct current quantity */
+	/** Increase quantity */
 	const increaseQuantity = () => {
-		cart.updateQuantity(item.productId, item.amount, item.quantity + 1);
+		cart.updateQuantity(item.priceId, item.quantity + 1);
 	};
 
-	/** Remove item - Now passing amount */
+	/** Remove item */
 	const removeItem = () => {
-		cart.removeItem(item.productId, item.amount);
+		cart.removeItem(item.priceId);
 	};
 </script>
 

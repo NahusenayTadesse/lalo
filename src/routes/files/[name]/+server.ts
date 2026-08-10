@@ -7,15 +7,37 @@ import { redirect } from '@sveltejs/kit';
 
 const FILES_DIR = env.FILES_DIR ?? '.temp-files';
 
-if (!fs.existsSync(FILES_DIR)) {
-	fs.mkdirSync(FILES_DIR, { recursive: true });
+/** Absolute path of the directory files may be served from. */
+const FILES_ROOT = path.resolve(FILES_DIR);
+
+if (!fs.existsSync(FILES_ROOT)) {
+	fs.mkdirSync(FILES_ROOT, { recursive: true });
+}
+
+/**
+ * Whether `candidate` sits inside `FILES_ROOT`.
+ *
+ * SvelteKit URL-decodes route params, so `%2F` arrives as a real `/` and
+ * `params.name` can contain `../` segments. Resolving and then asserting
+ * containment is what stops `/files/..%2F.env` from serving the env file.
+ *
+ * @param candidate absolute, already-resolved path
+ */
+function isInsideFilesDir(candidate: string) {
+	return candidate === FILES_ROOT || candidate.startsWith(FILES_ROOT + path.sep);
 }
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ params, request }) {
-	const file_path = path.normalize(path.join(FILES_DIR, params.name));
+	const file_path = path.resolve(FILES_ROOT, params.name);
 
-	if (!fs.existsSync(file_path)) {
+	// Same 404 as a missing file, so the response can't be used to probe for
+	// paths outside the directory.
+	if (!isInsideFilesDir(file_path)) {
+		return new Response('not found', { status: 404 });
+	}
+
+	if (!fs.existsSync(file_path) || !fs.statSync(file_path).isFile()) {
 		return new Response('not found', { status: 404 });
 	}
 

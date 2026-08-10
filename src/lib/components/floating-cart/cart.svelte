@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { useCart } from '$lib/hooks/cart.svelte.js';
+	import { useCart, cartKey } from '$lib/hooks/cart.svelte.js';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
@@ -56,7 +56,7 @@
 		{#if cart.items.length > 0}
 			<ScrollArea class="overscroll-behavior-contain min-h-0 flex-1">
 				<div class="flex flex-col gap-2 p-3">
-					{#each cart.items as item (item)}
+					{#each cart.items as item (cartKey(item))}
 						<CartItem {item} />
 					{/each}
 				</div>

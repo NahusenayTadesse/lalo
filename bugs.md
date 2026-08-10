@@ -8,13 +8,17 @@ reading the code and by running `vite build` (passes) and `svelte-check` (710 er
 
 | Severity | Count | Fixed |
 | --- | --- | --- |
-| Critical | 5 | 3 (C1, C2, C3) |
-| High | 8 | 1 (H8) |
+| Critical | 5 | **5 — all fixed** (C1–C5) |
+| High | 9 | 2 (H8, H9) |
 | Medium | 14 | — |
 | Low | 6 | — |
 
-H8 was not in the original audit — it surfaced while fixing C2 and is documented at the end of the
-High section. `svelte-check` is down from 710 errors to 704.
+H8 and H9 were not in the original audit — each surfaced while fixing a Critical (H8 while fixing
+C2, H9 while testing C4) and both are documented at the end of the High section. `svelte-check` is
+down from 710 errors to 701; `vite build` passes.
+
+**Every Critical finding is fixed and verified against a running server.** Two of them leaked data
+that a code fix cannot un-leak — see the credential-rotation note under C5.
 
 ---
 
@@ -233,7 +237,7 @@ the order form needs. The decoded `allItems`/`fetchedCustomers` arrays above are
 
 ---
 
-### C4. Checkout trusts client-supplied prices and delivery fee
+### C4. Checkout trusts client-supplied prices and delivery fee — ✅ FIXED (2026-08-10)
 
 **Where:** `src/routes/checkout/+page.server.ts:88-101`
 
@@ -271,9 +275,58 @@ const resolved = selectedProducts.map((p) => {
 
 Compute `total` from `resolved`, not from the request.
 
+**Correction to the fix sketch above:** the fee is keyed on **`address`**, not `deliveryAddress`.
+`address` is a `<select>` bound to `place_names.name`; `deliveryAddress` is the free-text street
+address and carries no fee.
+
+**Resolution:** `resolveLineItems()` re-reads every price from `prices` keyed on
+`(product_id, amount)` and `resolveFee()` re-reads the fee from `place_names` (active rows only),
+applying the `free_delivery.threshold` rule server-side. Neither the posted `price` nor the posted
+`fee` is read out of the form any more — `total` and the confirmation emails are both computed from
+the resolved rows, so the email can't quote a figure that differs from the order. The dead
+`getPrice()` helper, whose existence was the original tell, is gone.
+
+Three things were fixed alongside it, all in the same request path:
+
+- The action had **no authentication check**. Actions run before `load`, so nothing guarded it;
+  `eq(customers.userId, undefined)` merely made it crash rather than let a guest through.
+- A signed-in user with no `customers` row hit `customer.value` on `undefined`. Now a clean 403.
+- `fee` was `z.number().positive()`, so an order over the free-delivery threshold posted `fee: 0`
+  and was **rejected as invalid** — free delivery made checkout impossible. It is now optional and
+  non-negative, since the server computes it regardless.
+- `console.log(form.data)` printed the customer's address to stdout on every checkout; removed.
+
+**Verified end-to-end against a running dev server** with a throwaway account, posting a tampered
+payload (`price: 1`, `fee: 0.01`) for a variant whose real price is 150.00 in an area whose real fee
+is 200.00. The *same request* was replayed against both versions:
+
+| | before | after |
+| --- | --- | --- |
+| `order_items.price` written | **1.00** | 150.00 |
+| `orders.fee` written | **0.01** | 200.00 |
+| order total | **2.01** | 500.00 |
+
+Edge cases, all confirmed after the fix:
+
+| Request | Result |
+| --- | --- |
+| cart ≥ `free_delivery.threshold`, posted `fee: 0.01` | accepted, `orders.fee` = **0.00** (rule applied server-side) |
+| `address` not in `place_names` | rejected — "We do not deliver to that area" |
+| variant that doesn't exist | rejected — "One of the items in your cart is no longer available" |
+| no session cookie | rejected — "Please sign in to place an order" |
+| empty cart | rejected — "Your cart is empty", no row written |
+
+`svelte-check` 706 → 701; `vite build` passes. All probe rows were removed afterwards (user 7,
+customers 6, orders 6, order_items 6 — the original counts).
+
+**Note on duplication:** `/orders` has its own `resolveLineItems()`. The two differ for a real
+reason — `/orders` posts a combined `"<price> <amount>"` label and has to split it, while the cart
+stores `prices.amount` verbatim — so they were left separate rather than force-fitted into one
+helper. Worth unifying if the `/orders` form ever stops sending the combined label.
+
 ---
 
-### C5. Path traversal in the file-serving endpoint
+### C5. Path traversal in the file-serving endpoint — ✅ FIXED (2026-08-10)
 
 **Where:** `src/routes/files/[name]/+server.ts:16`
 
@@ -308,6 +361,40 @@ if (file_path !== root && !file_path.startsWith(root + path.sep)) {
 
 Rejecting any `params.name` containing `/` or `\` outright is an equally good fix here, since stored
 names are flat UUIDs.
+
+**Resolution:** `FILES_ROOT` is now resolved once at module load, `params.name` is resolved against
+it with `path.resolve`, and a containment check (`isInsideFilesDir`) runs before anything touches the
+filesystem. Escapes get the same `404 not found` as a missing file, so the response can't be used to
+probe for paths outside the directory. Also added an `isFile()` check — `statSync` on a directory
+previously produced a 200 with a nonsense body.
+
+**Verified against a running dev server**, unauthenticated, no session cookie:
+
+| Request | Before | After |
+| --- | --- | --- |
+| `GET /files/..%2F.env` | **200, full env file (416 bytes)** | 404 |
+| `GET /files/..%2F..%2Fetc%2Fpasswd` | 200 | 404 |
+| `GET /files/%2Fetc%2Fpasswd` (absolute) | 200 | 404 |
+| `GET /files/..%5C.env` (backslash) | 404 | 404 |
+| `GET /files/..%252F.env` (double-encoded) | 404 | 404 |
+| `GET /files/.` (the directory itself) | 200, garbage body | 404 |
+| `GET /files/<real-uuid>.jpg` | 200, `image/jpeg` | 200, `image/jpeg` |
+| same + matching `If-None-Match` | 304 | 304 |
+| `GET /files/does-not-exist.jpg` | 404 | 404 |
+
+The leaked body contained `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `SMTP_PASSWORD` in cleartext.
+
+> ⚠️ **Rotate these credentials.** The `.env` served here also carries a commented-out
+> `DATABASE_URL` pointing at a **remote production host** with its username and password. Any
+> deployment that ran this endpoint could have had the file pulled by anyone who knew the URL, with
+> no login. Fixing the code does not un-expose what was already reachable — the database password,
+> `BETTER_AUTH_SECRET` (which signs every session), and the SMTP password should all be rotated,
+> and `BETTER_AUTH_SECRET` rotation will invalidate existing sessions.
+
+**Still worth doing (not covered by this fix):** a symlink inside `FILES_DIR` pointing outside it
+would still be followed, since containment is checked on the resolved path, not the real path. Uploads
+are app-written UUIDs so nothing creates one today; `fs.realpathSync` before the check would close it
+if that ever changes.
 
 ---
 
@@ -550,6 +637,39 @@ Two smaller corrections in the same file:
   which throws for a signed-in user with no `customers` row. It now returns empty lists instead.
 
 After this, `svelte-check` reports **0 errors** in the file, down from 6.
+
+---
+
+### H9. An unreachable mail server crashes the whole app — ✅ FIXED (2026-08-10)
+
+**Where:** `src/routes/signup/+page.server.ts:82`, `src/routes/contact-us/+page.server.ts:34,37`
+
+Not in the original audit — found while testing C4, by pointing SMTP at a dead port.
+
+```ts
+sendEmail(email, subject, html);   // not awaited, no .catch
+```
+
+`sendEmail` is `async` and these three call sites neither `await` it nor attach a handler. The
+surrounding `try/catch` cannot see the rejection, because the action has already returned by the
+time nodemailer gives up. Node treats it as an unhandled rejection and **terminates the process**.
+
+**Failure scenario:** the mail host has a blip. One customer signs up, or one person uses the
+contact form, and the entire site goes down — not the request, the server. Observed directly:
+
+```
+Error: connect ECONNREFUSED 127.0.0.1:2525
+    at TCPConnectWrap.afterConnect
+Node.js v22.23.1        ← process exited
+```
+
+**Fix applied:** `.catch((err) => console.error(...))` on all three, matching the pattern the
+checkout and dashboard-orders routes already used correctly. The email stays fire-and-forget; only
+the crash is removed.
+
+Not covered here: a failed welcome or confirmation email is now silent apart from a log line. A
+retry queue, or surfacing "we couldn't email you a receipt" to the user, is the real answer if these
+emails matter.
 
 ---
 
@@ -797,10 +917,11 @@ through the switch and silently produces an all-time range instead of the intend
 
 ## Suggested order of work
 
-1. **C1** — the authorization hook. It is the single highest-leverage fix and it also closes the
-   reachable path to M4.
-2. **C2, C3, C4** — the customer-facing order and checkout holes.
-3. **C5, H1** — the two credential-exposure paths.
+1. ~~**C1** — the authorization hook. It is the single highest-leverage fix and it also closes the
+   reachable path to M4.~~ ✅
+2. ~~**C2, C3, C4** — the customer-facing order and checkout holes.~~ ✅
+3. ~~**C5**~~ ✅, **H1** — the two credential-exposure paths. C5 is fixed, but **rotate the
+   credentials it exposed** (see C5) — that part is not a code change.
 4. **H2, H5, H7** — small, self-contained, and each one currently breaks a real admin workflow.
 5. **H3, M5, M11** — data-correctness fixes; worth auditing existing rows after deploying.
 6. **H4** — mechanical but touches ~40 files; do it in one pass with `svelte-check` as the checklist.
