@@ -130,6 +130,7 @@
 				id={name}
 				type="file"
 				class="hidden"
+				bind:files={$file}
 				{name}
 				accept="image/*,application/pdf"
 				multiple={true}

@@ -14,6 +14,7 @@ import {
 	productImages
 } from '$lib/server/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { error } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ params, locals }) => {
@@ -89,6 +90,10 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 		.then((row) =>
 			row ? { ...row, price: priceRange?.price ?? null, saleCount: saleStats?.saleCount ?? 0 } : row
 		);
+
+	if (!product) {
+		error(404, 'Product not found');
+	}
 
 	const priceList = await db
 		.select({

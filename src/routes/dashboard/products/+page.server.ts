@@ -9,7 +9,8 @@ const ALLOWED_PAGE_SIZES = [10, 20, 50, 100];
 export const load: PageServerLoad = async ({ url }) => {
 	const search = url.searchParams.get('search')?.trim() ?? '';
 	const category = url.searchParams.get('category');
-	const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1'));
+	const parsedPage = parseInt(url.searchParams.get('page') ?? '1');
+	const page = Math.max(1, Number.isFinite(parsedPage) ? parsedPage : 1);
 	const pageSizeParam = parseInt(url.searchParams.get('pageSize') ?? '');
 	const pageSize = ALLOWED_PAGE_SIZES.includes(pageSizeParam) ? pageSizeParam : DEFAULT_PAGE_SIZE;
 	const offset = (page - 1) * pageSize;

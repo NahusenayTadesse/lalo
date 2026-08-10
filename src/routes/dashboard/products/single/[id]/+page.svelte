@@ -36,7 +36,7 @@
 
 	let singleTable = $derived([
 		{ name: 'Name', value: data.product?.name },
-		{ name: 'Category', value: data.product.category },
+		{ name: 'Category', value: data.product?.category },
 		{ name: 'Price', value: data.product?.price },
 		{ name: 'Available Quantity', value: data.product?.quantity },
 		{ name: 'Product Description', value: data.product?.description },
@@ -62,12 +62,14 @@
 		}
 	);
 
-	(($form.productName = data.product.name),
-		($form.category = data.product.categoryId),
-		($form.description = data.product.description),
-		($form.quantity = data.product.quantity),
-		($form.reorderLevel = data.product.reorderLevel),
-		($form.supplier = data.product.supplierId));
+	if (data.product) {
+		$form.productName = data.product.name;
+		$form.category = data.product.categoryId;
+		$form.description = data.product.description;
+		$form.quantity = data.product.quantity;
+		$form.reorderLevel = data.product.reorderLevel;
+		$form.supplier = data.product.supplierId;
+	}
 
 	export const snapshot: Snapshot = { capture, restore };
 
