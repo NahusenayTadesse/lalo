@@ -1,23 +1,16 @@
 import { db } from '$lib/server/db';
-import { user } from '$lib/server/db/schema';
-import { error, redirect } from '@sveltejs/kit';
+import { requireAdmin } from '$lib/server/authz';
 import type { LayoutServerLoad } from './$types';
 
 import { orders, contactMessages } from '$lib/server/db/schema';
-import { eq, count, gte } from 'drizzle-orm';
+import { eq, count } from 'drizzle-orm';
 
-export const load: LayoutServerLoad = async ({ locals, parent, depends }) => {
-	if (locals.user) {
-		const roleName = (await parent()).roleName;
-		if (roleName !== 'Admin') {
-			return error(404, 'Not Allowed');
-		}
-	} else {
-		return redirect(302, '/login');
-	}
+export const load: LayoutServerLoad = async ({ locals, depends }) => {
+	// Enforcement proper lives in `hooks.server.ts`, which also covers form
+	// actions; this reuses the role it cached on `locals`, so it costs no query.
+	const currentUser = await requireAdmin(locals);
 
 	depends('app:messages');
-	const name = locals?.user?.name;
 
 	const ordersNumber = await db
 		.select({ count: count(orders.id) })
@@ -32,7 +25,7 @@ export const load: LayoutServerLoad = async ({ locals, parent, depends }) => {
 		.then((rows) => rows[0]?.count ?? 0);
 
 	return {
-		name,
+		name: currentUser.name,
 		ordersNumber,
 		messageNumber
 	};

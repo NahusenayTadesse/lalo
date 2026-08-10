@@ -50,7 +50,7 @@
 				placeholder="Enter Product Variation"
 				required
 			/>
-			<Button type="submit" variant="destructive" size="lg">
+			<Button type="submit" size="lg">
 				{#if $delayed}
 					<LoadingBtn name="Saving Price" />
 				{:else}

@@ -7,6 +7,8 @@ declare global {
 		interface Locals {
 			user?: User;
 			session?: Session;
+			/** Resolved by `hooks.server.ts` for `/dashboard` requests. */
+			roleName?: string;
 		}
 
 		// interface Error {}

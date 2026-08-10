@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
-import { user, roles, gallery, catalogManual, freeDelivery } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { gallery, catalogManual, freeDelivery } from '$lib/server/db/schema';
+import { getRoleName } from '$lib/server/authz';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
@@ -17,16 +17,10 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		.limit(1)
 		.then((rows) => rows[0]);
 
-	// 1. Fetch the role name if a user exists
+	// 1. Fetch the role name if a user exists. On `/dashboard` the hook has already
+	// resolved it, so reuse that rather than repeating the join on every request.
 	if (currentUser) {
-		const roleData = await db
-			.select({ name: roles.name })
-			.from(user)
-			.leftJoin(roles, eq(user.roleId, roles.id))
-			.where(eq(user.id, currentUser.id))
-			.then((rows) => rows[0]);
-
-		roleName = roleData?.name ?? '';
+		roleName = locals.roleName ?? (await getRoleName(currentUser.id));
 	}
 
 

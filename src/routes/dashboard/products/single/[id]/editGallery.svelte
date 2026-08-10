@@ -48,7 +48,7 @@
 			required
 			bind:images
 		/>
-		<Button type="submit" variant="destructive" size="lg">
+		<Button type="submit" size="lg">
 			{#if $delayed}
 				<LoadingBtn name="Saving New Gallery" />
 			{:else}

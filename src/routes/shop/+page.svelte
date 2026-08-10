@@ -111,7 +111,7 @@
 
 <section
 	class="relative flex h-96 flex-col items-center justify-center overflow-hidden border-b bg-contain bg-center px-6 py-20 lg:px-8"
-	style="background-image: url('/files/demo.webp')"
+	style="background-image: url('/42.webp')"
 >
 	<div class="backdrop-blur-xm absolute inset-0 bg-black/40"></div>
 
