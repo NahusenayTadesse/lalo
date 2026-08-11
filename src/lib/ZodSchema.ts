@@ -309,17 +309,26 @@ export const editCustomer = z.object({
 
 export type EditCustomer = z.infer<typeof editCustomer>;
 
+/**
+ * A customer record on its own — no `user` account is created or linked, so the
+ * fields here mirror the `customers` table only. Shared by every page that shows
+ * the add-customer dialog; the action itself lives in
+ * `/dashboard/customers?/addCustomer`.
+ */
 export const addCustomer = z.object({
-	firstName: z.string().min(1, 'First name is required').max(50, 'First name is too long'),
-	lastName: z.string().max(50, 'Last name is too long').optional().or(z.literal('')),
+	name: z
+		.string()
+		.min(2, 'Name must be at least 2 characters')
+		.max(100, 'Name must be at most 100 characters'),
+	// Optional: a walk-in customer often has no email. Still validated when filled in.
+	email: z.email('Enter a valid email').max(100, 'Email is too long').optional().or(z.literal('')),
 	phone: z
 		.string()
 		.min(7, 'Phone number is too short')
 		.max(15, 'Phone number is too long')
 		.regex(/^[0-9+\-()\s]+$/, 'Invalid phone number'),
-	gender: z.string().refine((val) => ['male', 'female'].includes(val), {
-		message: 'Please select a gender'
-	})
+	address: z.string().max(255, 'Address is too long').optional().or(z.literal('')),
+	deliveryAddress: z.string().max(255, 'Delivery address is too long').optional().or(z.literal(''))
 });
 
 export type AddCustomerSchema = z.infer<typeof addCustomer>;

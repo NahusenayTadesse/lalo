@@ -7,7 +7,8 @@ import { USER } from '$env/static/private';
 import { addUser, loginSchema } from '$lib/ZodSchema';
 import { add } from './schema';
 import { db } from '$lib/server/db';
-import { orders, orderItems, customers, placeNames, prices, freeDelivery } from '$lib/server/db/schema';
+import { orders, orderItems, customers, placeNames, prices } from '$lib/server/db/schema';
+import { resolveDeliveryFee } from '$lib/server/delivery';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -57,7 +58,11 @@ export const actions: Actions = {
 		// Actions run *before* any `load`, so a guard in a load function would only
 		// affect the re-render. The check has to happen here.
 		if (!locals.user) {
-			return message(form, { type: 'error', text: 'Please sign in to place an order' }, { status: 401 });
+			return message(
+				form,
+				{ type: 'error', text: 'Please sign in to place an order' },
+				{ status: 401 }
+			);
 		}
 
 		if (!form.valid) {
@@ -95,7 +100,7 @@ export const actions: Actions = {
 		}
 
 		const subtotal = sumLineItems(lineItems);
-		const fee = await resolveFee(address, subtotal);
+		const fee = await resolveDeliveryFee(address, subtotal);
 
 		if (fee === undefined) {
 			return message(form, { type: 'error', text: 'We do not deliver to that area' });
@@ -148,12 +153,15 @@ export const actions: Actions = {
 			price: Number(item.price)
 		}));
 
-		// Send to Customer
-		sendEmail(
-			customer.email,
-			customerCheckoutTemplate(newOrderId, emailItems, total).subject,
-			customerCheckoutTemplate(newOrderId, emailItems, total).html
-		).catch((err) => console.error('Email Error (Customer):', err));
+		// Send to Customer — staff-created customers may have no email, so this is
+		// skipped rather than sent to a null address. The admin copy still goes out.
+		if (customer.email) {
+			sendEmail(
+				customer.email,
+				customerCheckoutTemplate(newOrderId, emailItems, total).subject,
+				customerCheckoutTemplate(newOrderId, emailItems, total).html
+			).catch((err) => console.error('Email Error (Customer):', err));
+		}
 
 		// Send to Admin
 		sendEmail(
@@ -222,34 +230,4 @@ function sumLineItems(lineItems: Array<{ quantity: number; price: string }>): nu
 		0
 	);
 	return cents / 100;
-}
-
-/**
- * The delivery fee for `placeName` as a decimal string, or `undefined` if we
- * don't deliver there.
- *
- * `address` is a select bound to `place_names.name`; `deliveryAddress` is the
- * free-text street address and carries no fee. Orders at or above the
- * free-delivery threshold ship free — the same rule the page shows, applied
- * here so the posted fee never has to be trusted.
- */
-async function resolveFee(placeName: string, subtotal: number): Promise<string | undefined> {
-	const place = await db
-		.select({ fee: placeNames.fee })
-		.from(placeNames)
-		.where(and(eq(placeNames.name, placeName), eq(placeNames.isActive, true)))
-		.limit(1)
-		.then((rows) => rows[0]);
-
-	if (!place) return undefined;
-
-	const threshold = await db
-		.select({ value: freeDelivery.threshold })
-		.from(freeDelivery)
-		.limit(1)
-		.then((rows) => rows[0]);
-
-	if (threshold && subtotal >= Number(threshold.value)) return '0.00';
-
-	return place.fee;
 }

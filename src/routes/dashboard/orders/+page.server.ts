@@ -14,9 +14,13 @@ import {
 	prices,
 	transactions,
 	paymentMethods,
-	productAdjustments
+	productAdjustments,
+	placeNames,
+	freeDelivery
 } from '$lib/server/db/schema';
+import { resolveDeliveryFee } from '$lib/server/delivery';
 import { idSchema, duplicateField } from '$lib/server/crud';
+import { addCustomer } from '$lib/ZodSchema';
 import { saveUploadedFile } from '$lib/server/upload';
 import type { PageServerLoad, Actions } from './$types';
 
@@ -40,9 +44,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		status !== 'all' ? eq(orders.status, status as (typeof STATUSES)[number]) : undefined,
 		start ? gte(orders.createdAt, new Date(start)) : undefined,
 		end ? lte(orders.createdAt, new Date(`${end}T23:59:59`)) : undefined,
-		paymentMethodFilter
-			? eq(transactions.paymentMethodId, Number(paymentMethodFilter))
-			: undefined,
+		paymentMethodFilter ? eq(transactions.paymentMethodId, Number(paymentMethodFilter)) : undefined,
 		search
 			? or(
 					like(customers.name, `%${search}%`),
@@ -53,10 +55,13 @@ export const load: PageServerLoad = async ({ url }) => {
 			: undefined
 	);
 
-	const [form, editForm, deleteForm] = await Promise.all([
+	// `addCustomerForm` feeds the shared add-customer dialog; it posts across to
+	// /dashboard/customers?/addCustomer, which is where that action lives.
+	const [form, editForm, deleteForm, addCustomerForm] = await Promise.all([
 		superValidate(zod4(add)),
 		superValidate(zod4(edit)),
-		superValidate(zod4(idSchema))
+		superValidate(zod4(idSchema)),
+		superValidate(zod4(addCustomer), { id: 'addCustomer' })
 	]);
 
 	const fetchedProducts = await db
@@ -67,22 +72,52 @@ export const load: PageServerLoad = async ({ url }) => {
 		.select({ value: paymentMethods.id, name: paymentMethods.name })
 		.from(paymentMethods);
 
+	// One row per orderable variant. `value` stays the "<price> <label>" string
+	// because that is what `selectedProducts[].amount` carries and what
+	// splitNumbers() reads back — the picker keys off `id` and writes both fields.
+	//
+	// innerJoin, not leftJoin: a large share of `prices` rows point at products that
+	// no longer exist (the FK evidently didn't cascade), and a variant of a deleted
+	// product can't be ordered. The old product-then-package picker hid them by
+	// accident; one flat list would have offered them as nameless "100g" rows.
 	const fetchedPrices = await db
 		.select({
 			value: sql<string>`CONCAT(${prices.price}, ' ', ${prices.amount})`,
 			name: sql<string>`CONCAT(${prices.price}, ' ', ${prices.amount}, ' pieces')`,
+			id: prices.id,
 			productId: prices.productId,
+			productName: products.name,
 			price: prices.price,
 			amount: prices.amount
 		})
-		.from(prices);
+		.from(prices)
+		.innerJoin(products, eq(prices.productId, products.id));
 
+	// COALESCE matters: MySQL's CONCAT returns NULL if any argument is NULL, so a
+	// customer with no phone used to come back with a null label and show up as a
+	// blank row in the picker.
 	const fetchedCustomers = await db
 		.select({
 			value: customers.id,
-			name: sql<string>`CONCAT(${customers.name}, ' ', ${customers.phone})`
+			name: sql<string>`CONCAT(${customers.name}, ' ', COALESCE(${customers.phone}, ''))`,
+			// Carried along so picking a customer can pre-fill the delivery fields.
+			address: customers.address,
+			deliveryAddress: customers.deliveryAddress
 		})
 		.from(customers);
+
+	const placeList = await db
+		.select({ value: placeNames.name, name: placeNames.name, fee: placeNames.fee })
+		.from(placeNames)
+		.where(eq(placeNames.isActive, true));
+
+	// Display only — the dialogs preview "delivery is free over X" with it. The
+	// fee that gets stored is always recomputed in the actions below.
+	const freeDeliveryThreshold = await db
+		.select({ value: freeDelivery.threshold })
+		.from(freeDelivery)
+		.limit(1)
+		.then((rows) => rows[0]?.value ?? null);
 
 	const allData = await db
 		.select({
@@ -140,13 +175,23 @@ export const load: PageServerLoad = async ({ url }) => {
 		form,
 		editForm,
 		deleteForm,
+		addCustomerForm,
 		allData,
 		allItems,
 		fetchedProducts,
 		fetchedCustomers,
 		fetchedPrices,
 		paymentMethodList,
-		filters: { status, start, end, search, paymentMethod: paymentMethodFilter, pageSize: PAGE_SIZE },
+		placeList,
+		freeDeliveryThreshold,
+		filters: {
+			status,
+			start,
+			end,
+			search,
+			paymentMethod: paymentMethodFilter,
+			pageSize: PAGE_SIZE
+		},
 		pagination: {
 			currentPage: page,
 			totalPages,
@@ -164,13 +209,34 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: 'Please check the form for Errors' });
 		}
 
-		const { selectedProducts, customer, status } = form.data;
+		const { selectedProducts, customer, status, address, deliveryAddress } = form.data;
+
+		// The address fields were previously collected by the dialog and then
+		// dropped on the floor here, so every staff-created order showed a blank
+		// delivery address in the table and had no fee.
+		const fee = address ? await resolveDeliveryFee(address, getTotal(selectedProducts)) : null;
+
+		if (address && fee === undefined) {
+			setError(form, 'address', 'We do not deliver to that area');
+			return message(
+				form,
+				{ type: 'error', text: 'We do not deliver to that area' },
+				{ status: 400 }
+			);
+		}
 
 		try {
 			await db.transaction(async (tx) => {
 				const [orderId] = await tx
 					.insert(orders)
-					.values({ customerId: customer, status, createdBy: locals?.user?.id })
+					.values({
+						customerId: customer,
+						status,
+						address: address || null,
+						deliveryAddress: deliveryAddress || null,
+						fee,
+						createdBy: locals?.user?.id
+					})
 					.$returningId();
 
 				if (selectedProducts.length) {
@@ -208,7 +274,27 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: 'Please check the form for Errors' });
 		}
 
-		const { id, selectedProducts, customer, status, reciept, paymentMethod } = form.data;
+		const {
+			id,
+			selectedProducts,
+			customer,
+			status,
+			reciept,
+			paymentMethod,
+			address,
+			deliveryAddress
+		} = form.data;
+
+		const fee = address ? await resolveDeliveryFee(address, getTotal(selectedProducts)) : null;
+
+		if (address && fee === undefined) {
+			setError(form, 'address', 'We do not deliver to that area');
+			return message(
+				form,
+				{ type: 'error', text: 'We do not deliver to that area' },
+				{ status: 400 }
+			);
+		}
 
 		if (status === 'delivered' && !paymentMethod) {
 			setError(form, 'paymentMethod', 'Payment Method is required for Delivered Orders');
@@ -269,6 +355,9 @@ export const actions: Actions = {
 					.set({
 						customerId: customer,
 						status,
+						address: address || null,
+						deliveryAddress: deliveryAddress || null,
+						fee,
 						...(transactionId ? { transactionId } : {}),
 						updatedBy: locals?.user?.id
 					})
@@ -377,11 +466,18 @@ export const actions: Actions = {
 	}
 };
 
+/**
+ * Split "<price> <package label>" back into its parts. Only the *first* space
+ * separates the two — `split(' ')[1]` dropped everything after it, so a label
+ * like "12 pieces" was stored as "12".
+ */
 function splitNumbers(input: string) {
-	const [first, second] = input.split(' ');
+	const separator = input.indexOf(' ');
+	if (separator === -1) return { price: Number(input), amount: '' };
+
 	return {
-		price: Number(first),
-		amount: second
+		price: Number(input.slice(0, separator)),
+		amount: input.slice(separator + 1)
 	};
 }
 

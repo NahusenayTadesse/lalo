@@ -7,7 +7,7 @@
 	import Statuses from '$lib/components/Table/statuses.svelte';
 	import Edit from './edit.svelte';
 	import Delete from './delete.svelte';
-	import ProductLineItem from './product-line-item.svelte';
+	import OrderFormFields from './order-form-fields.svelte';
 	import OrderItems from '$lib/components/order-items.svelte';
 	import Copy from '$lib/Copy.svelte';
 	import { formatEthiopianDate } from '$lib/global.svelte.js';
@@ -18,17 +18,29 @@
 	import QueryBuilder from '$lib/QueryBuilder.svelte';
 	import FilterMenu from '$lib/components/Table/FilterMenu.svelte';
 	import type { CalendarDate } from '@internationalized/date';
-	import { Sheet, Loader, CircleCheckBig, OctagonMinus, Plus, ChevronLeft, ChevronRight } from '@lucide/svelte';
+	import {
+		Sheet,
+		Loader,
+		CircleCheckBig,
+		OctagonMinus,
+		Plus,
+		ChevronLeft,
+		ChevronRight
+	} from '@lucide/svelte';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
+	import AddCustomer from '$lib/forms/AddCustomer.svelte';
+	import Errors from '$lib/formComponents/Errors.svelte';
 	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
 	import { superForm } from 'sveltekit-superforms/client';
 	import { toast } from 'svelte-sonner';
 
 	let { data } = $props();
 
-	const { form, errors, enhance, delayed, message } = superForm(data.form, {
-		dataType: 'json'
+	let addOpen = $state(false);
+
+	const { form, errors, enhance, delayed, message, allErrors } = superForm(data.form, {
+		dataType: 'json',
+		id: 'add-order'
 	});
 
 	$effect(() => {
@@ -37,20 +49,15 @@
 				toast.error($message.text);
 			} else {
 				toast.success($message.text);
+				// The dialog used to stay open on success, so a second click on
+				// "Add Order" happily created the same order again.
+				addOpen = false;
 			}
 		}
 	});
 
-	function addProduct() {
-		$form.selectedProducts = [...$form.selectedProducts, { product: 0, quantity: 1, amount: '' }];
-	}
-
-	const grandTotal = $derived(
-		$form.selectedProducts.reduce((sum, item) => {
-			const price = parseFloat(String(item.amount ?? '').split(' ')[0]);
-			return sum + (Number.isFinite(price) ? price * (item.quantity ?? 0) : 0);
-		}, 0)
-	);
+	const hasItems = $derived($form.selectedProducts.length > 0);
+	let addOrderTotal = $state(0);
 
 	// ---------------------------------------------------------------------
 	// Query builder — every control writes to the URL, +page.server.ts reads
@@ -125,11 +132,16 @@
 					customerName: row.original.name,
 					orderItems: data?.allItems,
 					priceList: data?.fetchedPrices,
-					productList: data?.fetchedProducts,
 					paymentMethodList: data?.paymentMethodList,
+					placeList: data?.placeList,
+					freeDeliveryThreshold: data?.freeDeliveryThreshold,
+					address: row.original.address,
+					deliveryAddress: row.original.deliveryAddress,
+					paymentMethod: row.original.paymentMethod ?? undefined,
+					image: row.original.recieptLink,
 					data: data?.editForm,
 					icon: false,
-					status: row.original.status
+					status: row.original.status ?? 'pending'
 				});
 			}
 		},
@@ -201,10 +213,15 @@
 					orderItems: data?.allItems,
 					priceList: data?.fetchedPrices,
 					paymentMethodList: data?.paymentMethodList,
-					productList: data?.fetchedProducts,
+					placeList: data?.placeList,
+					freeDeliveryThreshold: data?.freeDeliveryThreshold,
+					address: row.original.address,
+					deliveryAddress: row.original.deliveryAddress,
+					paymentMethod: row.original.paymentMethod ?? undefined,
+					image: row.original.recieptLink,
 					data: data?.editForm,
 					icon: true,
-					status: row.original.status
+					status: row.original.status ?? 'pending'
 				});
 			}
 		},
@@ -240,82 +257,66 @@
 			{/each}
 		</div>
 
-		<DialogComp title="+ Add New Order" dialogTitle="Add New Order" variant="default">
-			<form
-				action="/dashboard/orders/?/add"
-				use:enhance
-				id="main"
-				class="flex flex-col gap-4"
-				method="post"
-				enctype="multipart/form-data"
+		<div class="flex flex-row flex-wrap items-center gap-2">
+			<AddCustomer data={data.addCustomerForm} />
+
+			<DialogComp
+				bind:open={addOpen}
+				wide
+				title="+ Add New Order"
+				dialogTitle="Add New Order"
+				variant="default"
 			>
-				<InputComp
-					label="Customer"
-					name="customer"
-					type="combo"
-					{form}
-					{errors}
-					items={data?.fetchedCustomers}
-				/>
+				{#snippet footer()}
+					<div class="flex items-center justify-between gap-4">
+						<div class="text-sm">
+							<span class="text-muted-foreground">Total</span>
+							<span class="ml-2 text-base font-semibold tabular-nums">
+								ETB {addOrderTotal.toLocaleString()}
+							</span>
+						</div>
+						<Button type="submit" form="main" disabled={!hasItems || $delayed}>
+							{#if $delayed}
+								<LoadingBtn name="Adding Order" />
+							{:else}
+								<Plus /> Add Order
+							{/if}
+						</Button>
+					</div>
+				{/snippet}
 
-				<div class="flex items-center justify-between">
-					<Label class="text-sm font-semibold">Order Items</Label>
-					<Button type="button" size="sm" class="gap-2" onclick={() => addProduct()}>
-						<Plus class="h-4 w-4" />
-						<span>Add Product</span>
-					</Button>
-				</div>
+				<form
+					action="/dashboard/orders/?/add"
+					use:enhance
+					id="main"
+					class="flex flex-col gap-4"
+					method="post"
+					enctype="multipart/form-data"
+				>
+					<Errors allErrors={$allErrors} />
 
-				{#if $form.selectedProducts.length === 0}
-					<p class="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
-						No products added yet. Click "Add Product" to start building this order.
-					</p>
-				{/if}
-
-				{#each $form.selectedProducts as _, i (i)}
-					<ProductLineItem
-						index={i}
-						bind:item={$form.selectedProducts[i]}
-						productList={data?.fetchedProducts}
+					<OrderFormFields
+						{form}
+						{errors}
+						customerList={data?.fetchedCustomers}
 						priceList={data?.fetchedPrices}
-						errors={$errors.selectedProducts?.[i]}
-						onremove={() => {
-							$form.selectedProducts.splice(i, 1);
-							$form.selectedProducts = $form.selectedProducts;
-						}}
+						placeList={data?.placeList}
+						addCustomerForm={data?.addCustomerForm}
+						freeDeliveryThreshold={data?.freeDeliveryThreshold}
+						bind:total={addOrderTotal}
+						statusItems={[
+							{ value: 'pending', name: 'Pending' },
+							{ value: 'cancelled', name: 'Cancelled' }
+						]}
 					/>
-				{/each}
 
-				{#if grandTotal > 0}
-					<p class="text-right text-sm text-muted-foreground">
-						Order Total: <span class="font-semibold text-foreground">ETB {grandTotal.toLocaleString()}</span>
+					<p class="text-xs text-muted-foreground">
+						To mark an order delivered, save it first and use Edit — that is where the payment
+						method, receipt and stock adjustment are handled.
 					</p>
-				{/if}
-
-				<InputComp label="Delivery Address" name="deliveryAddress" type="text" {form} {errors} />
-
-				<InputComp
-					label="Status"
-					name="status"
-					type="select"
-					{form}
-					{errors}
-					items={[
-						{ value: 'pending', name: 'Pending' },
-						{ value: 'delivered', name: 'Delivered' },
-						{ value: 'cancelled', name: 'Cancelled' }
-					]}
-				/>
-
-				<Button type="submit" form="main">
-					{#if $delayed}
-						<LoadingBtn name="Adding Order" />
-					{:else}
-						<Plus /> Add Order
-					{/if}
-				</Button>
-			</form>
-		</DialogComp>
+				</form>
+			</DialogComp>
+		</div>
 	</div>
 
 	<QueryBuilder
@@ -342,8 +343,8 @@
 					onValueChange={(v) => update('paymentMethod', v)}
 				>
 					<SelectTrigger class="w-full">
-						{data.paymentMethodList.find((p) => String(p.value) === filters.paymentMethod)
-							?.name ?? 'Any'}
+						{data.paymentMethodList.find((p) => String(p.value) === filters.paymentMethod)?.name ??
+							'Any'}
 					</SelectTrigger>
 					<SelectContent>
 						<SelectItem value="">Any</SelectItem>

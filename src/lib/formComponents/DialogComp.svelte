@@ -12,9 +12,11 @@
 		title,
 		dialogTitle = title,
 		children,
+		footer,
 		variant,
 		IconComp,
 		open = $bindable(false),
+		wide = false,
 
 		class: className = ''
 	}: {
@@ -22,10 +24,15 @@
 		/** Header shown inside the dialog; defaults to `title` (the trigger button's label). */
 		dialogTitle?: string;
 		children: Snippet;
+		/** Pinned below the scroll area — for a running total and the submit button,
+		 *  which otherwise scroll out of reach on anything but the shortest form. */
+		footer?: Snippet;
 		variant: ButtonVariant;
 		IconComp?: Component<IconProps>;
 		/** Bindable so a caller can close the dialog itself, e.g. after a successful form submit. */
 		open?: boolean;
+		/** Roomier shell for forms with side-by-side fields or repeating rows. */
+		wide?: boolean;
 		class?: string;
 	} = $props();
 </script>
@@ -44,14 +51,23 @@
 			</Button>
 		{/snippet}
 	</Dialog.Trigger>
-	<Dialog.Content class="w-lg! {className}">
+	<Dialog.Content class="{wide ? 'w-3xl! max-w-[95vw]!' : 'w-lg!'} {className}">
 		<Dialog.Header>
 			<Dialog.Title>{dialogTitle}</Dialog.Title>
 		</Dialog.Header>
 		<ScrollArea class="h-auto w-full! min-w-0!  px-2 pr-4" orientation="both">
-			<div class="h-auto max-h-96 w-full lg:max-h-[calc(100vh-10rem)]">
+			<div
+				class="h-auto w-full {footer
+					? 'max-h-[50vh] lg:max-h-[calc(100vh-18rem)]'
+					: 'max-h-96 lg:max-h-[calc(100vh-10rem)]'}"
+			>
 				{@render children()}
 			</div>
 		</ScrollArea>
+		{#if footer}
+			<div class="mt-2 border-t px-2 pt-3">
+				{@render footer()}
+			</div>
+		{/if}
 	</Dialog.Content>
 </Dialog.Root>

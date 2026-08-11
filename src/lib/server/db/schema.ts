@@ -57,11 +57,11 @@ export const productImages = mysqlTable('product_images', {
 export const customers = mysqlTable('customers', {
 	id: int('id').primaryKey().autoincrement(),
 	name: varchar('name', { length: 100 }).notNull(),
-	email: varchar('email', { length: 100 }).notNull().unique(),
+	// Both nullable: staff add walk-in customers who have no account and often no
+	// email. UNIQUE still holds — MySQL allows repeated NULLs in a unique index.
+	email: varchar('email', { length: 100 }).unique(),
 	phone: varchar('phone', { length: 20 }),
-	userId: varchar('user_id', { length: 255 })
-		.notNull()
-		.references(() => user.id),
+	userId: varchar('user_id', { length: 255 }).references(() => user.id),
 	address: varchar('address', { length: 255 }),
 	deliveryAddress: varchar('delivery_address', { length: 255 }),
 	...secureFields

@@ -19,7 +19,10 @@
 	} = $props();
 
 	const { form, errors, enhance, delayed, message, allErrors } = superForm(data, {
-		resetForm: false
+		resetForm: false,
+		// One instance per row, all sharing `data.deleteForm`. Without a distinct id
+		// every one of them reacted to a single delete and fired its own toast.
+		id: `delete-order-${id}`
 	});
 
 	let open = $state(false);

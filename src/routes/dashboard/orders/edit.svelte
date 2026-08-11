@@ -1,27 +1,41 @@
 <script lang="ts">
 	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import { SquarePen, Plus, Save } from '@lucide/svelte';
+	import { SquarePen, Save } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import type { Edit } from './schema';
+	import type { edit } from './schema';
 
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
 	import Errors from '$lib/formComponents/Errors.svelte';
-	import { Label } from '$lib/components/ui/label/index.js';
+	import { toast } from 'svelte-sonner';
+	import InputComp from '$lib/formComponents/InputComp.svelte';
+	import DialogComp from '$lib/formComponents/DialogComp.svelte';
+	import OrderFormFields from './order-form-fields.svelte';
 
-	import ProductLineItem from './product-line-item.svelte';
-
+	/** Price and place lists key off strings, customer/product lists off ids. */
 	type Item = {
-		value: number;
+		value: string | number;
 		name: string;
+	};
+
+	type Status = 'pending' | 'delivered' | 'cancelled';
+
+	type PriceItem = {
+		id: number;
+		value: string;
+		productId: number | string | null;
+		productName?: string | null;
+		price: string;
+		amount: string;
 	};
 
 	type OrderItem = {
 		id: string | number;
-		orderId: string | number;
-		product: string;
+		// Nullable in the DB — `order_items.order_id` has no NOT NULL constraint.
+		orderId: string | number | null;
+		product: string | null;
 		amount: number | string;
-		productId: string | number;
+		productId: string | number | null;
 		quantity: number | string;
 		price: string | number;
 		total: number;
@@ -33,63 +47,63 @@
 		customer,
 		customerName,
 		customerList,
-		productList,
 		paymentMethod,
 		priceList,
+		placeList = [],
+		freeDeliveryThreshold = null,
+		address = '',
+		deliveryAddress = '',
 		image = '',
 		orderItems,
 		icon = false,
-		status = true,
+		status = 'pending',
 		paymentMethodList
 	}: {
-		data: SuperValidated<Infer<Edit>>;
+		// `Infer<typeof edit>`, not `Infer<Edit>` — the latter is already an inferred
+		// type, so it silently resolved `$form` to `{}` and every field access on it
+		// went unchecked.
+		data: SuperValidated<Infer<typeof edit>>;
 		id: number;
 		customer: number;
 		customerName: string;
 		customerList: Item[];
-		productList: Item[];
-		priceList: Item[];
+		priceList: PriceItem[];
+		placeList?: (Item & { fee: string })[];
+		freeDeliveryThreshold?: string | null;
+		address?: string | null;
+		deliveryAddress?: string | null;
 		orderItems: OrderItem[];
 		icon: boolean;
 		paymentMethod?: number;
-		status: boolean;
+		status: Status;
 		paymentMethodList: Item[];
 		image?: '';
 	} = $props();
 
 	const { form, errors, enhance, delayed, message, allErrors } = superForm(data, {
 		resetForm: false,
-		dataType: 'json'
+		dataType: 'json',
+		// Every row renders this component twice (the customer-name cell and the
+		// edit cell), so without a per-instance id a single save broadcast its
+		// result to all of them — one toast per instance, for every row on the page.
+		id: `edit-order-${id}-${icon ? 'icon' : 'name'}`
 	});
 
 	let open = $state(false);
+	let total = $state(0);
 
-	function addProduct() {
-		$form.selectedProducts = [...$form.selectedProducts, { product: 0, quantity: 1, amount: '' }];
-	}
-
-	const grandTotal = $derived(
-		$form.selectedProducts.reduce((sum, item) => {
-			const price = parseFloat(String(item.amount ?? '').split(' ')[0]);
-			return sum + (Number.isFinite(price) ? price * (item.quantity ?? 0) : 0);
-		}, 0)
-	);
-
-	interface SimpleProduct {
-		product: number; // This is the productId
-		quantity: number;
-	}
-
-	const simplifyOrderItems = (items: OrderItem[]): SimpleProduct[] => {
-		return items.map((item) => ({
-			product: item.productId,
-			quantity: item.quantity,
+	const simplifyOrderItems = (items: OrderItem[]) =>
+		items.map((item) => ({
+			product: Number(item.productId),
+			quantity: Number(item.quantity),
 			amount: item.price + ' ' + item.amount
 		}));
-	};
 
 	$form.id = id;
 	$form.customer = customer;
+	$form.status = status;
+	$form.address = address ?? '';
+	$form.deliveryAddress = deliveryAddress ?? '';
 
 	if (paymentMethod) {
 		$form.paymentMethod = paymentMethod;
@@ -98,11 +112,9 @@
 	$form.selectedProducts = simplifyOrderItems(
 		orderItems.filter((item) => Number(item.orderId) === Number(id))
 	);
-	$form.status = status;
 
-	import { toast } from 'svelte-sonner';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
-	import DialogComp from '$lib/formComponents/DialogComp.svelte';
+	const hasItems = $derived($form.selectedProducts.length > 0);
+
 	$effect(() => {
 		if ($message) {
 			if ($message.type === 'error') {
@@ -117,11 +129,31 @@
 
 <DialogComp
 	bind:open
+	wide
 	IconComp={icon ? SquarePen : undefined}
 	title={icon ? '' : customerName}
-	dialogTitle={`Edit ${customerName}`}
+	dialogTitle={`Edit Order #${id} — ${customerName}`}
 	variant="ghost"
 >
+	{#snippet footer()}
+		<div class="flex items-center justify-between gap-4">
+			<div class="text-sm">
+				<span class="text-muted-foreground">Total</span>
+				<span class="ml-2 text-base font-semibold tabular-nums">
+					ETB {total.toLocaleString()}
+				</span>
+			</div>
+			<Button type="submit" form="edit" disabled={!hasItems || $delayed}>
+				{#if $delayed}
+					<LoadingBtn name="Saving Changes" />
+				{:else}
+					<Save class="h-4 w-4" />
+					Save Changes
+				{/if}
+			</Button>
+		</div>
+	{/snippet}
+
 	<form
 		action="/dashboard/orders/?/edit"
 		use:enhance
@@ -132,49 +164,16 @@
 	>
 		<Errors allErrors={$allErrors} />
 		<input type="hidden" name="id" value={$form.id} />
-		<InputComp label="Customer" name="customer" type="combo" {form} {errors} items={customerList} />
 
-		<div class="flex items-center justify-between">
-			<Label class="text-sm font-semibold">Order Items</Label>
-			<Button type="button" size="sm" class="gap-2" onclick={() => addProduct()}>
-				<Plus class="h-4 w-4" />
-				<span>Add Product</span>
-			</Button>
-		</div>
-
-		{#if $form.selectedProducts.length === 0}
-			<p class="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
-				No products on this order yet. Click "Add Product" to add one.
-			</p>
-		{/if}
-
-		{#each $form.selectedProducts as _, i (i)}
-			<ProductLineItem
-				index={i}
-				bind:item={$form.selectedProducts[i]}
-				{productList}
-				{priceList}
-				errors={$errors.selectedProducts?.[i]}
-				onremove={() => {
-					$form.selectedProducts.splice(i, 1);
-					$form.selectedProducts = $form.selectedProducts;
-				}}
-			/>
-		{/each}
-
-		{#if grandTotal > 0}
-			<p class="text-right text-sm text-muted-foreground">
-				Order Total: <span class="font-semibold text-foreground">ETB {grandTotal.toLocaleString()}</span>
-			</p>
-		{/if}
-
-		<InputComp
-			label="Status"
-			name="status"
-			type="select"
+		<OrderFormFields
 			{form}
 			{errors}
-			items={[
+			{customerList}
+			{priceList}
+			{placeList}
+			{freeDeliveryThreshold}
+			bind:total
+			statusItems={[
 				{ value: 'pending', name: 'Pending' },
 				{ value: 'delivered', name: 'Delivered' },
 				{ value: 'cancelled', name: 'Cancelled' }
@@ -182,34 +181,30 @@
 		/>
 
 		{#if $form.status === 'delivered'}
-			<InputComp
-				label="Payment Method"
-				name="paymentMethod"
-				type="combo"
-				{form}
-				{errors}
-				items={paymentMethodList}
-			/>
+			<div class="flex flex-col gap-4 rounded-lg border border-primary/30 bg-primary/5 p-3">
+				<p class="text-xs text-muted-foreground">
+					Marking this delivered moves stock and emails the customer.
+				</p>
 
-			<InputComp
-				label="Reciept"
-				name="reciept"
-				type="file"
-				{form}
-				{image}
-				{errors}
-				placeholder="Upload Screenshot or PDF of Reciept"
-			/>
+				<InputComp
+					label="Payment Method"
+					name="paymentMethod"
+					type="combo"
+					{form}
+					{errors}
+					items={paymentMethodList}
+				/>
+
+				<InputComp
+					label="Reciept"
+					name="reciept"
+					type="file"
+					{form}
+					{image}
+					{errors}
+					placeholder="Upload Screenshot or PDF of Reciept"
+				/>
+			</div>
 		{/if}
-
-		<Button type="submit" class="mt-4" form="edit">
-			{#if $delayed}
-				<LoadingBtn name="Saving Changes" />
-			{:else}
-				<Save class="h-4 w-4" />
-
-				Save Changes
-			{/if}
-		</Button>
 	</form>
 </DialogComp>

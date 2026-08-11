@@ -1,31 +1,50 @@
+<script lang="ts" module>
+	/** Bumped per mounted dialog so each gets its own superForm id (see below). */
+	let instances = 0;
+</script>
+
 <script lang="ts">
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
+	import DialogComp from '$lib/formComponents/DialogComp.svelte';
+	import InputComp from '$lib/formComponents/InputComp.svelte';
 	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import { Plus } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
-	// import { zod4Client } from "sveltekit-superforms/adapters";
-	import type { AddCustomerSchema } from '$lib/ZodSchema';
-	// import { createRoleSchema } from "$lib/ZodSchema";
+	import { UserPlus } from '@lucide/svelte';
+	import type { addCustomer } from '$lib/ZodSchema';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
-	import SelectComp from '$lib/formComponents/SelectComp.svelte';
-	import { gender } from '$lib/global.svelte';
+	import { toast } from 'svelte-sonner';
+
+	/**
+	 * Self-contained add-customer dialog. The action lives on the customers page,
+	 * so every other page posts across to it and relies on `invalidateAll` to pick
+	 * the new customer up in its own load.
+	 */
+	const instance = ++instances;
 
 	let {
 		data,
-		action = '/dashboard/cusotmers?/addCustomer'
-	}: { data: SuperValidated<Infer<AddCustomerSchema>>; action: string } = $props();
+		action = '/dashboard/customers?/addCustomer',
+		title = '+ Add New Customer'
+	}: {
+		data: SuperValidated<Infer<typeof addCustomer>>;
+		action?: string;
+		title?: string;
+	} = $props();
+
+	let open = $state(false);
 
 	const { form, errors, enhance, delayed, message } = superForm(data, {
-		taintedMessage: () => {
-			return new Promise((resolve) => {
-				resolve(window.confirm('Do you want to leave?\nChanges you made may not be saved.'));
-			});
+		// Distinct id per instance. Several of these can share a page (a toolbar
+		// button plus one inside the add-order dialog); with one shared id every
+		// instance claimed the same server response and fired its own toast.
+		id: `addCustomer-${instance}`,
+		resetForm: true,
+		invalidateAll: true,
+		onUpdated: ({ form }) => {
+			if (form.valid) open = false;
 		}
 	});
 
-	import { toast } from 'svelte-sonner';
 	$effect(() => {
 		if ($message) {
 			if ($message.type === 'error') {
@@ -37,53 +56,58 @@
 	});
 </script>
 
-{#snippet fe(
-	label = '',
-	name = '',
-	type = '',
-	placeholder = '',
-	required = false,
-	min = '',
-	max = ''
-)}
-	<div class="flex w-full flex-col justify-start gap-2">
-		<Label for={name}>{label}</Label>
-		<Input
-			{type}
-			{name}
-			{placeholder}
-			{required}
-			{min}
-			{max}
-			bind:value={$form[name]}
-			aria-invalid={$errors[name] ? 'true' : undefined}
+<DialogComp {title} dialogTitle="Add New Customer" variant="default" IconComp={UserPlus} bind:open>
+	<form {action} method="post" use:enhance id="add-customer" class="flex w-full flex-col gap-2 p-1">
+		<InputComp
+			label="Customer Name"
+			name="name"
+			type="text"
+			placeholder="Full name"
+			required
+			{form}
+			{errors}
 		/>
-		{#if $errors[name]}
-			<span class="text-red-500">{$errors[name]}</span>
-		{/if}
-	</div>
-{/snippet}
-{#snippet selects(name, items)}
-	<div class="flex w-full flex-col justify-start gap-2">
-		<Label for={name} class="capitalize">{name.replace(/([a-z])([A-Z])/g, '$1 $2')}:</Label>
+		<InputComp
+			label="Email"
+			name="email"
+			type="email"
+			placeholder="customer@example.com (optional)"
+			{form}
+			{errors}
+		/>
+		<InputComp
+			label="Phone"
+			name="phone"
+			type="tel"
+			placeholder="09XXXXXXXX"
+			required
+			{form}
+			{errors}
+		/>
+		<InputComp
+			label="Address"
+			name="address"
+			type="text"
+			placeholder="Home or work address"
+			{form}
+			{errors}
+		/>
+		<InputComp
+			label="Delivery Address"
+			name="deliveryAddress"
+			type="text"
+			placeholder="Where orders are delivered"
+			{form}
+			{errors}
+		/>
 
-		<SelectComp {name} bind:value={$form[name]} {items} />
-		{#if $errors[name]}<span class="text-red-500">{$errors[name]}</span>{/if}
-	</div>
-{/snippet}
-
-<form {action} use:enhance method="post" id="edit" class="flex w-full flex-col gap-4 p-4">
-	{@render fe('Customer First Name', 'firstName', 'text', 'Edit Customer First Name', true)}
-	{@render fe('Customer Last Name', 'lastName', 'text', 'Edit Customer Last Name')}
-	{@render fe('Customer Phone', 'phone', 'tel;', 'Edit Customer Phone', true)}
-	{@render selects('gender', gender)}
-	<Button type="submit" class="mt-4" form="edit">
-		{#if $delayed}
-			<LoadingBtn name="Adding Customer" />
-		{:else}
-			<Plus class="h-4 w-4" />
-
-			Add Customer
-		{/if}
-	</Button>
-</form>
+		<Button type="submit" form="add-customer" class="mt-4">
+			{#if $delayed}
+				<LoadingBtn name="Adding Customer" />
+			{:else}
+				<UserPlus class="h-4 w-4" />
+				Add Customer
+			{/if}
+		</Button>
+	</form>
+</DialogComp>
