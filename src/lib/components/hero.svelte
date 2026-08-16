@@ -6,7 +6,10 @@
 		SparklesIcon,
 		WheatIcon,
 		ChefHatIcon,
-		ShoppingBasketIcon
+		ShoppingBasketIcon,
+
+		ExternalLink
+
 	} from '@lucide/svelte';
 	import { fly, fade } from 'svelte/transition';
 
@@ -86,7 +89,8 @@
 						Get Started
 						<ArrowRightIcon class="ml-2 size-5 transition-transform group-hover:translate-x-1" />
 					</Button>
-					<Button size="lg" href="/about-us" variant="outline">Learn More</Button>
+					<Button size="lg" href="https://docs.google.com/forms/d/e/1FAIpQLSeGRl7RpY9NlirsfKyRA8a7WFQFjxkMsyi6NDjKyNnkjkoCVA/viewform" target="_blank" variant="outline">Register for an Event <ExternalLink /></Button>
+					<!-- <Button size="lg" href="/about-us" variant="outline">Learn More</Button> -->
 				</div>
 			</div>
 

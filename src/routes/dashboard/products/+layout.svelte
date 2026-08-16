@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/state';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { Plus, Sheet } from '@lucide/svelte';
+	import { Plus, Sheet, Archive } from '@lucide/svelte';
 	let { children } = $props();
 </script>
 
@@ -17,6 +17,11 @@
 		><Plus /> Add Products</Button
 	>
 
+	<Button
+		href="/dashboard/products/inactive"
+		variant={page.url.pathname === '/dashboard/products/inactive' ? 'default' : 'outline'}
+		><Archive /> Inactive Products</Button
+	>
 	<Button
 		href="/dashboard/products/categories"
 		variant={page.url.pathname === '/dashboard/products/categories' ? 'default' : 'outline'}

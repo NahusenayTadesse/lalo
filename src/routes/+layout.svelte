@@ -29,6 +29,7 @@
 	import Cart from '$lib/components/floating-cart/cart.svelte';
 	import Header from '$lib/components/header.svelte';
 	import Footer from '$lib/components/footer.svelte';
+	import Whatsappchat from '$lib/components/whatsappchat.svelte';
 
 	// This initializes the class and puts it into Svelte's context
 	setCart();
@@ -78,6 +79,7 @@
 	<Header data={data?.user?.name ?? ''} />
 	{@render children()}
 	<Footer />
+	<Whatsappchat />
 	<Cart freeDeliveryThreshold={data?.freeData?.threshold} suggestionThreshold={data?.freeData?.suggestionThreshold} />
 {:else}
 	{@render children()}

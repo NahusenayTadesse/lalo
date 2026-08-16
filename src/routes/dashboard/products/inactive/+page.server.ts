@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ url }) => {
 	const offset = (page - 1) * pageSize;
 
 	const whereClause = and(
-		eq(products.isActive, true),
+		eq(products.isActive, false),
 		search
 			? or(like(products.name, `%${search}%`), like(products.description, `%${search}%`))
 			: undefined,
@@ -30,7 +30,6 @@ export const load: PageServerLoad = async ({ url }) => {
 		.select({ value: productCategories.id, name: productCategories.name })
 		.from(productCategories);
 
-	// First, get products
 	const productsData = await db
 		.select({
 			id: products.id,
@@ -54,13 +53,11 @@ export const load: PageServerLoad = async ({ url }) => {
 		.where(whereClause);
 	const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-	// Then, get prices for those products
 	const productIds = productsData.map((p) => p.id);
 	const relevantPrices = productIds.length
 		? await db.select().from(prices).where(inArray(prices.productId, productIds))
 		: [];
 
-	// Merge in application code
 	const productList = productsData.map((p) => ({
 		...p,
 		priceList: relevantPrices
@@ -86,7 +83,7 @@ export const load: PageServerLoad = async ({ url }) => {
 };
 
 export const actions: Actions = {
-	bulkDelete: async ({ request, cookies }) => {
+	bulkActivate: async ({ request, cookies }) => {
 		const formData = await request.formData();
 		const ids = formData
 			.getAll('ids')
@@ -99,13 +96,13 @@ export const actions: Actions = {
 		}
 
 		try {
-			await db.update(products).set({ isActive: false }).where(inArray(products.id, ids));
+			await db.update(products).set({ isActive: true }).where(inArray(products.id, ids));
 			setFlash(
-				{ type: 'success', message: `${ids.length} product(s) deactivated successfully!` },
+				{ type: 'success', message: `${ids.length} product(s) activated successfully!` },
 				cookies
 			);
 		} catch (err) {
-			console.error('Error bulk deactivating products:', err);
+			console.error('Error bulk activating products:', err);
 			setFlash({ type: 'error', message: `Unexpected Error: ${(err as Error)?.message}` }, cookies);
 			return fail(400);
 		}

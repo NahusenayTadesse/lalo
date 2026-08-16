@@ -205,7 +205,7 @@
 					class="aspect-square overflow-hidden rounded-2xl bg-linear-to-br from-primary/20 to-accent/20"
 				>
 					<img
-						src="/files/demo.webp"
+						src="/store.webp"
 						alt="Lalo Bakery Solution"
 						class="h-full w-full object-cover"
 					/>

@@ -11,17 +11,14 @@
 	import QueryBuilder from '$lib/QueryBuilder.svelte';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import { updateFlash } from 'sveltekit-flash-message';
 
-	import { Frown, Plus, ChevronLeft, ChevronRight, Trash } from '@lucide/svelte';
+	import { Frown, ChevronLeft, ChevronRight, RotateCcw } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button';
 
 	let filteredList = $derived(data.productList);
 	let selected: (typeof data.productList)[number][] = $state([]);
-	let confirmOpen = $state(false);
-	let deleting = $state(false);
+	let activating = $state(false);
 
 	function updateFilters(params: Record<string, string | number | undefined>) {
 		const url = new URL(page.url);
@@ -54,10 +51,10 @@
 </script>
 
 <svelte:head>
-	<title>Products List</title>
+	<title>Inactive Products</title>
 </svelte:head>
 
-<h2 class="my-4 text-2xl">No of Products {data.pagination.totalCount}</h2>
+<h2 class="my-4 text-2xl">No of Inactive Products {data.pagination.totalCount}</h2>
 
 <QueryBuilder
 	title="Product Filters"
@@ -97,9 +94,8 @@
 	<div class="flex h-96 w-full flex-col items-center justify-center lg:w-5xl">
 		<p class="justify-self-cente mt-4 flex flex-row gap-4 text-center text-4xl">
 			<Frown class="h-12 w-16  animate-bounce" />
-			Products List is Empty
+			No Inactive Products
 		</p>
-		<Button href="/dashboard/products/add-products"><Plus />Add New Products</Button>
 	</div>
 {:else}
 	<div class="mt-4 w-6xl p-0 lg:w-full lg:p-0">
@@ -112,54 +108,33 @@
 		{#if selected.length > 0}
 			<div class="my-2 flex items-center gap-3 rounded-md border bg-muted p-3">
 				<span class="text-sm">{selected.length} product(s) selected</span>
-				<Button variant="destructive" size="sm" onclick={() => (confirmOpen = true)}>
-					<Trash /> Deactivate Selected
-				</Button>
+				<form
+					method="post"
+					action="?/bulkActivate"
+					use:enhance={() => {
+						activating = true;
+						return async ({ result, update }) => {
+							await update();
+							activating = false;
+							updateFlash(page);
+							if (result.type === 'success') {
+								selected = [];
+							}
+						};
+					}}
+				>
+					{#each selected as product (product.id)}
+						<input type="hidden" name="ids" value={product.id} />
+					{/each}
+					<Button type="submit" variant="default" size="sm" disabled={activating}>
+						<RotateCcw /> {activating ? 'Activating...' : 'Activate Selected'}
+					</Button>
+				</form>
 			</div>
 		{/if}
 
-		<DataTable data={filteredList} {columns} fileName="Product List" bind:selected />
+		<DataTable data={filteredList} {columns} fileName="Inactive Product List" bind:selected />
 	</div>
-
-	<Dialog.Root bind:open={confirmOpen}>
-		<Dialog.Content class="w-full">
-			<Dialog.Header>
-				<Dialog.Title>Deactivate {selected.length} product(s)</Dialog.Title>
-			</Dialog.Header>
-			<ScrollArea class="h-auto rounded-md border p-2">
-				<h5 class="text-center">
-					Are you sure you want to deactivate {selected.length} selected product(s)?
-				</h5>
-				<div class="flex flex-row items-center justify-center gap-4 pt-4">
-					<form
-						method="post"
-						action="?/bulkDelete"
-						use:enhance={() => {
-							deleting = true;
-							return async ({ result, update }) => {
-								await update();
-								deleting = false;
-								updateFlash(page);
-								if (result.type === 'success') {
-									confirmOpen = false;
-									selected = [];
-								}
-							};
-						}}
-					>
-						{#each selected as product (product.id)}
-							<input type="hidden" name="ids" value={product.id} />
-						{/each}
-						<Button type="submit" disabled={deleting} variant="destructive" size="lg">
-							<Trash /> {deleting ? 'Deactivating...' : 'Deactivate'}
-						</Button>
-					</form>
-
-					<Button onclick={() => (confirmOpen = false)} size="lg">Cancel</Button>
-				</div>
-			</ScrollArea>
-		</Dialog.Content>
-	</Dialog.Root>
 
 	{#if data.pagination.totalPages > 1}
 		<div class="mt-6 flex items-center justify-center gap-2">
