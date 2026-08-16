@@ -134,6 +134,13 @@
       "when": 1782641929957,
       "tag": "0018_daily_scalphunter",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "5",
+      "when": 1786913824966,
+      "tag": "0019_greedy_crystal",
+      "breakpoints": true
     }
   ]
 }

@@ -23,5 +23,40 @@ export const add = z.object({
 	// `place_names`. Optional and non-negative because a free-delivery order shows
 	// 0, which the previous `.positive()` rejected outright.
 	fee: z.number().nonnegative().optional(),
-	saveInfo: z.boolean().default(false)
+	saveInfo: z.boolean().default(false),
+
+	// --- Guest checkout ---------------------------------------------------
+	// Someone without an account can still order: they type their details here
+	// and the action creates an account-less `customers` row (`user_id` NULL).
+	//
+	// `guest` is only a *validation* switch — it decides whether the three
+	// fields below are required. It is never trusted for authorisation: the
+	// action re-derives guest-ness from `locals.user` and re-checks the fields,
+	// so posting `guest: false` with no session cannot slip an order through
+	// without contact details.
+	guest: z.boolean().default(false),
+	guestName: z.string().max(100).optional(),
+	guestEmail: z.string().max(100).optional(),
+	guestPhone: z.string().max(15).optional()
+});
+
+/**
+ * The guest fields, checked only when the form says it is a guest checkout.
+ *
+ * Kept as a separate refinement on top of `add` so the plain object schema
+ * stays usable server-side (where `locals.user` is the real signal) while the
+ * browser still gets per-field errors instead of one opaque "check the form".
+ */
+export const addGuest = add.superRefine((data, ctx) => {
+	if (!data.guest) return;
+
+	if (!data.guestName || data.guestName.trim().length < 2) {
+		ctx.addIssue({ code: 'custom', path: ['guestName'], message: 'Your name is required' });
+	}
+	if (!data.guestEmail || !z.email().safeParse(data.guestEmail).success) {
+		ctx.addIssue({ code: 'custom', path: ['guestEmail'], message: 'A valid email is required' });
+	}
+	if (!data.guestPhone || data.guestPhone.trim().length < 10) {
+		ctx.addIssue({ code: 'custom', path: ['guestPhone'], message: 'A valid phone is required' });
+	}
 });

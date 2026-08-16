@@ -1,6 +1,6 @@
 // import { encodeBase32LowerCase } from '@oslojs/encoding';
 
-import type { Actions, PageServerLoad } from './login/$types';
+import type { Actions, PageServerLoad } from './$types';
 import { message, setError, superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { add } from './schema';
@@ -47,7 +47,7 @@ export const actions: Actions = {
 				form,
 				{
 					type: 'error',
-					text: 'Please Check the form}'
+					text: 'Please check the form for errors'
 				},
 				{
 					status: 500

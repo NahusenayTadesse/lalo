@@ -54,6 +54,10 @@
 	const orderTotal = $derived(cart.totalPrice + feeAmount);
 
 
+	/** Unique per instance — see the note in `Signup.svelte`; a shared `id="main"`
+	 *  had the signup dialog's button submitting this order form. */
+	const formId = $props.id();
+
 	const { form, errors, enhance, allErrors, delayed, message } = superForm(data.form, {
 		dataType: 'json',
 		resetForm: true,
@@ -92,6 +96,16 @@
 		}
 	});
 
+
+	/**
+	 * Tells the schema whether to demand contact details.
+	 *
+	 * Only a validation switch — the action ignores what is posted here and
+	 * decides from the session, so it cannot be flipped to skip the checks.
+	 */
+	$effect(() => {
+		$form.guest = !data?.user;
+	});
 
 	onMount(() => {
 		if (data?.user) {
@@ -193,49 +207,93 @@
 				</div>
 
 				{#if !data?.user}
-					<DialogComp title="Sign Up" variant="default" IconComp={UserRoundPlus}>
-						<Signup data={data?.signupForm} action="/signup/?/signup" placeList={data?.placeList} />
-					</DialogComp>
+					<!-- Guests order without an account: the details below become a
+					     standalone `customers` row. Signing up is offered, not required. -->
+					<div class="mb-6 rounded-lg border border-dashed bg-muted/40 p-4">
+						<p class="text-sm text-muted-foreground">
+							You can check out as a guest — just fill in your details below. Already have an
+							account, or want to save your details for next time?
+						</p>
+						<div class="mt-3 flex flex-wrap gap-2">
+							<DialogComp title="Sign Up" variant="default" IconComp={UserRoundPlus}>
+								<Signup data={data?.signupForm} action="/signup?/signup" placeList={data?.placeList} />
+							</DialogComp>
 
-					<DialogComp title="Log In" variant="default" IconComp={User}>
-						<Login data={data?.loginForm} action="/login/?/login" />
-					</DialogComp>
+							<DialogComp title="Log In" variant="outline" IconComp={User}>
+								<Login data={data?.loginForm} action="/login?/login" />
+							</DialogComp>
+						</div>
+					</div>
+
 					<form
 						action="?/add"
 						use:enhance
-						id="main"
+						id={formId}
 						class="space-y-5"
 						method="post"
 						enctype="multipart/form-data"
 					>
 						<Errors allErrors={$allErrors} />
-						<!-- <InputComp
-							label="Address"
-							name="address"
+
+						<InputComp
+							label="Full Name"
+							name="guestName"
 							type="text"
 							{form}
-
 							{errors}
-							placeholder="Enter your address"
-							/>
+							required
+							placeholder="John Doe"
+						/>
+
 						<InputComp
-							label="Address"
+							label="Email Address"
+							name="guestEmail"
+							type="email"
+							{form}
+							{errors}
+							required
+							placeholder="john@example.com"
+						/>
+
+						<InputComp
+							label="Phone Number"
+							name="guestPhone"
+							type="tel"
+							{form}
+							{errors}
+							required
+							placeholder="+251 9-11-00-00-00"
+						/>
+
+						<InputComp
+							label="Delivery Area"
+							name="address"
+							type="select"
+							items={data?.placeList}
+							{form}
+							{errors}
+							placeholder="Select your area"
+						/>
+
+						<InputComp
+							label="Delivery Address"
 							name="deliveryAddress"
 							type="text"
 							{form}
 							{errors}
-							placeholder="Enter your delivery address"
-							/>
+							required
+							placeholder="Enter your specific delivery address"
+						/>
 
-							<InputComp
+						<InputComp
 							label="Delivery Fee"
 							name="fee"
 							type="text"
 							{form}
 							disabled
 							{errors}
-							placeholder="Enter delivery fee"
-							/> -->
+							placeholder="Choose a delivery area"
+						/>
 
 						<InputComp
 							label=""
@@ -246,17 +304,31 @@
 							placeholder=""
 						/>
 
+						<div
+							class="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+						>
+							<div>
+								<p class="text-xs font-bold tracking-wider text-gray-500 uppercase">Your Cart</p>
+								<p class="text-sm text-gray-600">{cart.totalItems} items</p>
+							</div>
+							<div class="text-right">
+								<p class="text-lg font-bold text-gray-900">{formatPrice(orderTotal)}</p>
+							</div>
+						</div>
+
 						<div class="pt-4">
 							<Button
 								type="submit"
-								form="main"
+								form={formId}
 								class="h-12 w-full text-lg shadow-md"
-								disabled={cart.items.length === 0 || $delayed}
+								disabled={cart.items.length === 0 || $delayed || !reconciled}
 							>
 								{#if $delayed}
 									<LoadingBtn name="Processing..." />
+								{:else if !reconciled}
+									<LoadingBtn name="Checking prices..." />
 								{:else}
-									Complete Order — {formatPrice(cart.totalPrice)}
+									Complete Order — {formatPrice(orderTotal)}
 								{/if}
 							</Button>
 						</div>
@@ -265,7 +337,7 @@
 					<form
 						action="?/add"
 						use:enhance
-						id="main"
+						id={formId}
 						class="space-y-5"
 						method="post"
 						enctype="multipart/form-data"
@@ -334,7 +406,7 @@
 						<div class="pt-4">
 							<Button
 								type="submit"
-								form="main"
+								form={formId}
 								class="h-12 w-full text-lg shadow-md"
 								disabled={cart.items.length === 0 || $delayed || !reconciled}
 							>
@@ -386,7 +458,9 @@
 							</div>
 							<div class="flex justify-between text-sm">
 								<span class="text-muted-foreground">Shipping</span>
-								{#if data?.user && feeKnown}
+								<!-- Guests choose a delivery area too, so the quote no longer
+								     depends on being signed in. -->
+								{#if feeKnown}
 									<span class="font-medium text-green-600">
 										{feeAmount !== 0 ? formatPrice(feeAmount) : 'Free'}
 									</span>

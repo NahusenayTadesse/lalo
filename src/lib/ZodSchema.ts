@@ -8,13 +8,26 @@ const ACCEPTED_FILE_TYPES = [
 	'image/heif', // High Efficiency Image File (related to HEIC)
 	'application/pdf' // Document format, kept from original
 ];
+/**
+ * The signup form — the one schema behind `/signup`, its action, and the
+ * "Sign Up" dialog on the checkout page.
+ *
+ * The field is `deliveryAddress`, matching both `Signup.svelte` and the
+ * `customers` column. It used to be `specificAddress` here while the form and
+ * the action both said `deliveryAddress`, so the seeded form and the validated
+ * one were two different shapes: superforms saw mismatched form ids and threw
+ * the action's errors away, which is why signup only ever produced a bare
+ * "check the form" toast.
+ */
 export const addUser = z.object({
 	name: z.string('Name is Required').min(2).max(100),
 	phone: z.string('Phone is Required').min(10).max(15),
 	email: z.email('Email is Required'),
-	password: z.string('Password is required!'),
-	address: z.string('General Address is required!'),
-	specificAddress: z.string('Specific Address is required!')
+	// better-auth rejects anything shorter with an opaque APIError; catching it
+	// here puts the message on the field instead.
+	password: z.string('Password is required!').min(8, 'Password must be at least 8 characters'),
+	address: z.string('General Address is required!').min(1, 'Please choose your area'),
+	deliveryAddress: z.string('Specific Address is required!').min(5).max(200)
 });
 export type SignupSchema = typeof addUser;
 export const loginSchema = z.object({

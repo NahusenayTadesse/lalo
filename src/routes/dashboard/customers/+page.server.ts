@@ -55,10 +55,9 @@ export const actions: Actions = {
 		const { name, email, phone, address, deliveryAddress } = form.data;
 
 		try {
-			// BLOCKED: `customers.user_id` and `customers.email` are both still NOT NULL
-			// in the DB, so this insert won't type-check or run until those two columns
-			// are made nullable. Nothing here changes once they are — the customer stays
-			// account-less and email-less by design.
+			// Needs `drizzle/0019_*.sql` applied — it makes `customers.user_id` and
+			// `customers.email` nullable. The customer stays account-less and
+			// email-less by design.
 			//
 			// `email` must go in as NULL, never '': the column is UNIQUE, and MySQL
 			// allows repeated NULLs but not a second empty string.

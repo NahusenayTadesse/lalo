@@ -29,7 +29,7 @@ export const actions: Actions = {
 				form,
 				{
 					type: 'error',
-					text: 'Please Check the form}'
+					text: 'Please check the form for errors'
 				},
 				{
 					status: 500
