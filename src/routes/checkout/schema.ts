@@ -1,4 +1,5 @@
 import { z } from 'zod/v4';
+
 export const add = z.object({
 	selectedProducts: z
 		.object({
@@ -17,13 +18,24 @@ export const add = z.object({
 	// "Bole", a real 4-character area, so nobody living there could check out at
 	// all. Whether the area actually exists is settled server-side against
 	// `place_names`, which is the check that matters.
-	address: z.string('Address is required').min(1, 'Please choose a delivery area').max(100),
-	deliveryAddress: z.string('Delivery Address is required').min(5).max(200),
+	//
+	// Both are optional here rather than required, because a local-pickup order
+	// has nowhere to deliver to. The requirement is re-imposed in `addGuest`
+	// whenever `pickup` is false — see the refinement below.
+	address: z.string().max(100).optional(),
+	deliveryAddress: z.string().max(200).optional(),
 	// Display only, same as `price` above — the server computes the real fee from
 	// `place_names`. Optional and non-negative because a free-delivery order shows
 	// 0, which the previous `.positive()` rejected outright.
 	fee: z.number().nonnegative().optional(),
 	saveInfo: z.boolean().default(false),
+
+	// --- Local pickup -----------------------------------------------------
+	// The customer collects the order from the shop, so no area is chosen and
+	// no fee is charged. Like `guest`, this is only a validation switch for the
+	// address fields; the action zeroes the fee itself rather than believing
+	// whatever `fee` the browser posted.
+	pickup: z.boolean().default(false),
 
 	// --- Guest checkout ---------------------------------------------------
 	// Someone without an account can still order: they type their details here
@@ -41,13 +53,28 @@ export const add = z.object({
 });
 
 /**
- * The guest fields, checked only when the form says it is a guest checkout.
+ * The conditional fields: guest contact details, checked only when the form says
+ * it is a guest checkout, and the delivery address, checked only when the order
+ * is not being picked up in person.
  *
  * Kept as a separate refinement on top of `add` so the plain object schema
  * stays usable server-side (where `locals.user` is the real signal) while the
  * browser still gets per-field errors instead of one opaque "check the form".
  */
 export const addGuest = add.superRefine((data, ctx) => {
+	if (!data.pickup) {
+		if (!data.address || data.address.trim().length < 1) {
+			ctx.addIssue({ code: 'custom', path: ['address'], message: 'Please choose a delivery area' });
+		}
+		if (!data.deliveryAddress || data.deliveryAddress.trim().length < 5) {
+			ctx.addIssue({
+				code: 'custom',
+				path: ['deliveryAddress'],
+				message: 'Delivery Address is required'
+			});
+		}
+	}
+
 	if (!data.guest) return;
 
 	if (!data.guestName || data.guestName.trim().length < 2) {

@@ -8,6 +8,7 @@ import { USER } from '$env/static/private';
 // seeded with the same schema that action validates against — see `addUser`.
 import { addUser as signupSchema, loginSchema } from '$lib/ZodSchema';
 import { addGuest } from './schema';
+import { PICKUP_LABEL } from '$lib/delivery';
 import { db } from '$lib/server/db';
 import { orders, orderItems, customers, placeNames, prices } from '$lib/server/db/schema';
 import { resolveDeliveryFee } from '$lib/server/delivery';
@@ -68,7 +69,14 @@ export const actions: Actions = {
 
 		// `fee` and each item's `price` are deliberately *not* read out of the form —
 		// they are display values the browser computed, and both are recomputed below.
-		const { selectedProducts, address, deliveryAddress, saveInfo } = form.data;
+		const { selectedProducts, saveInfo, pickup } = form.data;
+
+		// A pickup order has no delivery area, so nothing is looked up in
+		// `place_names` and nothing is charged. The two address columns are stamped
+		// with `PICKUP_LABEL` rather than left empty so an order in the dashboard
+		// reads as a collection rather than as one missing its address.
+		const address = pickup ? PICKUP_LABEL : (form.data.address ?? '');
+		const deliveryAddress = pickup ? PICKUP_LABEL : (form.data.deliveryAddress ?? '');
 
 		if (!selectedProducts.length) {
 			return message(form, { type: 'error', text: 'Your cart is empty' });
@@ -107,6 +115,9 @@ export const actions: Actions = {
 		}
 
 		const subtotal = sumLineItems(lineItems);
+		// A pickup order passes `PICKUP_LABEL` as the area and comes back at 0.00 —
+		// zeroed server-side, for the same reason the fee is always resolved here:
+		// the `fee` the browser posted is display data and is never trusted.
 		const fee = await resolveDeliveryFee(address, subtotal);
 
 		if (fee === undefined) {
@@ -150,7 +161,10 @@ export const actions: Actions = {
 			await db.transaction(async (tx) => {
 				// Guests have nothing to save back to — their row was just written with
 				// exactly these values, and it isn't a profile they can return to.
-				if (saveInfo && !isGuest) {
+				// Never on a pickup order: `address` is the `PICKUP_LABEL` placeholder
+				// there, and writing it back would wipe the delivery area the customer
+				// had saved and leave the next order unable to quote a fee.
+				if (saveInfo && !isGuest && !pickup) {
 					await tx
 						.update(customers)
 						.set({ address, deliveryAddress, updatedBy: locals.user?.id })

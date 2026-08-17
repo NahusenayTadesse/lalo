@@ -31,9 +31,42 @@
 		}).format(price);
 	};
 	let saveInfo = $state(false);
+
+	/** Unique per instance — see the note in `Signup.svelte`; a shared `id="main"`
+	 *  had the signup dialog's button submitting this order form. */
+	const formId = $props.id();
+
+	const { form, errors, enhance, allErrors, delayed, message } = superForm(data.form, {
+		dataType: 'json',
+		resetForm: true,
+		onChange: (event) => {
+			if (event.paths.includes('address') || event.paths.includes('deliveryAddress')) {
+				saveInfo = true;
+			}
+		},
+
+		onResult: ({ result }) => {
+			// 2. Only clear cart if the server actually says 'success'
+			if (result.type === 'success') {
+				cart.clearCart();
+				
+			}
+		}
+	});
+
+	/**
+	 * Local pickup: the customer collects the order, so no area is chosen and
+	 * nothing is charged for delivery.
+	 *
+	 * The flag lives on the form (`$form.pickup`) rather than in a local `$state`
+	 * because the schema needs it to decide whether the address fields are
+	 * required — the action still zeroes the fee itself and never trusts it.
+	 */
+	const pickup = $derived(Boolean($form.pickup));
+
 	let freeDelivery = $derived(cart.totalPrice >= Number(data?.freeData?.threshold));
 	const fee = $derived(
-		freeDelivery ? 0 : data?.placeList?.find((item) => item.name === $form.address)?.fee
+		pickup || freeDelivery ? 0 : data?.placeList?.find((item) => item.name === $form.address)?.fee
 	);
 
 	/**
@@ -47,35 +80,11 @@
 
 	/** Whether we can quote a fee yet, as opposed to defaulting it to zero. */
 	const feeKnown = $derived(
-		freeDelivery || Boolean(data?.placeList?.some((item) => item.name === $form.address))
+		pickup || freeDelivery || Boolean(data?.placeList?.some((item) => item.name === $form.address))
 	);
 
 	/** What the customer will actually be charged: goods plus delivery. */
 	const orderTotal = $derived(cart.totalPrice + feeAmount);
-
-
-	/** Unique per instance — see the note in `Signup.svelte`; a shared `id="main"`
-	 *  had the signup dialog's button submitting this order form. */
-	const formId = $props.id();
-
-	const { form, errors, enhance, allErrors, delayed, message } = superForm(data.form, {
-		dataType: 'json',
-		resetForm: true,
-		onChange: (event) => {
-			if (event.paths.includes('address') || event.paths.includes('deliveryAddress')) {
-				saveInfo = true;
-				$form.fee = feeAmount;
-			}
-		},
-
-		onResult: ({ result }) => {
-			// 2. Only clear cart if the server actually says 'success'
-			if (result.type === 'success') {
-				cart.clearCart();
-				
-			}
-		}
-	});
 
 	const formattedData = $derived(
 		cart?.items.map((item) => ({
@@ -105,6 +114,16 @@
 	 */
 	$effect(() => {
 		$form.guest = !data?.user;
+	});
+
+	/**
+	 * Keeps the disabled "Delivery Fee" field showing the quote.
+	 *
+	 * Was done from `onChange` on the address fields alone, which meant toggling
+	 * pickup left the previous area's fee sitting in the box.
+	 */
+	$effect(() => {
+		$form.fee = feeAmount;
 	});
 
 	onMount(() => {
@@ -187,6 +206,26 @@
 	<title>Checkout - Lalo Bakery</title>
 </svelte:head>
 
+<!-- Shared by the guest and the signed-in form: both offer the same choice, and
+     duplicating it left the two able to drift apart. -->
+{#snippet pickupToggle()}
+	<div class="rounded-lg border border-dashed bg-muted/40 p-4">
+		<InputComp
+			label=""
+			name="pickup"
+			type="checkboxSingle"
+			{form}
+			{errors}
+			placeholder="Pick up at the shop — no delivery fee"
+		/>
+		{#if pickup}
+			<p class="mt-2 text-sm text-muted-foreground">
+				We'll have your order ready for collection at the bakery. Nothing is charged for delivery.
+			</p>
+		{/if}
+	</div>
+{/snippet}
+
 <div class="mx-auto max-w-6xl px-4 py-8 md:py-12">
 	<div class="mb-8 flex items-center gap-3">
 		<div class="rounded-full bg-primary/10 p-2 text-primary">
@@ -265,35 +304,39 @@
 							placeholder="+251 9-11-00-00-00"
 						/>
 
-						<InputComp
-							label="Delivery Area"
-							name="address"
-							type="select"
-							items={data?.placeList}
-							{form}
-							{errors}
-							placeholder="Select your area"
-						/>
+						{@render pickupToggle()}
 
-						<InputComp
-							label="Delivery Address"
-							name="deliveryAddress"
-							type="text"
-							{form}
-							{errors}
-							required
-							placeholder="Enter your specific delivery address"
-						/>
+						{#if !pickup}
+							<InputComp
+								label="Delivery Area"
+								name="address"
+								type="select"
+								items={data?.placeList}
+								{form}
+								{errors}
+								placeholder="Select your area"
+							/>
 
-						<InputComp
-							label="Delivery Fee"
-							name="fee"
-							type="text"
-							{form}
-							disabled
-							{errors}
-							placeholder="Choose a delivery area"
-						/>
+							<InputComp
+								label="Delivery Address"
+								name="deliveryAddress"
+								type="text"
+								{form}
+								{errors}
+								required
+								placeholder="Enter your specific delivery address"
+							/>
+
+							<InputComp
+								label="Delivery Fee"
+								name="fee"
+								type="text"
+								{form}
+								disabled
+								{errors}
+								placeholder="Choose a delivery area"
+							/>
+						{/if}
 
 						<InputComp
 							label=""
@@ -342,36 +385,39 @@
 						method="post"
 						enctype="multipart/form-data"
 					>
-							
-						<InputComp
-							label="Address"
-							name="address"
-							type="select"
-							items={data?.placeList}
-							{form}
-							{errors}
-							placeholder="Enter your delivery address"
+						{@render pickupToggle()}
+
+						{#if !pickup}
+							<InputComp
+								label="Address"
+								name="address"
+								type="select"
+								items={data?.placeList}
+								{form}
+								{errors}
+								placeholder="Enter your delivery address"
 							/>
 
 							<InputComp
-							label="Delivery Address"
-							name="deliveryAddress"
-							type="text"
-							{form}
-							{errors}
-							placeholder="Enter your specific delivery address"
+								label="Delivery Address"
+								name="deliveryAddress"
+								type="text"
+								{form}
+								{errors}
+								placeholder="Enter your specific delivery address"
 							/>
 
 							<InputComp
-							label="Delivery Fee"
-							name="fee"
-							type="text"
-							{form}
-							disabled
-							{errors}
-							placeholder="Enter delivery fee"
+								label="Delivery Fee"
+								name="fee"
+								type="text"
+								{form}
+								disabled
+								{errors}
+								placeholder="Enter delivery fee"
 							/>
-                         {#if saveInfo}
+						{/if}
+                         {#if saveInfo && !pickup}
 							<InputComp
 							label="Save Information"
 							name="saveInfo"
@@ -437,7 +483,16 @@
 					</div>
 
 					{#if cart.items.length > 0}
-						<ScrollArea class="max-h-100 pr-4">
+						<!-- The cap has to reach the viewport, not just the root. bits-ui puts
+						     `overflow-y: scroll` on `[data-slot=scroll-area-viewport]`, and the
+						     shadcn wrapper sizes that viewport `size-full` — a percentage height,
+						     which resolves to `auto` under a root that only carries `max-h-*`. So
+						     the viewport grew with the cart and a long list ran straight out of the
+						     summary card instead of scrolling. `max-h-[inherit]` hands the viewport
+						     the root's own 25rem, and a short cart still shrinks to fit. -->
+						<ScrollArea
+							class="max-h-100 pr-4 [&>[data-slot=scroll-area-viewport]]:max-h-[inherit]"
+						>
 							<div class="divide-y divide-border">
 								<!-- Keyed on the variant, not the product: the cart holds one line per
 								     variant, so keying on `productId` alone produced duplicate keys and
@@ -457,7 +512,7 @@
 								<span>{formatPrice(cart.totalPrice)}</span>
 							</div>
 							<div class="flex justify-between text-sm">
-								<span class="text-muted-foreground">Shipping</span>
+								<span class="text-muted-foreground">{pickup ? 'Pickup' : 'Shipping'}</span>
 								<!-- Guests choose a delivery area too, so the quote no longer
 								     depends on being signed in. -->
 								{#if feeKnown}
