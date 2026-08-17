@@ -1,6 +1,3 @@
-import { auth } from '$lib/server/auth';
-import type { Actions } from './$types';
-
 import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
@@ -137,14 +134,5 @@ export const load: PageServerLoad = async ({ locals }) => {
 			activeDiscounts: [],
 			error: 'Failed to balance metrics summary snapshot.'
 		};
-	}
-};
-
-export const actions: Actions = {
-	logout: async (event) => {
-		await auth.api.signOut({
-			headers: event.request.headers
-		});
-		redirect('/login', { type: 'success', message: 'Logout Successful' }, event.cookies);
 	}
 };

@@ -35,7 +35,7 @@
 			<DropdownMenu.Item>
 				<form
 					method="post"
-					action="/dashboard/?/logout"
+					action="/logout"
 					use:enhance={() => {
 						deleting = true; // 1. start spinner
 
