@@ -17,7 +17,16 @@
 		id: number;
 	} = $props();
 
+	// Unique per row, for both the superforms instance and the DOM form — see
+	// `delete.svelte` for the whole story. Here the DOM half was the worse of the
+	// two: these forms are all mounted at once, not behind a dialog, so with every
+	// one of them hard-coding the same element id, the submit button's `form`
+	// attribute (resolved with `getElementById`) pointed at the first unread row
+	// and every "Mark as Read" marked that one row.
+	const formId = `read-message-${id}`;
+
 	const { form, enhance, delayed, message, allErrors } = superForm(data, {
+		id: formId,
 		resetForm: false
 	});
 	import { toast } from 'svelte-sonner';
@@ -37,12 +46,12 @@
 
 <form
 	method="post"
-	id="read"
+	id={formId}
 	class="-mt-4 flex h-full flex-col items-start justify-start"
 	action="?/read"
 	use:enhance
 >
-	<Button type="submit" size="sm" variant="outline" class="mt-4" form="read">
+	<Button type="submit" size="sm" variant="outline" class="mt-4" form={formId}>
 		{#if $delayed}
 			<LoadingBtn name="Marking as Read" />
 		{:else}

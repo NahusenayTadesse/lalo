@@ -1,4 +1,5 @@
 import { z } from 'zod/v4';
+import { INVALID_PHONE_MESSAGE, isEthiopianPhone } from '$lib/validators/phone';
 
 export const add = z.object({
 	selectedProducts: z
@@ -49,7 +50,10 @@ export const add = z.object({
 	guest: z.boolean().default(false),
 	guestName: z.string().max(100).optional(),
 	guestEmail: z.string().max(100).optional(),
-	guestPhone: z.string().max(15).optional()
+	// 20, not 15: a number typed with separators (`+251 91 234 5678`) is longer
+	// than the digits it carries, and the refinement below is what actually
+	// decides whether it is a real number.
+	guestPhone: z.string().max(20).optional()
 });
 
 /**
@@ -83,7 +87,11 @@ export const addGuest = add.superRefine((data, ctx) => {
 	if (!data.guestEmail || !z.email().safeParse(data.guestEmail).success) {
 		ctx.addIssue({ code: 'custom', path: ['guestEmail'], message: 'A valid email is required' });
 	}
-	if (!data.guestPhone || data.guestPhone.trim().length < 10) {
-		ctx.addIssue({ code: 'custom', path: ['guestPhone'], message: 'A valid phone is required' });
+	// A length check let "1234567890" through, and an unreachable phone number on
+	// a delivery order is as good as no phone number at all. The area code is
+	// optional in what the customer types — `isEthiopianPhone` accepts every
+	// local/national form and the action normalises before storing.
+	if (!isEthiopianPhone(data.guestPhone)) {
+		ctx.addIssue({ code: 'custom', path: ['guestPhone'], message: INVALID_PHONE_MESSAGE });
 	}
 });

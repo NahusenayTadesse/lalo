@@ -35,7 +35,9 @@ export const load: PageServerLoad = async () => {
 
 export const actions: Actions = {
 	read: async ({ request, locals }) => {
-		const form = await superValidate(request, zod4(deleteTestimonial));
+		// `markRead`, not `deleteTestimonial` — the two schemas happen to be the same
+		// shape, so this worked, but it seeded the read form from the delete schema.
+		const form = await superValidate(request, zod4(markRead));
 
 		if (!form.valid) {
 			return fail(400, { form });

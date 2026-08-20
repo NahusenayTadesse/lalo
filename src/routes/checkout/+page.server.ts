@@ -9,6 +9,7 @@ import { USER } from '$env/static/private';
 import { addUser as signupSchema, loginSchema } from '$lib/ZodSchema';
 import { addGuest } from './schema';
 import { PICKUP_LABEL } from '$lib/delivery';
+import { INVALID_PHONE_MESSAGE, normalizeEthiopianPhone } from '$lib/validators/phone';
 import { db } from '$lib/server/db';
 import { orders, orderItems, customers, placeNames, prices } from '$lib/server/db/schema';
 import { resolveDeliveryFee } from '$lib/server/delivery';
@@ -94,11 +95,13 @@ export const actions: Actions = {
 			// here so a hand-rolled POST can't create an unreachable order.
 			const name = form.data.guestName?.trim() ?? '';
 			const email = form.data.guestEmail?.trim().toLowerCase() ?? '';
-			const phone = form.data.guestPhone?.trim() ?? '';
+			// Normalised to `+251XXXXXXXXX`, so the number written on the customer
+			// row is in one shape no matter which form was typed.
+			const phone = normalizeEthiopianPhone(form.data.guestPhone);
 
 			if (name.length < 2) return setError(form, 'guestName', 'Your name is required');
 			if (!email) return setError(form, 'guestEmail', 'A valid email is required');
-			if (phone.length < 10) return setError(form, 'guestPhone', 'A valid phone is required');
+			if (!phone) return setError(form, 'guestPhone', INVALID_PHONE_MESSAGE);
 
 			guestDetails = { name, email, phone };
 		}

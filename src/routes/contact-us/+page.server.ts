@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm';
 import { sendEmail, customerContactTemplate, adminContactTemplate } from '$lib/server/email';
 import { USER } from '$env/static/private';
 import { contactSchema } from './schema';
+import { normalizeEthiopianPhone } from '$lib/validators/phone';
 import { db } from '$lib/server/db';
 import { contactMessages } from '$lib/server/db/schema';
 import type { PageServerLoad, Actions } from './$types';
@@ -22,6 +23,12 @@ export const actions: Actions = {
 		if (!form.valid) {
 			return message(form, { type: 'error', text: 'Please check the form for Errors' });
 		}
+
+		// The schema has already accepted the number; this only settles which of the
+		// forms it was typed in, so every stored number reads `+251XXXXXXXXX`. Written
+		// back onto `form.data` so the admin notification quotes the same thing the
+		// row holds.
+		form.data.phoneNumber = normalizeEthiopianPhone(form.data.phoneNumber) as string;
 
 		const { name, phoneNumber, email, subject, contactMessage, address } = form.data;
 

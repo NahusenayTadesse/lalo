@@ -1,4 +1,5 @@
 import { z } from 'zod/v4';
+import { ethiopianPhone } from '$lib/validators/phone';
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 5MB limit
 const ACCEPTED_FILE_TYPES = [
 	'image/jpeg', // Common for both platforms
@@ -21,7 +22,10 @@ const ACCEPTED_FILE_TYPES = [
  */
 export const addUser = z.object({
 	name: z.string('Name is Required').min(2).max(100),
-	phone: z.string('Phone is Required').min(10).max(15),
+	// Ethiopian phone number, mobile or landline, accepted in any of the usual
+	// forms; the signup actions normalise it to `+251XXXXXXXXX` before writing
+	// `customers.phone`.
+	phone: ethiopianPhone(),
 	email: z.email('Email is Required'),
 	// better-auth rejects anything shorter with an opaque APIError; catching it
 	// here puts the message on the field instead.

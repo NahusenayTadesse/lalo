@@ -4,6 +4,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { message, setError, superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { add } from './schema';
+import { normalizeEthiopianPhone } from '$lib/validators/phone';
 import { redirect } from 'sveltekit-flash-message/server';
 import { auth } from '$lib/server/auth';
 import { eq, and, sql } from 'drizzle-orm';
@@ -55,7 +56,10 @@ export const actions: Actions = {
 			);
 		}
 
-		const { name, email, password, phone, address, deliveryAddress } = form.data;
+		const { name, email, password, address, deliveryAddress } = form.data;
+		// Already validated by the schema; normalised here so `customers.phone` holds
+		// one shape (`+251XXXXXXXXX`) whichever form was typed.
+		const phone = normalizeEthiopianPhone(form.data.phone) as string;
 
 		try {
 			await db.transaction(async (tx) => {
@@ -81,9 +85,7 @@ export const actions: Actions = {
 
 			// Not awaited, so the surrounding try/catch can't see a rejection — without
 			// this handler an unreachable mail server crashes the whole process.
-			sendEmail(email, subject, html).catch((err) =>
-				console.error('Email Error (Welcome):', err)
-			);
+			sendEmail(email, subject, html).catch((err) => console.error('Email Error (Welcome):', err));
 			return message(form, {
 				type: 'success',
 				text: 'Sign Up Successful!'

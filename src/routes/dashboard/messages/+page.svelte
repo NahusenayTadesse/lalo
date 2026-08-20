@@ -137,11 +137,5 @@
 </svelte:head>
 {#key data?.allPaymentMethods}
 	<FilterMenu data={data?.allPaymentMethods} bind:filteredList filterKeys={['subject', 'isRead']} />
-	<DataTable
-		{columns}
-		class="lg:max-w-6xl!    "
-		data={filteredList}
-		search={true}
-		fileName="Messages"
-	/>
+	<DataTable {columns} data={filteredList} search={true} fileName="Messages" />
 {/key}
