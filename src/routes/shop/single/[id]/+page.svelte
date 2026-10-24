@@ -5,7 +5,7 @@
 	import ProductCard from '$lib/components/product-card.svelte';
 	import * as Carousel from '$lib/components/ui/carousel/index.js';
 	import { ArrowBigRight } from '@lucide/svelte';
-	import Button from '$lib/components/ui/button/button.svelte';
+	import Button from '@nahu/admin-kit/components/ui/button/button.svelte';
 	import { page } from '$app/state';
 
 	let { data } = $props();

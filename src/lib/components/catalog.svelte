@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
 	import { Download } from '@lucide/svelte';
-	import Button from './ui/button/button.svelte';
+	import Button from '@nahu/admin-kit/components/ui/button/button.svelte';
 
 	// Svelte 5 uses runes for state
 

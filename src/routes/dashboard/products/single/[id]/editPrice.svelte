@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { SquarePen, Save } from '@lucide/svelte';
 
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
 	import type { EditPrice } from './schema';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
 
 	let {
 		data,

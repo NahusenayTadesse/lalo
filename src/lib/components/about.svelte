@@ -6,7 +6,7 @@
 		CardDescription,
 		CardHeader,
 		CardTitle
-	} from '$lib/components/ui/card';
+	} from '@nahu/admin-kit/components/ui/card/index.js';
 	import { CheckIcon, SparklesIcon, TrendingUpIcon, AwardIcon } from '@lucide/svelte';
 	import { fly } from 'svelte/transition';
 

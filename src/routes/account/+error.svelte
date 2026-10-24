@@ -1,7 +1,7 @@
 <script>
 	import { m } from '$lib/paraglide/messages.js';
 	import { page } from '$app/state';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 </script>
 
 <div class="flex h-full w-full flex-col items-center justify-center">

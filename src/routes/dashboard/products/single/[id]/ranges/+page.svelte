@@ -5,11 +5,11 @@
 
 	let { data } = $props();
 
-	import DataTable from '$lib/components/Table/data-table.svelte';
+	import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
 	import QueryBuilder from '$lib/QueryBuilder.svelte';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select';
-	import { Button } from '$lib/components/ui/button/index';
+	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
+	import { Select, SelectContent, SelectItem, SelectTrigger } from '@nahu/admin-kit/components/ui/select/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 
 	import { Frown, ArrowLeft } from '@lucide/svelte';
 	import type { CalendarDate } from '@internationalized/date';

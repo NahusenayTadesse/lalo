@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card";
+	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@nahu/admin-kit/components/ui/card/index.js";
 	import { FileTextIcon } from "@lucide/svelte";
 	import type { Snippet } from "svelte";
 

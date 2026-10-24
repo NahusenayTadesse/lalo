@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
-	import Button from '$lib/components/ui/button/button.svelte';
+	import Button from '@nahu/admin-kit/components/ui/button/button.svelte';
 	import { orderStatusLabel, paymentStatusLabel } from '$lib/status-labels';
 
 	let { data } = $props();

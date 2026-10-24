@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { categories } from '$lib/data/products.js';
-	import { Card } from '$lib/components/ui/card';
+	import { Card } from '@nahu/admin-kit/components/ui/card/index.js';
 	import { ArrowRightIcon } from '@lucide/svelte';
 </script>
 

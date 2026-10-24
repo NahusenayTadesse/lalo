@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import * as Card from '$lib/components/ui/card/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+	import * as Card from '@nahu/admin-kit/components/ui/card/index.js';
 
-	import InputComp from '$lib/formComponents/InputComp.svelte';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
+	import { Input } from '@nahu/admin-kit/components/ui/input/index.js';
+	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
 
 	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
 	import type { SignupSchema } from '$lib/ZodSchema';
 	import { Eye, EyeOff } from '@lucide/svelte';
-	import Errors from '$lib/formComponents/Errors.svelte';
+	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
 
 	let {
 		data,

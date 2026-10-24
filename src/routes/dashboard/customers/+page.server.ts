@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { customers, user, orders } from '$lib/server/db/schema';
-import { eq, and, count, sql, inArray } from 'drizzle-orm';
+import { eq, and, count, desc, sql, inArray } from 'drizzle-orm';
 import { setFlash } from 'sveltekit-flash-message/server';
 import { fail, message, setError, superValidate } from 'sveltekit-superforms';
 import { addCustomer } from '$lib/ZodSchema';
@@ -28,7 +28,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.from(customers)
 		.leftJoin(user, eq(customers.createdBy, user.id))
 		.leftJoin(orders, and(eq(orders.customerId, customers.id), eq(orders.status, 'pending')))
-		.groupBy(customers.id, user.name, customers.createdAt, customers.name);
+		.groupBy(customers.id, user.name, customers.createdAt, customers.name)
+		// Newest first: the table pages, so a customer just added must land on page one.
+		.orderBy(desc(customers.createdAt), desc(customers.id));
 
 	return {
 		customersList,

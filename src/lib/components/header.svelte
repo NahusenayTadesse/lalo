@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { MenuIcon, XIcon } from '@lucide/svelte';
-	import DarkMode from './DarkMode.svelte';
+	import DarkMode from '@nahu/admin-kit/components/shell/DarkMode.svelte';
 	import AvatarSettings from './AvatarSettings.svelte';
 	import LanguageSwitcher from './LanguageSwitcher.svelte';
 	import { m } from '$lib/paraglide/messages.js';
 
-	import { Sheet, SheetContent, SheetTrigger } from '$lib/components/ui/sheet';
-	import { Button } from '$lib/components/ui/button';
+	import { Sheet, SheetContent, SheetTrigger } from '@nahu/admin-kit/components/ui/sheet/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 
 	let isOpen = $state(false);
 

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
 	import { useCart, cartKey } from '$lib/hooks/cart.svelte.js';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
-	import { ScrollArea } from '$lib/components/ui/scroll-area';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+	import { Badge } from '@nahu/admin-kit/components/ui/badge/index.js';
+	import { ScrollArea } from '@nahu/admin-kit/components/ui/scroll-area/index.js';
 	import { ShoppingCartIcon, Cookie, TrashIcon, PartyPopper } from '@lucide/svelte';
 	import CartItem from './cart-item.svelte';
-	import * as Sheet from '$lib/components/ui/sheet/index.js';
+	import * as Sheet from '@nahu/admin-kit/components/ui/sheet/index.js';
 
 	let {
 		freeDeliveryThreshold,

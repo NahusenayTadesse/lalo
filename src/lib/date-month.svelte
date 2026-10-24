@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
-	import RangeCalendar from '$lib/components/ui/range-calendar/range-calendar.svelte';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+	import { Popover, PopoverContent, PopoverTrigger } from '@nahu/admin-kit/components/ui/popover/index.js';
+	import RangeCalendar from '@nahu/admin-kit/components/ui/range-calendar/range-calendar.svelte';
 	import { CalendarIcon, SlidersHorizontal } from '@lucide/svelte';
 	import { getLocalTimeZone, type CalendarDate, type DateValue } from '@internationalized/date';
 	import type { DateRange } from 'bits-ui';

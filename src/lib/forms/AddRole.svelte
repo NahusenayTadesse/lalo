@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Textarea } from '$lib/components/ui/textarea/index.js';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
+	import { Input } from '@nahu/admin-kit/components/ui/input/index.js';
+	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
+	import { Textarea } from '@nahu/admin-kit/components/ui/textarea/index.js';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
+	import { ScrollArea } from '@nahu/admin-kit/components/ui/scroll-area/index.js';
 
 	import { Plus } from '@lucide/svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	// import { zod4Client } from "sveltekit-superforms/adapters";
 	import type { CreateRoleSchema } from '$lib/ZodSchema';
 	// import { createRoleSchema } from "$lib/ZodSchema";

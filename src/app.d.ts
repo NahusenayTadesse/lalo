@@ -9,6 +9,9 @@ declare global {
 			session?: Session;
 			/** Resolved by `hooks.server.ts` for `/dashboard` requests. */
 			roleName?: string;
+			/** Stamped by the kit's hook: see `$lib/access`. */
+			permList: string[];
+			isSuperAdmin: boolean;
 		}
 
 		// interface Error {}

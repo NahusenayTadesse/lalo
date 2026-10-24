@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
-	import Button from '$lib/components/ui/button/button.svelte';
+	import Button from '@nahu/admin-kit/components/ui/button/button.svelte';
 	import { ShoppingCart } from '@lucide/svelte';
 	import type { PageData } from './$types';
 	import { orderStatusLabel } from '$lib/status-labels';

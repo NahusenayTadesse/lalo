@@ -7,16 +7,16 @@
 		CardTitle,
 		CardDescription,
 		CardContent
-	} from '$lib/components/ui/card';
-	import { Button } from '$lib/components/ui/button';
+	} from '@nahu/admin-kit/components/ui/card/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 
 	import { IconBrandFacebook, IconBrandInstagram, IconBrandTiktok } from '@tabler/icons-svelte';
 	import { MailIcon, MessageCircleIcon, SendIcon, PhoneIcon } from '@lucide/svelte';
 
 	import { superForm } from 'sveltekit-superforms/client';
 	import { toast } from 'svelte-sonner';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	let { data } = $props();
 	const { form, errors, enhance, delayed, message } = superForm(data.form, {
 		dataType: 'json'

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
 	import { useCart } from '$lib/hooks/cart.svelte.js';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { MinusIcon, PlusIcon, TrashIcon } from '@lucide/svelte';
 	import type { CartItem } from '$lib/hooks/cart.svelte.js';
 

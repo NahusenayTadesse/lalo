@@ -1,18 +1,18 @@
 <script lang="ts">
 	import type { Snapshot } from '@sveltejs/kit';
 
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import { fly } from 'svelte/transition';
 	import { Plus, X } from '@lucide/svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { add as schema } from './schema';
 	import { superForm } from 'sveltekit-superforms/client';
-	import Errors from '$lib/formComponents/Errors.svelte';
-	import FormCard from '$lib/formComponents/FormCard.svelte';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
+	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
+	import FormCard from '@nahu/admin-kit/formComponents/FormCard.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
+	import { Input } from '@nahu/admin-kit/components/ui/input/index.js';
+	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
 
 	let { data } = $props();
 

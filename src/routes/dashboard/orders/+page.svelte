@@ -1,20 +1,20 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { renderComponent } from '$lib/components/ui/data-table/index.js';
-	import DataTable from '$lib/components/Table/data-table.svelte';
-	import DataTableSort from '$lib/components/Table/data-table-sort.svelte';
-	import Statuses from '$lib/components/Table/statuses.svelte';
+	import { renderComponent } from '@nahu/admin-kit/components/ui/data-table/index.js';
+	import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
+	import DataTableSort from '@nahu/admin-kit/components/Table/data-table-sort.svelte';
+	import Statuses from '@nahu/admin-kit/components/Table/statuses.svelte';
 	import Edit from './edit.svelte';
 	import Delete from './delete.svelte';
 	import OrderFormFields from './order-form-fields.svelte';
 	import OrderItems from '$lib/components/order-items.svelte';
-	import Copy from '$lib/Copy.svelte';
+	import Copy from '@nahu/admin-kit/Copy.svelte';
 	import { formatEthiopianDate } from '$lib/global.svelte.js';
 
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
+	import { Select, SelectContent, SelectItem, SelectTrigger } from '@nahu/admin-kit/components/ui/select/index.js';
 	import QueryBuilder from '$lib/QueryBuilder.svelte';
 	import FilterMenu from '$lib/components/Table/FilterMenu.svelte';
 	import type { CalendarDate } from '@internationalized/date';
@@ -29,8 +29,8 @@
 	} from '@lucide/svelte';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
 	import AddCustomer from '$lib/forms/AddCustomer.svelte';
-	import Errors from '$lib/formComponents/Errors.svelte';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import { superForm } from 'sveltekit-superforms/client';
 	import { toast } from 'svelte-sonner';
 

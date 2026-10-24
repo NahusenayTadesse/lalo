@@ -1,22 +1,22 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import { SquarePen, Plus, X } from '@lucide/svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import type { Edit } from './schema';
-	import { buttonVariants } from '$lib/components/ui/button/index.js';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import { buttonVariants } from '@nahu/admin-kit/components/ui/button/index.js';
+	import * as Dialog from '@nahu/admin-kit/components/ui/dialog/index.js';
 
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
-	import Errors from '$lib/formComponents/Errors.svelte';
-	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
+	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
+	import * as Tooltip from '@nahu/admin-kit/components/ui/tooltip/index.js';
+	import { Input } from '@nahu/admin-kit/components/ui/input/index.js';
+	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
 
 	import ComboboxComp from '$lib/formComponents/ComboboxComp.svelte';
 	import { fly } from 'svelte/transition';
-	import ScrollArea from '$lib/components/ui/scroll-area/scroll-area.svelte';
+	import ScrollArea from '@nahu/admin-kit/components/ui/scroll-area/scroll-area.svelte';
 
 	type Item = {
 		value: number;
@@ -95,7 +95,7 @@
 	);
 
 	import { toast } from 'svelte-sonner';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
 	$effect(() => {
 		if ($message) {
 			if ($message.type === 'error') {

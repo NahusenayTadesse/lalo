@@ -2,17 +2,17 @@
 
 	let { data } = $props();
 
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 
 	import { ArrowLeft } from '@lucide/svelte';
 
-	import Empty from '$lib/components/Empty.svelte';
+	import Empty from '@nahu/admin-kit/components/Empty.svelte';
 
-	import { renderComponent } from '$lib/components/ui/data-table/index.js';
-	import DataTable from '$lib/components/Table/data-table.svelte';
-	import DataTableSort from '$lib/components/Table/data-table-sort.svelte';
+	import { renderComponent } from '@nahu/admin-kit/components/ui/data-table/index.js';
+	import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
+	import DataTableSort from '@nahu/admin-kit/components/Table/data-table-sort.svelte';
 	import OrderItems from '../../../orders/order-items.svelte';
-	import Statuses from '$lib/components/Table/statuses.svelte';
+	import Statuses from '@nahu/admin-kit/components/Table/statuses.svelte';
 	import FilterMenu from '$lib/components/Table/FilterMenu.svelte';
 	export const columns = [
 		{

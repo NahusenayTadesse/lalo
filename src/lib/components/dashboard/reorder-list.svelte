@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "$lib/components/ui/card";
-	import { Badge } from "$lib/components/ui/badge";
+	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@nahu/admin-kit/components/ui/card/index.js";
+	import { Badge } from "@nahu/admin-kit/components/ui/badge/index.js";
 	import { AlertCircleIcon } from "@lucide/svelte";
 
 	interface Item {

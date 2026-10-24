@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Dialog, DialogContent, DialogTrigger } from '$lib/components/ui/dialog';
+	import { Dialog, DialogContent, DialogTrigger } from '@nahu/admin-kit/components/ui/dialog/index.js';
 	import { ImageIcon } from '@lucide/svelte';
 
 	interface Props {

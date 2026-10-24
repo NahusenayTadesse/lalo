@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import type { MarkRead as schema } from './schema';
 
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
 	import { CircleCheckBig } from '@lucide/svelte';
-	import Errors from '$lib/formComponents/Errors.svelte';
+	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
 
 	let {
 		data,

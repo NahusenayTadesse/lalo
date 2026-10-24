@@ -1,5 +1,5 @@
 <script>
-          import * as RadioGroup from "$lib/components/ui/radio-group/index.js";
+          import * as RadioGroup from "@nahu/admin-kit/components/ui/radio-group/index.js";
 	import { label } from "$lib/global.svelte";
 
     let { name, value=$bindable(), items, required=true, btnName} = $props();

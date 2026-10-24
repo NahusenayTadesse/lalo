@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
-	import { renderComponent } from '$lib/components/ui/data-table/index.js';
-	import DataTable from '$lib/components/Table/data-table.svelte';
-	import DataTableSort from '$lib/components/Table/data-table-sort.svelte';
-	import Statuses from '$lib/components/Table/statuses.svelte';
+	import { renderComponent } from '@nahu/admin-kit/components/ui/data-table/index.js';
+	import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
+	import DataTableSort from '@nahu/admin-kit/components/Table/data-table-sort.svelte';
+	import Statuses from '@nahu/admin-kit/components/Table/statuses.svelte';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
-	import { Button } from '$lib/components/ui/button/index';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+	import { Input } from '@nahu/admin-kit/components/ui/input/index.js';
+	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
 
 	import ComboboxComp from '$lib/formComponents/ComboboxComp.svelte';
 	import Edit from './edit.svelte';
@@ -87,8 +87,8 @@
 	];
 	let { data } = $props();
 	import { superForm } from 'sveltekit-superforms/client';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import { Plus, X } from '@lucide/svelte';
 
 	import OrdersGrid from './orders-grid.svelte';

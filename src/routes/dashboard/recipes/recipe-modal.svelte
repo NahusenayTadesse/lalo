@@ -5,9 +5,9 @@
 		DialogHeader,
 		DialogTitle,
 		DialogDescription
-	} from '$lib/components/ui/dialog';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Separator } from '$lib/components/ui/separator';
+	} from '@nahu/admin-kit/components/ui/dialog/index.js';
+	import { Badge } from '@nahu/admin-kit/components/ui/badge/index.js';
+	import { Separator } from '@nahu/admin-kit/components/ui/separator/index.js';
 	import { Clock, ChefHat } from '@lucide/svelte';
 	import type { Recipe, Ingredient } from '$lib/data/recipes';
 

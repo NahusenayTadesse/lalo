@@ -1,11 +1,11 @@
-import { renderComponent } from '$lib/components/ui/data-table/index.js';
-import DataTableSort from '$lib/components/Table/data-table-sort.svelte';
-import Statuses from '$lib/components/Table/statuses.svelte';
-import BigText from '$lib/components/Table/bigText.svelte';
+import { renderComponent } from '@nahu/admin-kit/components/ui/data-table/index.js';
+import DataTableSort from '@nahu/admin-kit/components/Table/data-table-sort.svelte';
+import Statuses from '@nahu/admin-kit/components/Table/statuses.svelte';
+import BigText from '@nahu/admin-kit/components/Table/bigText.svelte';
 
-import Copy from '$lib/Copy.svelte';
+import Copy from '@nahu/admin-kit/Copy.svelte';
 
-import DataTableLinks from '$lib/components/Table/data-table-links.svelte';
+import DataTableLinks from '@nahu/admin-kit/components/Table/data-table-links.svelte';
 export const columns = [
 	{
 		accessorKey: 'index',

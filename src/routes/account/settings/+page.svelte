@@ -7,18 +7,18 @@
 
 	let { data } = $props();
 
-	import SingleTable from '$lib/components/SingleTable.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import SingleTable from '@nahu/admin-kit/components/SingleTable.svelte';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { superForm } from 'sveltekit-superforms/client';
 
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import { ArrowLeft, Pencil, Save, Pen, History } from '@lucide/svelte';
 	import type { Snapshot } from '@sveltejs/kit';
 
-	import SingleView from '$lib/components/SingleView.svelte';
-	import Errors from '$lib/formComponents/Errors.svelte';
-	import DataTable from '$lib/components/Table/data-table.svelte';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
+	import SingleView from '@nahu/admin-kit/components/SingleView.svelte';
+	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
+	import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
 
 	import { columns } from './columns.js';
 

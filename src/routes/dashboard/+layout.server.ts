@@ -26,6 +26,8 @@ export const load: LayoutServerLoad = async ({ locals, depends }) => {
 
 	return {
 		name: currentUser.name,
+		permList: locals.permList,
+		isSuperAdmin: locals.isSuperAdmin,
 		ordersNumber,
 		messageNumber
 	};

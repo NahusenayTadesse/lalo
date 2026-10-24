@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import * as Avatar from '$lib/components/ui/avatar/index.js';
+	import * as DropdownMenu from '@nahu/admin-kit/components/ui/dropdown-menu/index.js';
+	import * as Avatar from '@nahu/admin-kit/components/ui/avatar/index.js';
 
 	import { LogOut, KeyRound, User } from '@lucide/svelte';
 	import { enhance } from '$app/forms';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import { goto } from '$app/navigation';
 	let { data }: { data: string | undefined } = $props();
 

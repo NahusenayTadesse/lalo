@@ -1,14 +1,14 @@
 <script lang="ts">
 	import type { Snapshot } from '@sveltejs/kit';
-	import * as Card from '$lib/components/ui/card/index.js';
+	import * as Card from '@nahu/admin-kit/components/ui/card/index.js';
 	import { Plus } from '@lucide/svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { add } from './schema';
 	import { superForm } from 'sveltekit-superforms/client';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
-	import Errors from '$lib/formComponents/Errors.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
+	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
 
 	let { data } = $props();
 

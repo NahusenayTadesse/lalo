@@ -1,9 +1,7 @@
 <script lang="ts">
-	import * as Collapsible from '$lib/components/ui/collapsible/index.js';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import { cn } from 'tailwind-variants';
+	import * as Collapsible from '@nahu/admin-kit/components/ui/collapsible/index.js';
+	import * as Sidebar from '@nahu/admin-kit/components/ui/sidebar/index.js';
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
-	import { sidebarMenuButtonVariants } from './ui/sidebar/sidebar-menu-button.svelte';
 	let {
 		items
 	}: {
@@ -13,7 +11,7 @@
 			// this should be `Component` after @lucide/svelte updates types
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			icon?: any;
-			counter?: string | number;
+			counter?: number;
 			isActive?: boolean;
 			items?: {
 				title: string;
@@ -25,7 +23,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { slide } from 'svelte/transition';
-	import { fade, scale } from 'svelte/transition';
+	import { scale } from 'svelte/transition';
 
 	function variantChecker(url: string) {
 		const currentPath = page.url.pathname;
@@ -78,12 +76,12 @@
 											class="ms-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
 										/>
 									</Sidebar.MenuButton>
-									{#if item.counter > 0}
+									{#if (item.counter ?? 0) > 0}
 										<span
 											class="absolute -top-2 -right-2 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
 											in:scale={{ duration: 200 }}
 										>
-											{formatCount(item.counter)}
+											{formatCount(item.counter ?? 0)}
 										</span>
 									{/if}
 								{/snippet}
@@ -132,12 +130,12 @@
 							{/snippet}
 						</Sidebar.MenuButton>
 
-						{#if item.counter > 0}
+						{#if (item.counter ?? 0) > 0}
 							<span
 								class="absolute -top-2 -right-2 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
 								in:scale={{ duration: 200 }}
 							>
-								{formatCount(item.counter)}
+								{formatCount(item.counter ?? 0)}
 							</span>
 						{/if}
 					</Sidebar.MenuItem>

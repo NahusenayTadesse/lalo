@@ -1,24 +1,24 @@
 <script lang="ts">
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
+	import { Input } from '@nahu/admin-kit/components/ui/input/index.js';
+	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { editUserSchema } from './schema';
 
 	let { data } = $props();
 
-	import SingleTable from '$lib/components/SingleTable.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import SingleTable from '@nahu/admin-kit/components/SingleTable.svelte';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { superForm } from 'sveltekit-superforms/client';
 
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import { ArrowLeft, Pencil, Save } from '@lucide/svelte';
-	import SelectComp from '$lib/formComponents/SelectComp.svelte';
+	import SelectComp from '@nahu/admin-kit/formComponents/SelectComp.svelte';
 	import type { Snapshot } from '@sveltejs/kit';
 
 	import Delete from '$lib/forms/Delete.svelte';
-	import SingleView from '$lib/components/SingleView.svelte';
-	import Errors from '$lib/formComponents/Errors.svelte';
-	import DataTable from '$lib/components/Table/data-table.svelte';
+	import SingleView from '@nahu/admin-kit/components/SingleView.svelte';
+	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
+	import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
 	import { columns } from './columns.js';
 
 	let singleTable = $derived([

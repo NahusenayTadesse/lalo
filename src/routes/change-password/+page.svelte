@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
-	import { Input } from '$lib/components/ui/input/index';
-	import { Label } from '$lib/components/ui/label/index';
+	import { Input } from '@nahu/admin-kit/components/ui/input/index.js';
+	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
 
-	import { Button } from '$lib/components/ui/button/index';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import type { Snapshot } from '@sveltejs/kit';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import * as Card from '@nahu/admin-kit/components/ui/card/index.js';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 
 	import { Eye, Plus, EyeClosed } from '@lucide/svelte';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { changePasswordSchema } from './schema';
 	import { superForm } from 'sveltekit-superforms/client';
-	import Errors from '$lib/formComponents/Errors.svelte';
+	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
 	let { data } = $props();
 	import { updateFlash } from 'sveltekit-flash-message';
 	import { page } from '$app/state';

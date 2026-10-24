@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+	import { Input } from '@nahu/admin-kit/components/ui/input/index.js';
 	import ComboboxComp from '$lib/formComponents/ComboboxComp.svelte';
 	import { Minus, Plus, X } from '@lucide/svelte';
 	import { fly } from 'svelte/transition';

@@ -1,10 +1,10 @@
 <script>
 	import { enhance } from '$app/forms';
-	import { Button, buttonVariants } from '$lib/components/ui/button/index.js';
+	import { Button, buttonVariants } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { Trash } from '@lucide/svelte';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import * as Dialog from '@nahu/admin-kit/components/ui/dialog/index.js';
+	import { ScrollArea } from '@nahu/admin-kit/components/ui/scroll-area/index.js';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import { goto } from '$app/navigation';
 	let isOpen = $state(false);
 

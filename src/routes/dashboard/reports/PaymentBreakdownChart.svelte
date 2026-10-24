@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '$lib/components/ui/card';
+	import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@nahu/admin-kit/components/ui/card/index.js';
 	import { formatETB } from '$lib/global.svelte';
 
 	let { breakdown }: { breakdown: { name: string; revenue: number; orders: number }[] } = $props();

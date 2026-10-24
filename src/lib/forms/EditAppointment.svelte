@@ -1,11 +1,11 @@
 <script lang="ts">
 	
-import { Input } from "$lib/components/ui/input/index.js";
-	import { Label } from '$lib/components/ui/label/index.js';
-  import LoadingBtn from "$lib/formComponents/LoadingBtn.svelte";
+import { Input } from "@nahu/admin-kit/components/ui/input/index.js";
+	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
+  import LoadingBtn from "@nahu/admin-kit/formComponents/LoadingBtn.svelte";
 
 	import { Plus } from "@lucide/svelte";
-  import { Button } from "$lib/components/ui/button/index.js";
+  import { Button } from "@nahu/admin-kit/components/ui/button/index.js";
 	import type { ExistingCustomerAppointmentForm } from "$lib/ZodSchema";
 	import  type {  Infer, SuperValidated } from "sveltekit-superforms";
 	  import { superForm } from 'sveltekit-superforms';

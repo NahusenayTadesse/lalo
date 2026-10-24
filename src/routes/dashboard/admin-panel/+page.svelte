@@ -1,16 +1,14 @@
-<script>
-	import AdminNavCard from '$lib/components/AdminCard.svelte';
+<script lang="ts">
+	import AdminNavCard from '@nahu/admin-kit/components/shell/AdminCard.svelte';
+	import { Users } from '@lucide/svelte';
+	import { NAVIGATION } from '$lib/navigation';
 
-	let userManagement = [
-		{ name: 'Payment Methods', href: '/dashboard/admin-panel/payment-methods' },
-		{ name: 'Users', href: '/dashboard/admin-panel/users' },
-		{ name: 'Roles', href: '/dashboard/admin-panel/roles' }
-	];
+	const userManagement = NAVIGATION.find((item) => item.url === '/dashboard/admin-panel')?.items ?? [];
 </script>
 
-<svele:head>
+<svelte:head>
 	<title>Admin Panel</title>
-</svele:head>
+</svelte:head>
 
 <div class="min-h-dvh w-full text-foreground transition-colors duration-300">
 	<!-- Header -->
@@ -31,9 +29,8 @@
 			<AdminNavCard
 				title="User Management"
 				description="Control users and their assigned roles"
-				icon="Users"
+				icon={Users}
 				items={userManagement}
-				accentColor="from-violet-500/15 to-violet-500/5"
 			/>
 		</div>
 	</main>

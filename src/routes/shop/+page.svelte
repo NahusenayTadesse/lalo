@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
 	import ProductCard from '$lib/components/product-card.svelte';
-	import { Input } from '$lib/components/ui/input';
-	import { Checkbox } from '$lib/components/ui/checkbox';
-	import { Button } from '$lib/components/ui/button';
+	import { Input } from '@nahu/admin-kit/components/ui/input/index.js';
+	import { Checkbox } from '@nahu/admin-kit/components/ui/checkbox/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { SearchIcon, XIcon, ChevronLeft, ChevronRight } from '@lucide/svelte';
-	import Label from '$lib/components/ui/label/label.svelte';
+	import Label from '@nahu/admin-kit/components/ui/label/label.svelte';
 	import { goto } from '$app/navigation';
 	import { page as sveltePage } from '$app/state';
 

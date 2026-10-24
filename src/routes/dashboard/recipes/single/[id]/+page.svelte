@@ -1,23 +1,23 @@
 <script lang="ts">
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
+	import { Input } from '@nahu/admin-kit/components/ui/input/index.js';
+	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { edit } from './schema.js';
 	let { data } = $props();
 
-	import SingleTable from '$lib/components/SingleTable.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import SingleTable from '@nahu/admin-kit/components/SingleTable.svelte';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { superForm } from 'sveltekit-superforms/client';
 	import { page } from '$app/state';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
 
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import { ArrowLeft, Pencil, Save, Plus, X } from '@lucide/svelte';
 	import type { Snapshot } from '@sveltejs/kit';
 
 	import Delete from '$lib/forms/Delete.svelte';
-	import SingleView from '$lib/components/SingleView.svelte';
-	import Errors from '$lib/formComponents/Errors.svelte';
+	import SingleView from '@nahu/admin-kit/components/SingleView.svelte';
+	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
 
 	function addIng() {
 		$form.ingredients = [...$form.ingredients, { ingredient: '', amount: '1', ingredientAm: '', amountAm: '' }];
@@ -67,8 +67,8 @@
 		}
 	});
 
-	import * as Table from '$lib/components/ui/table';
-	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
+	import * as Table from '@nahu/admin-kit/components/ui/table/index.js';
+	import { Card, CardContent, CardHeader, CardTitle } from '@nahu/admin-kit/components/ui/card/index.js';
 
 	let ingList = $derived(data?.ingList);
 

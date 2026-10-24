@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
-	import { Card, CardContent } from '$lib/components/ui/card';
-	import { Badge } from '$lib/components/ui/badge';
+	import { Card, CardContent } from '@nahu/admin-kit/components/ui/card/index.js';
+	import { Badge } from '@nahu/admin-kit/components/ui/badge/index.js';
 	import { Clock, ChefHat } from '@lucide/svelte';
 	import type { Recipe } from '$lib/data/recipes';
 

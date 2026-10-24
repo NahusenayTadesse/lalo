@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { X, Send, Phone } from '@lucide/svelte';
-	import Button from './ui/button/button.svelte';
+	import Button from '@nahu/admin-kit/components/ui/button/button.svelte';
 
 	let {
 		phones = ["+251908454545","+251911234567"],

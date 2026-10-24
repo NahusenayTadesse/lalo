@@ -4,20 +4,20 @@
 
 	let { data } = $props();
 
-	import SingleTable from '$lib/components/SingleTable.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import SingleTable from '@nahu/admin-kit/components/SingleTable.svelte';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { superForm } from 'sveltekit-superforms/client';
 
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import { ArrowLeft, Pencil, Save, Trash } from '@lucide/svelte';
 	import type { Snapshot } from '@sveltejs/kit';
 
 	import Delete from '$lib/forms/Delete.svelte';
-	import SingleView from '$lib/components/SingleView.svelte';
-	// import DataTable from '$lib/components/Table/data-table.svelte';
+	import SingleView from '@nahu/admin-kit/components/SingleView.svelte';
+	// import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
 	// import { columns, userColumns } from './columns.js';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
-	import Errors from '$lib/formComponents/Errors.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
+	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
 
 	let singleTable = $derived([
 		{ name: 'Name', value: data.single?.name },

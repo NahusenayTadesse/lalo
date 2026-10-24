@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { renderComponent } from '$lib/components/ui/data-table/index.js';
-	import DataTableSort from '$lib/components/Table/data-table-sort.svelte';
+	import { renderComponent } from '@nahu/admin-kit/components/ui/data-table/index.js';
+	import DataTableSort from '@nahu/admin-kit/components/Table/data-table-sort.svelte';
 	import ImageViewer from '$lib/components/Table/image-viewer.svelte';
-	import DataTableLinks from '$lib/components/Table/data-table-links.svelte';
+	import DataTableLinks from '@nahu/admin-kit/components/Table/data-table-links.svelte';
 	let { data } = $props();
 	const columns = [
 		{
@@ -83,14 +83,14 @@
 		}
 	];
 
-	import DataTable from '$lib/components/Table/data-table.svelte';
+	import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
 
-	import Loading from '$lib/components/Loading.svelte';
+	import Loading from '@nahu/admin-kit/components/Loading.svelte';
 	import { Frown, Plus } from '@lucide/svelte';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import FilterMenu from '$lib/components/Table/FilterMenu.svelte';
 	import RecipeItems from './recipe-items.svelte';
-	import Statuses from '$lib/components/Table/statuses.svelte';
+	import Statuses from '@nahu/admin-kit/components/Table/statuses.svelte';
 
 	let filteredList = $derived(data?.recipeList);
 </script>

@@ -1,5 +1,5 @@
 <script>
-	import DataTable from '$lib/components/Table/data-table.svelte';
+	import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
 	import { columns } from './columns';
 	let { data } = $props();
 </script>

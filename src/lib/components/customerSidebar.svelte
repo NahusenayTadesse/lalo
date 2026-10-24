@@ -11,15 +11,15 @@
 		Truck,
 		User
 	} from '@lucide/svelte';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import * as Sidebar from '@nahu/admin-kit/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
-	import { useSidebar } from '$lib/components/ui/sidebar/index.js';
+	import { useSidebar } from '@nahu/admin-kit/components/ui/sidebar/index.js';
 	import CustomerNav from './customerNav.svelte';
 
 	import Logout from '$lib/forms/Logout.svelte';
 
 	// Simplified parameters focused entirely on the customer
-	let { name, ...restProps }: ComponentProps<typeof Sidebar.Root> = $props();
+	let { name, ...restProps }: { name?: string } & ComponentProps<typeof Sidebar.Root> = $props();
 
 	// Restructured navigation focusing on clear, immediate customer goals
 	const navItems = [

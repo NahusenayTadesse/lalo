@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+	import { Input } from '@nahu/admin-kit/components/ui/input/index.js';
+	import { Select, SelectContent, SelectItem, SelectTrigger } from '@nahu/admin-kit/components/ui/select/index.js';
 	import { ChevronRightIcon, SearchIcon } from '@lucide/svelte';
 	import OrderCard from './order-card.svelte';
 	import type { Snippet } from 'svelte';

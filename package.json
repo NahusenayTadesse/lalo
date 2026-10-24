@@ -4,7 +4,8 @@
 	"version": "0.0.1",
 	"type": "module",
 	"overrides": {
-		"typebox": "1.1.6"
+		"typebox": "1.1.6",
+		"@lucide/svelte": "$@lucide/svelte"
 	},
 	"scripts": {
 		"dev": "vite dev",
@@ -66,6 +67,7 @@
 		"zod": "^4.3.6"
 	},
 	"dependencies": {
+		"@nahu/admin-kit": "file:../admin-kit",
 		"@tabler/icons-svelte": "^3.38.0",
 		"browser-image-compression": "^2.0.2",
 		"chart.js": "^4.5.1",

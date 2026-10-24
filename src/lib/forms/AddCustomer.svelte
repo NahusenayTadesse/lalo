@@ -5,9 +5,9 @@
 
 <script lang="ts">
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { UserPlus } from '@lucide/svelte';
 	import type { addCustomer } from '$lib/ZodSchema';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';

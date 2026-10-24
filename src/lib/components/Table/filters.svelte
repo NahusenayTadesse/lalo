@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { FilterMeta } from './data-table-filters.svelte';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
+  import { Input } from '@nahu/admin-kit/components/ui/input/index.js';
+  import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+  import { Checkbox } from '@nahu/admin-kit/components/ui/checkbox/index.js';
+  import * as DropdownMenu from "@nahu/admin-kit/components/ui/dropdown-menu/index.js";
 
   import { ChevronDownIcon } from '@lucide/svelte';
 

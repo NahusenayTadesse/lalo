@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
-	import { Button } from '$lib/components/ui/button';
-	import { Separator } from '$lib/components/ui/separator';
+	import { Popover, PopoverContent, PopoverTrigger } from '@nahu/admin-kit/components/ui/popover/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+	import { Separator } from '@nahu/admin-kit/components/ui/separator/index.js';
 	import { CookingPotIcon, ChevronDownIcon, UtensilsIcon } from '@lucide/svelte';
 
 	type RecipeItem = {

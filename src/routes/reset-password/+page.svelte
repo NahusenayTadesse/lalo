@@ -2,10 +2,10 @@
 	import { m } from '$lib/paraglide/messages.js';
 	import { page } from '$app/stores';
 	import { authClient } from '$lib/auth-client';
-	import * as Card from '$lib/components/ui/card';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-	import { Button } from '$lib/components/ui/button';
+	import * as Card from '@nahu/admin-kit/components/ui/card/index.js';
+	import { Input } from '@nahu/admin-kit/components/ui/input/index.js';
+	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { Loader2, AlertCircle, CheckCircle2 } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 

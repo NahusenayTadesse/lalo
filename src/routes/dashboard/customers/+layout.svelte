@@ -1,5 +1,5 @@
 <script>
-	import Button from '$lib/components/ui/button/button.svelte';
+	import Button from '@nahu/admin-kit/components/ui/button/button.svelte';
 	import { Sheet } from '@lucide/svelte';
 	let { children } = $props();
 </script>

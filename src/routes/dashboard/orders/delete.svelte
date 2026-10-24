@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { Trash } from '@lucide/svelte';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import type { idSchema } from '$lib/server/crud';
 
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
-	import Errors from '$lib/formComponents/Errors.svelte';
+	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
 	import { toast } from 'svelte-sonner';
 
 	let {

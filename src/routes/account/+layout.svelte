@@ -1,5 +1,5 @@
 <script lang="ts">
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import * as Sidebar from '@nahu/admin-kit/components/ui/sidebar/index.js';
 	import AppSidebar from '$lib/components/customerSidebar.svelte';
 
 	let { children, data } = $props();

@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { Save, Video, Image as ImageIcon, AlertCircle } from '@lucide/svelte';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import { superForm } from 'sveltekit-superforms';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
+	import GalleryField from '$lib/formComponents/GalleryField.svelte';
 	import { toast } from 'svelte-sonner';
-	import FormCard from '$lib/formComponents/FormCard.svelte';
+	import FormCard from '@nahu/admin-kit/formComponents/FormCard.svelte';
 
 	let { data } = $props();
 
@@ -53,10 +54,10 @@
 				<InputComp label="" name="existing" type="hidden" {form} {errors} required={true} />
 
 				<div class="rounded-lg border bg-muted/10 p-2">
-					<InputComp
+					<GalleryField
 						{form}
 						{errors}
-						type="gallery"
+						
 						name="images"
 						label=""
 						placeholder="Drop images here or click to upload"

@@ -7,7 +7,7 @@
 	import './layout.css';
 	import { getFlash } from 'sveltekit-flash-message';
 	import { page, updated } from '$app/state';
-	import { Toaster } from '$lib/components/ui/sonner/index.js';
+	import { Toaster } from '@nahu/admin-kit/components/ui/sonner/index.js';
 	import { ProgressBar } from '@prgm/sveltekit-progress-bar';
 	import { toastmsg } from '$lib/global.svelte';
 
@@ -15,7 +15,7 @@
 
 	import { ModeWatcher } from 'mode-watcher';
 	import { fly } from 'svelte/transition';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { toast } from 'svelte-sonner';
 
 	async function notifyBrowser(title: string, body: string) {
@@ -81,14 +81,17 @@
 {/if}
 
 {#if !page.url.pathname.startsWith('/dashboard')}
-	<Header data={data?.user?.name ?? ''} />
-	{@render children()}
-	<Footer />
-	<Whatsappchat />
-	<Cart
-		freeDeliveryThreshold={data?.freeData?.threshold}
-		suggestionThreshold={data?.freeData?.suggestionThreshold}
-	/>
+	<!-- The storefront keeps its own typography: the kit's h1–p rules skip this subtree. -->
+	<div data-site-type class="contents">
+		<Header data={data?.user?.name ?? ''} />
+		{@render children()}
+		<Footer />
+		<Whatsappchat />
+		<Cart
+			freeDeliveryThreshold={data?.freeData?.threshold}
+			suggestionThreshold={data?.freeData?.suggestionThreshold}
+		/>
+	</div>
 {:else}
 	{@render children()}
 {/if}

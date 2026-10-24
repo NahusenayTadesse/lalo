@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input/index';
-	import { Label } from '$lib/components/ui/label/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+	import { Input } from '@nahu/admin-kit/components/ui/input/index.js';
+	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
 	import {
 		X,
 		CloudUpload as UploadCloud,

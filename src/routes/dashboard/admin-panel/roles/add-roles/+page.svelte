@@ -1,12 +1,12 @@
 <script lang="ts">
 	import type { Snapshot } from '@sveltejs/kit';
 	import { Plus } from '@lucide/svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { createRoleSchema } from './schema';
 	import { superForm } from 'sveltekit-superforms/client';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import Errors from '$lib/formComponents/Errors.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
+	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
 
 	let { data } = $props();
 
@@ -20,8 +20,8 @@
 	);
 
 	import { toast } from 'svelte-sonner';
-	import FormCard from '$lib/formComponents/FormCard.svelte';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
+	import FormCard from '@nahu/admin-kit/formComponents/FormCard.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
 	$effect(() => {
 		if ($message) {
 			if ($message.type === 'error') {

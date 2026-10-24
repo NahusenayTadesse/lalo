@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
 	import { useCart, cartKey } from '$lib/hooks/cart.svelte.js';
-	import { Button } from '$lib/components/ui/button';
-	import { ScrollArea } from '$lib/components/ui/scroll-area';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+	import { ScrollArea } from '@nahu/admin-kit/components/ui/scroll-area/index.js';
 	import {
 		ShoppingCartIcon,
 		CreditCard,
@@ -14,9 +14,9 @@
 	import CartItem from '$lib/components/floating-cart/cart-item.svelte';
 	import { superForm } from 'sveltekit-superforms/client';
 	import { toast } from 'svelte-sonner';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import Errors from '$lib/formComponents/Errors.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
+	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
 	import Signup from '$lib/forms/Signup.svelte';
 	import Login from '$lib/forms/Login.svelte';

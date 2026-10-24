@@ -5,10 +5,10 @@
 		CardDescription,
 		CardHeader,
 		CardTitle
-	} from '$lib/components/ui/card';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import { Separator } from '$lib/components/ui/separator';
+	} from '@nahu/admin-kit/components/ui/card/index.js';
+	import { Badge } from '@nahu/admin-kit/components/ui/badge/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+	import { Separator } from '@nahu/admin-kit/components/ui/separator/index.js';
 	import { ChevronRightIcon } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
 

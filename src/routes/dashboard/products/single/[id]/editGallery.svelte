@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { Save } from '@lucide/svelte';
 
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
 	import type { EditGallery } from './schema';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
+	import GalleryField from '$lib/formComponents/GalleryField.svelte';
 
 	let {
 		data,
@@ -38,10 +39,10 @@
 		enctype="multipart/form-data"
 	>
 		<InputComp label="" name="existing" type="hidden" {form} {errors} required={true} />
-		<InputComp
+		<GalleryField
 			{form}
 			{errors}
-			type="gallery"
+			
 			name="gallery"
 			label="Product Gallery"
 			placeholder="Edit and Upload New Product Gallery"

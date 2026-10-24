@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Label } from '$lib/components/ui/label/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
 	import { Plus } from '@lucide/svelte';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
 	import AddCustomer from '$lib/forms/AddCustomer.svelte';
 	import ProductLineItem from './product-line-item.svelte';
 

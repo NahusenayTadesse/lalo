@@ -1,11 +1,18 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
-@import 'shadcn-svelte/tailwind.css';
+@import '@nahu/admin-kit/styles/theme.base.css';
 @import '@fontsource-variable/roboto';
 @import '@fontsource-variable/inter';
 @custom-variant dark (&:is(.dark *));
 
 :root {
+	--kit-font-sans: 'Roboto Variable', ui-sans-serif, system-ui, sans-serif;
+	--kit-font-head: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+	/* Statuses, notices and stat cards in the admin-kit. */
+	--success: oklch(0.6 0.15 150);
+	--success-foreground: oklch(0.985 0 0);
+	--warning: oklch(0.75 0.16 75);
+	--warning-foreground: oklch(0.2 0 0);
+	--info: oklch(0.6305 0.1123 227.4281);
+	--info-foreground: oklch(0.985 0 0);
 	--background: oklch(1 0 0);
 	--foreground: oklch(0.148 0.004 228.8);
 	--card: oklch(1 0 0);
@@ -41,6 +48,12 @@
 }
 
 .dark {
+	--success: oklch(0.7 0.15 150);
+	--success-foreground: oklch(0.15 0 0);
+	--warning: oklch(0.8 0.15 80);
+	--warning-foreground: oklch(0.15 0 0);
+	--info: oklch(0.7 0.11 227);
+	--info-foreground: oklch(0.15 0 0);
 	--background: oklch(0.148 0.004 228.8);
 	--foreground: oklch(0.987 0.002 197.1);
 	--card: oklch(0.218 0.008 223.9);

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Languages } from '@lucide/svelte';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import { buttonVariants } from '$lib/components/ui/button/index.js';
+	import * as DropdownMenu from '@nahu/admin-kit/components/ui/dropdown-menu/index.js';
+	import { buttonVariants } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { getLocale, locales, setLocale, type Locale } from '$lib/paraglide/runtime.js';
 	import { m } from '$lib/paraglide/messages.js';
 

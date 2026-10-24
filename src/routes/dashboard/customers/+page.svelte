@@ -3,9 +3,9 @@
 
 	let { data } = $props();
 
-	import DataTable from '$lib/components/Table/data-table.svelte';
+	import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
 
-	import Loading from '$lib/components/Loading.svelte';
+	import Loading from '@nahu/admin-kit/components/Loading.svelte';
 	import { Frown } from '@lucide/svelte';
 	import FilterMenu from '$lib/components/Table/FilterMenu.svelte';
 	import AddCustomer from '$lib/forms/AddCustomer.svelte';

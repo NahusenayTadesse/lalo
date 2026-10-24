@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { Save, BookCopy } from '@lucide/svelte';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import { superForm } from 'sveltekit-superforms';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
 	import { toast } from 'svelte-sonner';
-	import FormCard from '$lib/formComponents/FormCard.svelte';
+	import FormCard from '@nahu/admin-kit/formComponents/FormCard.svelte';
 
 	let { data } = $props();
 

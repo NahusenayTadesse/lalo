@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
-	import { Button } from '$lib/components/ui/button';
+	import { Popover, PopoverContent, PopoverTrigger } from '@nahu/admin-kit/components/ui/popover/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { ChevronDownIcon } from '@lucide/svelte';
 
 	// Pre-formatted for display by the loader (e.g. "5 Pieces", "ETB 120"), not raw numbers.

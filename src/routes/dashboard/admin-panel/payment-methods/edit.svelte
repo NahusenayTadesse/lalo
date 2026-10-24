@@ -1,15 +1,15 @@
 <script lang="ts">
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import { SquarePen, Plus } from '@lucide/svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import type { EditPaymentMethod as schema } from './schema';
-	import { buttonVariants } from '$lib/components/ui/button/index.js';
+	import { buttonVariants } from '@nahu/admin-kit/components/ui/button/index.js';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
 
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
-	import Errors from '$lib/formComponents/Errors.svelte';
-	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
+	import * as Tooltip from '@nahu/admin-kit/components/ui/tooltip/index.js';
 
 	let {
 		data,
@@ -35,8 +35,8 @@
 	$form.name = name;
 
 	import { toast } from 'svelte-sonner';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
-	import Messages from '$lib/formComponents/Messages.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
+	import Messages from '@nahu/admin-kit/formComponents/Messages.svelte';
 	$effect(() => {
 		if ($message) {
 			if ($message.type === 'error') {

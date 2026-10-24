@@ -1,185 +1,59 @@
 <script lang="ts">
-	import {
-		Users,
-		UserRoundCog,
-		ChartArea,
-		LayoutDashboard,
-		Container,
-		Banknote,
-		Plus,
-		Sheet,
-		Mail,
-		ListOrdered,
-		CookingPot,
-		Star,
-		Building2,
-		BookDown,
-		MapPin,
-		Truck
-	} from '@lucide/svelte';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import * as Sidebar from '@nahu/admin-kit/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
-	import { bgGradient } from '$lib/global.svelte';
-	import { useSidebar } from '$lib/components/ui/sidebar/index.js';
+	import { appSurface } from '@nahu/admin-kit/global';
+	import { useKit } from '@nahu/admin-kit/context';
+	import { visibleNavigation } from '@nahu/admin-kit/navigation';
 
 	import NavMain from './NavMain.svelte';
 
-	let { messageNumber, ordersNumber, ...restProps }: ComponentProps<typeof Sidebar.Root> = $props();
+	/**
+	 * The kit's menu (from `<KitProvider navigation>`, filtered by `access`) with a count beside
+	 * an entry — pending orders, unread messages. The kit's own `AppSidebar` has no counts.
+	 */
+	let {
+		counters = {},
+		...restProps
+	}: { counters?: Record<string, number> } & ComponentProps<typeof Sidebar.Root> = $props();
 
-	const navigation = [
-		{ title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
-		{ title: 'Customers', url: '/dashboard/customers', icon: Users },
-		{
-			title: 'Orders',
-			url: '/dashboard/orders',
-			icon: ListOrdered,
-			counter: ordersNumber
-		},
-
-		{
-			title: 'Products',
-			url: '/dashboard/products',
-			icon: Container,
-			items: [
-				{ title: 'All Products', url: '/dashboard/products', icon: Sheet },
-				{ title: 'Add Product', url: '/dashboard/products/add-products', icon: Plus },
-				{ title: 'Suppliers', url: '/dashboard/products/suppliers', icon: Sheet },
-				{ title: 'Add Supplier', url: '/dashboard/products/add-supplier', icon: Plus }
-			]
-		},
-
-		{
-			title: 'Recipes ',
-			url: '/dashboard/recipes',
-			icon: CookingPot,
-			items: [
-				{ title: 'All Recipes', url: '/dashboard/recipes', icon: Sheet },
-				{ title: 'Add Recipe', url: '/dashboard/recipes/add-recipes', icon: Plus }
-			]
-		},
-		{
-			title: 'Delivery Address',
-			url: '/dashboard/delivery-address',
-			icon: Truck
-		},
-		{
-			title: 'Messages',
-			url: '/dashboard/messages',
-			icon: Mail,
-			counter: messageNumber
-		},
-		{
-			title: 'Testimonials  ',
-			url: '/dashboard/testimonials',
-			icon: Star
-		},
-
-		{
-			title: 'Partner Logos  ',
-			url: '/dashboard/logos',
-			icon: Building2
-		},
-
-		{
-			title: 'Catalog & Manual',
-			url: '/dashboard/catalog',
-			icon: BookDown
-		},
-		{
-			title: 'Reports',
-			url: '/dashboard/reports',
-			icon: ChartArea
-		},
-		{
-			title: 'Admin Panel',
-			url: '/dashboard/admin-panel',
-			icon: UserRoundCog,
-			items: [
-				{
-					title: 'Payment Methods',
-					url: '/dashboard/admin-panel/payment-methods',
-					icon: Banknote
-				},
-				{ title: 'Users', url: '/dashboard/admin-panel/users', icon: Users },
-				{ title: 'Roles', url: '/dashboard/admin-panel/roles', icon: Users }
-			]
-		}
-	];
-
-	const on = 'bg-sidebar-primary text-sidebar-primary-foreground';
-	const off = 'text-sidebar-foreground';
-	// function blacken(url: string) {
-	// 	const currentPath = page.url.pathname;
-
-	// 	// Special case for root dashboard
-	// 	if (url === '/dashboard') {
-	// 		return currentPath === '/dashboard' ? on : off;
-	// 	}
-
-	// 	// For other items, check if current path starts with their URL but is not just /dashboard
-	// 	return currentPath.startsWith(url) && currentPath !== '/dashboard' ? on : off;
-	// }
-
-	// let open = $state(false);
-
-	const sidebar = useSidebar();
-
-	function closeSidebar() {
-		if (sidebar.isMobile) {
-			sidebar.setOpenMobile(false);
-		}
-	}
+	const kit = useKit();
+	const items = $derived(
+		visibleNavigation(kit.navigation, kit.canOpen).map((item) => ({
+			...item,
+			counter: counters[item.url]
+		}))
+	);
 </script>
 
 <Sidebar.Root collapsible="offcanvas" {...restProps}>
 	<Sidebar.Content
 		class="z-9999! h-full
-  [scrollbar-width:thin] [scrollbar-color:#a3a3a3_transparent]
-  overflow-y-scroll
-  pt-4
+  overflow-y-scroll pt-4
+  [scrollbar-color:#a3a3a3_transparent]
+  [scrollbar-width:thin]
   [&::-webkit-scrollbar]:w-2
   [&::-webkit-scrollbar-thumb]:bg-gray-400
   [&::-webkit-scrollbar-thumb:hover]:bg-gray-500 [&::-webkit-scrollbar-track]:bg-transparent
-  {bgGradient}
+  {appSurface}
 "
 	>
 		<Sidebar.Group>
 			<Sidebar.GroupLabel>
 				<a
-					class="flex flex-row items-center justify-center gap-4"
+					class=" flex flex-col items-center gap-4 justify-self-center"
 					href="/"
 					title="Go to Website Home Page"
 					target="_blank"
 				>
-					<img src="/logo.webp" class=" h-16 w-16" alt="Logo" />
-					<h4 class="text-center text-[16px]! text-primary">Lalo Bakery Solutions</h4>
+					<img src="/logo.webp" class=" h-12 w-auto" alt="Logo" />
 				</a></Sidebar.GroupLabel
 			>
 			<Sidebar.GroupContent class="my-4">
-				<NavMain items={navigation} />
-				<!-- <Sidebar.Menu class="w-full gap-3">
-					{#each navigation as item (item.title)}
-						<Sidebar.MenuItem>
-							<Sidebar.MenuButton
-								class="flex items-center gap-3 rounded-lg px-3 py-5 text-lg
-          font-normal transition-colors duration-300 hover:bg-sidebar-accent
-          hover:text-sidebar-accent-foreground {selectItem}
-          {blacken(item.url)}"
-							>
-								{#snippet child({ props })}
-									<a href={item.url} onclick={closeSidebar} {...props} transition:fade>
-										<item.icon class="!h-5 !w-5" />
-										<span>{item.title}</span>
-									</a>
-								{/snippet}
-							</Sidebar.MenuButton>
-						</Sidebar.MenuItem>
-					{/each}
-				</Sidebar.Menu> -->
+				<NavMain {items} />
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
 	</Sidebar.Content>
-	<Sidebar.Footer class="flex flex-row bg-white dark:bg-black">
+	<Sidebar.Footer class="flex flex-row border-t bg-sidebar">
 		<Sidebar.GroupLabel>
 			Powered By <a href="https://nahusenaytadesse.vercel.app" target="_blank" class="ml-1">NT</a>
 		</Sidebar.GroupLabel>

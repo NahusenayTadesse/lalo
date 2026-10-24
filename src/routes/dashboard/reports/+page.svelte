@@ -10,14 +10,14 @@
 
 	let { data } = $props();
 
-	import DataTable from '$lib/components/Table/data-table.svelte';
+	import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
 	import QueryBuilder from '$lib/QueryBuilder.svelte';
 	import FilterMenu from '$lib/components/Table/FilterMenu.svelte';
-	import { Label } from '$lib/components/ui/label/index.js';
-	import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select';
-	import { Button } from '$lib/components/ui/button/index';
-	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
-	import DataTableLinks from '$lib/components/Table/data-table-links.svelte';
+	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
+	import { Select, SelectContent, SelectItem, SelectTrigger } from '@nahu/admin-kit/components/ui/select/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+	import { Card, CardContent, CardHeader, CardTitle } from '@nahu/admin-kit/components/ui/card/index.js';
+	import DataTableLinks from '@nahu/admin-kit/components/Table/data-table-links.svelte';
 
 	import {
 		Frown,

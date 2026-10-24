@@ -1,10 +1,10 @@
 <script>
-	import { renderComponent } from '$lib/components/ui/data-table/index.js';
-	import DataTable from '$lib/components/Table/data-table.svelte';
-	import DataTableLinks from '$lib/components/Table/data-table-links.svelte';
-	import DataTableSort from '$lib/components/Table/data-table-sort.svelte';
+	import { renderComponent } from '@nahu/admin-kit/components/ui/data-table/index.js';
+	import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
+	import DataTableLinks from '@nahu/admin-kit/components/Table/data-table-links.svelte';
+	import DataTableSort from '@nahu/admin-kit/components/Table/data-table-sort.svelte';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
-	import { Button } from '$lib/components/ui/button/index';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import Edit from './edit.svelte';
 	import Delete from './delete.svelte';
 	import BigText from './bigText.svelte';
@@ -128,8 +128,8 @@
 	];
 	let { data } = $props();
 	import { superForm } from 'sveltekit-superforms/client';
-	import InputComp from '$lib/formComponents/InputComp.svelte';
-	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
+	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
+	import LoadingBtn from '@nahu/admin-kit/formComponents/LoadingBtn.svelte';
 	import { Plus } from '@lucide/svelte';
 
 	const { form, errors, enhance, delayed, message } = superForm(data.form, {});

@@ -1,8 +1,8 @@
 <script>
-	import { renderComponent } from '$lib/components/ui/data-table/index.js';
-	import DataTable from '$lib/components/Table/data-table.svelte';
-	import DataTableSort from '$lib/components/Table/data-table-sort.svelte';
-	import Statuses from '$lib/components/Table/statuses.svelte';
+	import { renderComponent } from '@nahu/admin-kit/components/ui/data-table/index.js';
+	import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
+	import DataTableSort from '@nahu/admin-kit/components/Table/data-table-sort.svelte';
+	import Statuses from '@nahu/admin-kit/components/Table/statuses.svelte';
 
 	import Read from './read.svelte';
 	import Delete from './delete.svelte';
@@ -125,7 +125,7 @@
 	];
 	let { data } = $props();
 
-	import Copy from '$lib/Copy.svelte';
+	import Copy from '@nahu/admin-kit/Copy.svelte';
 	import { formatEthiopianDate as formatDate } from '$lib/global.svelte.js';
 	import FilterMenu from '$lib/components/Table/FilterMenu.svelte';
 

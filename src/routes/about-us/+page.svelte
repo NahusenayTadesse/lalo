@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { ArrowRightIcon } from '@lucide/svelte';
 	import { CheckCircleIcon, ShieldCheckIcon, HeartHandshakeIcon } from '@lucide/svelte';
 	import { WheatIcon, BadgeCheckIcon, ToolCase, BookOpenIcon } from '@lucide/svelte';
@@ -18,7 +18,7 @@
 		Building
 	} from '@lucide/svelte';
 
-	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card';
+	import { Card, CardContent, CardHeader, CardTitle } from '@nahu/admin-kit/components/ui/card/index.js';
 
 	import { IconBrandFacebook, IconBrandInstagram, IconBrandTiktok } from '@tabler/icons-svelte';
 	import Slider from '$lib/components/slider.svelte';

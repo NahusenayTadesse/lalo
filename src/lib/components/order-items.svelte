@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
-	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
-	import { Separator } from '$lib/components/ui/separator';
+	import { Popover, PopoverContent, PopoverTrigger } from '@nahu/admin-kit/components/ui/popover/index.js';
+	import { Badge } from '@nahu/admin-kit/components/ui/badge/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+	import { Separator } from '@nahu/admin-kit/components/ui/separator/index.js';
 	import { PackageIcon, ChevronDownIcon } from '@lucide/svelte';
 
 	type OrderItem = {

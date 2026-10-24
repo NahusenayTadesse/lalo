@@ -1,8 +1,8 @@
-import { renderComponent } from '$lib/components/ui/data-table/index.js';
-import DataTableLinks from '$lib/components/Table/data-table-links.svelte';
-import Statuses from '$lib/components/Table/statuses.svelte';
+import { renderComponent } from '@nahu/admin-kit/components/ui/data-table/index.js';
+import DataTableLinks from '@nahu/admin-kit/components/Table/data-table-links.svelte';
+import Statuses from '@nahu/admin-kit/components/Table/statuses.svelte';
 import DataTableActions from './data-table-actions.svelte';
-import DataTableSort from '$lib/components/Table/data-table-sort.svelte';
+import DataTableSort from '@nahu/admin-kit/components/Table/data-table-sort.svelte';
 
 export const columns = [
 	{

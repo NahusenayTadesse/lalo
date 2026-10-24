@@ -1,7 +1,7 @@
 <script>
-	import { Button } from '$lib/components/ui/button/index.js';
-	import * as NavigationMenu from '$lib/components/ui/navigation-menu/index.js';
-	import * as Menubar from '$lib/components/ui/menubar/index.js';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
+	import * as NavigationMenu from '@nahu/admin-kit/components/ui/navigation-menu/index.js';
+	import * as Menubar from '@nahu/admin-kit/components/ui/menubar/index.js';
 	import { selectItem } from '$lib/global.svelte';
 	import { ChevronDown } from '@lucide/svelte';
 	import { fly, slide } from 'svelte/transition';

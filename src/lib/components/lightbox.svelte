@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
 	import { fade, scale } from 'svelte/transition';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 	import { XIcon, ChevronLeftIcon, ChevronRightIcon } from '@lucide/svelte';
 
 	// Props
