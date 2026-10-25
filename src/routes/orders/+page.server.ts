@@ -273,7 +273,12 @@ async function resolveLineItems(
 	const productIds = [...new Set(selectedProducts.map((p) => Number(p.product)))];
 
 	const variants = await tx
-		.select({ productId: prices.productId, amount: prices.amount, price: prices.price })
+		.select({
+			id: prices.id,
+			productId: prices.productId,
+			amount: prices.amount,
+			price: prices.price
+		})
 		.from(prices)
 		.innerJoin(products, eq(prices.productId, products.id))
 		.where(and(inArray(prices.productId, productIds), eq(products.isActive, true)));
@@ -289,6 +294,7 @@ async function resolveLineItems(
 
 		return {
 			productId,
+			priceId: variant.id,
 			quantity: Number(product.quantity),
 			amount: variant.amount,
 			// `price` is a decimal column — mysql2 wants a string, and a JS number

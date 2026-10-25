@@ -50,6 +50,22 @@
 				placeholder="Enter Product Variation"
 				required
 			/>
+			<InputComp
+				{form}
+				{errors}
+				type="text"
+				name="sku"
+				label="SKU"
+				placeholder="Optional stock-keeping code"
+			/>
+			<InputComp
+				{form}
+				{errors}
+				type="number"
+				name="reorderLevel"
+				label="Reorder Level"
+				placeholder="Empty uses the product's level"
+			/>
 			<Button type="submit" size="lg">
 				{#if $delayed}
 					<LoadingBtn name="Saving Price" />

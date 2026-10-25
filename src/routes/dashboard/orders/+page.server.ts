@@ -18,11 +18,12 @@ import {
 	prices,
 	transactions,
 	paymentMethods,
-	productAdjustments,
 	placeNames,
 	freeDelivery
 } from '$lib/server/db/schema';
 import { resolveDeliveryFee } from '$lib/server/delivery';
+import { StockError, stockTarget, syncOrderStock } from '$lib/server/inventory';
+import { PICKUP_LABEL } from '$lib/delivery';
 import { idSchema } from '$lib/server/crud';
 import { addCustomer } from '$lib/ZodSchema';
 import { saveUploadedFile } from '$lib/server/upload';
@@ -112,10 +113,14 @@ export const load: PageServerLoad = async ({ url }) => {
 		})
 		.from(customers);
 
-	const placeList = await db
+	const deliveryAreas = await db
 		.select({ value: placeNames.name, name: placeNames.name, fee: placeNames.fee })
 		.from(placeNames)
 		.where(eq(placeNames.isActive, true));
+	// Pickup isn't a `place_names` row, so without this a pickup order opened in the
+	// edit dialog showed an empty "Delivery Area", and staff had no way to enter one.
+	// `resolveDeliveryFee` already treats this label as free.
+	const placeList = [{ value: PICKUP_LABEL, name: PICKUP_LABEL, fee: '0.00' }, ...deliveryAreas];
 
 	// Display only — the dialogs preview "delivery is free over X" with it. The
 	// fee that gets stored is always recomputed in the actions below.
@@ -366,13 +371,6 @@ export const actions: Actions = {
 					transactionId = tranId.id;
 				}
 
-				// Read before the items are replaced: reversing stock needs what was
-				// actually deducted, not what was just submitted.
-				const previousItems = await tx
-					.select({ productId: orderItems.productId, quantity: orderItems.quantity })
-					.from(orderItems)
-					.where(eq(orderItems.orderId, id));
-
 				await tx
 					.update(orders)
 					.set({
@@ -396,31 +394,23 @@ export const actions: Actions = {
 					}))
 				);
 
-				// Stock tracker. A delivered order holds its items out of stock, so the
-				// change is (what it held before) − (what it holds now). That one rule
-				// covers delivering, un-delivering, and editing the items of an order
-				// that stays delivered — the last used to move no stock at all, and
-				// un-delivering used to credit back the *new* quantities.
-				const stockChange = new Map<number, number>();
-				if (wasDelivered) {
-					for (const item of previousItems) {
-						if (item.productId === null) continue;
-						stockChange.set(item.productId, (stockChange.get(item.productId) ?? 0) + item.quantity);
-					}
-				}
-				if (isDelivered) {
-					for (const item of lineItems) {
-						stockChange.set(item.productId, (stockChange.get(item.productId) ?? 0) - item.quantity);
-					}
-				}
-
+				// A delivered order holds its items out of stock; any other status holds
+				// none. The order's batch allocations record what it holds now, so this
+				// one call covers delivering, un-delivering, and editing the items of an
+				// order that stays delivered.
 				const reason = becameDelivered
 					? `Order #${id} delivered`
 					: leftDelivered
 						? `Order #${id} un-delivered`
 						: `Order #${id} items changed`;
 
-				await applyStockChanges(tx, stockChange, reason, transactionId, locals?.user?.id);
+				await syncOrderStock(
+					tx,
+					id,
+					isDelivered ? stockTarget(lineItems) : new Map(),
+					{ reason, transactionId },
+					locals?.user?.id
+				);
 			});
 
 			if (becameDelivered) {
@@ -447,6 +437,9 @@ export const actions: Actions = {
 
 			return message(form, { type: 'success', text: 'Order Successfully Updated' });
 		} catch (err) {
+			if (err instanceof StockError) {
+				return message(form, { type: 'error', text: err.message }, { status: 400 });
+			}
 			console.error('Failed to update order:', err);
 			return message(form, { type: 'error', text: 'Could not update the order' }, { status: 500 });
 		}
@@ -472,26 +465,13 @@ export const actions: Actions = {
 
 				// A delivered order's items were taken out of stock; deleting the order
 				// has to put them back, or the units are lost from inventory for good.
-				if (order.status === 'delivered') {
-					const items = await tx
-						.select({ productId: orderItems.productId, quantity: orderItems.quantity })
-						.from(orderItems)
-						.where(eq(orderItems.orderId, id));
-
-					const stockChange = new Map<number, number>();
-					for (const item of items) {
-						if (item.productId === null) continue;
-						stockChange.set(item.productId, (stockChange.get(item.productId) ?? 0) + item.quantity);
-					}
-
-					await applyStockChanges(
-						tx,
-						stockChange,
-						`Order #${id} deleted`,
-						order.transactionId ?? undefined,
-						locals?.user?.id
-					);
-				}
+				await syncOrderStock(
+					tx,
+					id,
+					new Map(),
+					{ reason: `Order #${id} deleted`, transactionId: order.transactionId ?? undefined },
+					locals?.user?.id
+				);
 
 				// `orderItems.orderId` has no ON DELETE CASCADE, so items must go first.
 				await tx.delete(orderItems).where(eq(orderItems.orderId, id));
@@ -504,33 +484,6 @@ export const actions: Actions = {
 		}
 	}
 };
-
-type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
-/** Writes one ledger row and one stock update per product whose quantity changes. */
-async function applyStockChanges(
-	tx: Tx,
-	stockChange: Map<number, number>,
-	reason: string,
-	transactionId: number | undefined,
-	userId: string | undefined
-) {
-	for (const [productId, adjustment] of stockChange) {
-		if (adjustment === 0) continue;
-
-		await tx.insert(productAdjustments).values({
-			productsId: productId,
-			adjustment,
-			reason,
-			transactionId,
-			createdBy: userId
-		});
-		await tx
-			.update(products)
-			.set({ quantity: sql`quantity + ${adjustment}`, updatedBy: userId })
-			.where(eq(products.id, productId));
-	}
-}
 
 /**
  * Split "<price> <package label>" back into its parts. Only the *first* space
@@ -555,6 +508,7 @@ type SelectedProduct = {
 
 type StaffLineItem = {
 	productId: number;
+	priceId: number;
 	productName: string | null;
 	quantity: number;
 	amount: string;
@@ -580,6 +534,7 @@ async function resolveStaffLineItems(
 
 	const variants = await db
 		.select({
+			id: prices.id,
 			productId: prices.productId,
 			productName: products.name,
 			amount: prices.amount,
@@ -607,6 +562,7 @@ async function resolveStaffLineItems(
 
 		return {
 			productId,
+			priceId: variant.id,
 			productName: variant.productName,
 			quantity: Number(item.quantity),
 			amount: variant.amount,

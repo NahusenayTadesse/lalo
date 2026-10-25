@@ -28,15 +28,15 @@
 	import Delete from '$lib/forms/Delete.svelte';
 	import SingleView from '@nahu/admin-kit/components/SingleView.svelte';
 	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
-	import Adjustment from '$lib/forms/Adjustment.svelte';
-	import Damaged from '$lib/forms/Damaged.svelte';
+	import Adjustment from './adjustment.svelte';
+	import Damaged from './damaged.svelte';
 	import { Badge } from '@nahu/admin-kit/components/ui/badge/index.js';
+	import ExpiryCell from '@nahu/admin-kit/components/Table/expiry-cell.svelte';
 
-	const isLowStock = $derived(
-		data.product?.reorderLevel != null &&
-			data.product?.quantity != null &&
-			data.product.quantity <= data.product.reorderLevel
-	);
+	/** Days ahead that a batch counts as expiring soon. */
+	const EXPIRY_WARNING_DAYS = 7;
+
+	const lowStockVariants = $derived(data.priceList.filter((v) => v.lowStock));
 
 	function scrollToPrices() {
 		const element = document.getElementById('price-section-anchor');
@@ -49,9 +49,9 @@
 		{ name: 'Name', value: data.product?.name },
 		{ name: 'Category', value: data.product?.category },
 		{ name: 'Price', value: data.product?.price },
-		{ name: 'Available Quantity', value: data.product?.quantity },
+		{ name: 'Total Stock (all variants)', value: data.product?.quantity },
 		{ name: 'Product Description', value: data.product?.description },
-		{ name: 'Reorder Notification Quantity', value: data.product?.reorderLevel },
+		{ name: 'Default Reorder Level', value: data.product?.reorderLevel },
 		{ name: 'Product Supplier', value: data?.product?.supplier },
 		{ name: 'Added On', value: data.product?.createdAt },
 		{ name: 'Added By', value: data.product?.createdBy },
@@ -135,6 +135,32 @@
 		},
 
 		{
+			accessorKey: 'sku',
+			header: 'SKU',
+			cell: ({ row }) => row.original.sku ?? '—'
+		},
+		{
+			accessorKey: 'quantity',
+			header: ({ column }) =>
+				renderComponent(DataTableSort, {
+					name: 'In Stock',
+					onclick: column.getToggleSortingHandler()
+				}),
+			sortable: true,
+			cell: ({ row }) =>
+				row.original.lowStock ? `${row.original.quantity} (low)` : row.original.quantity
+		},
+		{
+			accessorKey: 'effectiveReorder',
+			header: 'Reorder At',
+			cell: ({ row }) =>
+				row.original.reorderLevel != null
+					? row.original.reorderLevel
+					: row.original.effectiveReorder != null
+						? `${row.original.effectiveReorder} (product default)`
+						: '—'
+		},
+		{
 			accessorKey: 'Price',
 			header: ({ column }) =>
 				renderComponent(DataTableSort, {
@@ -148,6 +174,8 @@
 					id: row.original.id,
 					price: row.original.price,
 					amount: row.original.amount,
+					sku: row.original.sku,
+					reorderLevel: row.original.reorderLevel,
 					data: data?.priceEdit
 				});
 			}
@@ -172,6 +200,51 @@
 		}
 	];
 
+	const batchColumns = [
+		{ accessorKey: 'batchNumber', header: 'Batch' },
+		{ accessorKey: 'variant', header: 'Variant' },
+		{
+			accessorKey: 'quantityRemaining',
+			header: ({ column }) =>
+				renderComponent(DataTableSort, {
+					name: 'Remaining',
+					onclick: column.getToggleSortingHandler()
+				}),
+			sortable: true,
+			cell: ({ row }) => `${row.original.quantityRemaining} / ${row.original.quantityReceived}`
+		},
+		{
+			accessorKey: 'expiresAt',
+			header: ({ column }) =>
+				renderComponent(DataTableSort, {
+					name: 'Expires',
+					onclick: column.getToggleSortingHandler()
+				}),
+			sortable: true,
+			cell: ({ row }) =>
+				renderComponent(ExpiryCell, {
+					expiresOn: row.original.expiresAt,
+					warningDays: EXPIRY_WARNING_DAYS
+				})
+		},
+		{
+			accessorKey: 'manufacturedAt',
+			header: 'Manufactured',
+			cell: ({ row }) => row.original.manufacturedAt ?? '—'
+		},
+		{ accessorKey: 'receivedAt', header: 'Received' },
+		{
+			accessorKey: 'supplier',
+			header: 'Supplier',
+			cell: ({ row }) => row.original.supplier ?? '—'
+		},
+		{
+			accessorKey: 'costPerUnit',
+			header: 'Cost / Unit',
+			cell: ({ row }) => row.original.costPerUnit ?? '—'
+		}
+	];
+
 	let images = $derived(data?.images);
 </script>
 
@@ -180,12 +253,12 @@
 </svelte:head>
 
 <SingleView title={data?.product?.name} photo={String(data?.product?.image)} class="w-full!">
-	{#if isLowStock}
+	{#each lowStockVariants as variant (variant.id)}
 		<Badge variant="secondary" class="ml-4 gap-1 bg-amber-500 text-white">
-			<TriangleAlert class="h-3.5 w-3.5" /> Low stock: {data.product?.quantity} left (reorder at {data
-				.product?.reorderLevel})
+			<TriangleAlert class="h-3.5 w-3.5" /> Low stock: {variant.amount} has {variant.quantity} left (reorder
+			at {variant.effectiveReorder})
 		</Badge>
-	{/if}
+	{/each}
 	<div class="mt-4 flex w-full flex-row flex-wrap items-start justify-start gap-2 pl-4">
 		<Button onclick={() => (editForm = !editForm)}>
 			{#if !editForm}
@@ -202,12 +275,19 @@
 				data={data.adjustForm}
 				name={data.product?.name}
 				supplierList={data.supplierList}
+				variants={data.priceList}
+				batches={data.batches}
 			/>
 		{/key}
 		<Button href="/dashboard/products/single/{page.params.id}/ranges">
 			<History /> See Change History
 		</Button>
-		<Damaged data={data.damagedForm} name={data.product?.name} />
+		<Damaged
+			data={data.damagedForm}
+			name={data.product?.name}
+			variants={data.priceList}
+			batches={data.batches}
+		/>
 		<Button href="/dashboard/products/single/{page.params.id}/damaged">
 			<History /> See Damaged History
 		</Button>
@@ -284,7 +364,10 @@
 					label="Product Category"
 					placeholder="Enter Product Name"
 					required
-					items={data?.allCategories?.map((c) => ({ ...c, description: c.description ?? undefined }))}
+					items={data?.allCategories?.map((c) => ({
+						...c,
+						description: c.description ?? undefined
+					}))}
 				/>
 
 				<InputComp
@@ -340,7 +423,7 @@
 <div id="price-section-anchor" class="mx-auto my-12 px-4 pt-12 sm:px-6 lg:px-4">
 	{#key data?.priceList}
 		<div class="mb-6 flex flex-col gap-4 border-b border-gray-100 pb-4">
-			<h1 class="text-3xl font-bold tracking-tight sm:text-4xl">Price List</h1>
+			<h1 class="text-3xl font-bold tracking-tight sm:text-4xl">Variants &amp; Stock</h1>
 			<div class="w-sm"><AddPrice data={data?.priceAdd} /></div>
 			{#if data.priceList.length === 0}
 				<p class="animate-pulse text-destructive">No prices available for this product.</p>
@@ -355,6 +438,25 @@
 			{/if}
 		</div>
 	{/key}
+</div>
+
+<div class="mx-auto my-12 px-4 sm:px-6 lg:px-4">
+	<div class="mb-6 flex flex-col gap-4 border-b border-gray-100 pb-4">
+		<h1 class="text-3xl font-bold tracking-tight sm:text-4xl">Stock Batches</h1>
+		{#if data.batches.length === 0}
+			<p class="text-muted-foreground">
+				No stock received yet. Use “Change Stock” to receive a batch for a variant.
+			</p>
+		{:else}
+			<DataTable
+				columns={batchColumns}
+				data={data.batches}
+				class="w-6xl!"
+				fileName="{data?.product?.name} - Batches"
+				search={true}
+			/>
+		{/if}
+	</div>
 </div>
 
 <div class="mx-auto my-12 px-4 sm:px-6 lg:px-4">

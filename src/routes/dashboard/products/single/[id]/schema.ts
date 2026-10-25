@@ -42,34 +42,63 @@ export const edit = z.object({
 		.optional()
 });
 
-export const adjust = z.object({
-	intent: z.enum(['add', 'remove'], {
-		message: 'Please select an adjustment type'
-	}),
+/** `YYYY-MM-DD`, or empty for "not given". */
+const optionalDate = z
+	.string()
+	.regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a full date')
+	.optional()
+	.or(z.literal(''));
 
-	costPerItem: z.coerce
-		.number('Cost per unit must be a number')
-		.min(0, 'Cost per unit must be greater than 0'),
+const variantId = z.coerce.number('Pick a variant').int().positive('Pick a variant');
 
-	employeeResponsible: z.coerce.string('Employee is required'),
-	// Who the stock came from, for an `add`. Recorded on the adjustment so the change
-	// history's supplier filter has something to filter on.
-	supplier: z.coerce.number().int().nonnegative().optional(),
-	quantity: z.coerce
-		.number('Quantity is required')
-		.int()
-		.positive('Quantity must be greater than 0'),
+/**
+ * Receiving (`add`) books a new batch; removing is a correction, taken from one
+ * batch or, with none picked, earliest-expiry-first.
+ */
+export const adjust = z
+	.object({
+		intent: z.enum(['add', 'remove'], {
+			message: 'Please select an adjustment type'
+		}),
+		variantId,
+		quantity: z.coerce
+			.number('Quantity is required')
+			.int()
+			.positive('Quantity must be greater than 0'),
 
-	reason: z.string().max(255).optional(),
-	reciept: z
-		.instanceof(File)
-		.refine((file) => file.size <= MAX_FILE_SIZE, `Max file size is 10MB.`)
-		.refine((file) => ACCEPTED_FILE_TYPES.includes(file.type), 'Invalid file type.')
-		.optional()
-});
-export type AdjustForm = z.infer<typeof adjust>;
+		// add: the delivery's batch
+		batchNumber: z.string().trim().max(64, 'Batch number is too long').optional(),
+		manufacturedAt: optionalDate,
+		expiresAt: optionalDate,
+		costPerItem: z.coerce
+			.number('Cost per unit must be a number')
+			.min(0, 'Cost per unit cannot be negative')
+			.optional(),
+		// Who the stock came from. Recorded on the batch and the ledger row, so the
+		// change history's supplier filter has something to filter on.
+		supplier: z.coerce.number().int().nonnegative().optional(),
+		reciept: z
+			.instanceof(File)
+			.refine((file) => file.size <= MAX_FILE_SIZE, `Max file size is 10MB.`)
+			.refine((file) => ACCEPTED_FILE_TYPES.includes(file.type), 'Invalid file type.')
+			.optional(),
+
+		// remove: 0 / absent means earliest-expiry-first
+		batchId: z.coerce.number().int().nonnegative().optional(),
+
+		employeeResponsible: z.coerce.string('Employee is required'),
+		reason: z.string().max(255).optional()
+	})
+	.refine((d) => !d.expiresAt || !d.manufacturedAt || d.expiresAt >= d.manufacturedAt, {
+		message: 'Expiry date is before the manufacture date',
+		path: ['expiresAt']
+	});
+export type AdjustForm = typeof adjust;
 
 export const damaged = z.object({
+	variantId,
+	// 0 / absent means earliest-expiry-first
+	batchId: z.coerce.number().int().nonnegative().optional(),
 	damagedBy: z.coerce.string('Employee is required'),
 	quantity: z.coerce
 		.number('Quantity is required')
@@ -79,7 +108,7 @@ export const damaged = z.object({
 	reason: z.string().max(255).optional()
 });
 
-export type DamagedForm = z.infer<typeof damaged>;
+export type DamagedForm = typeof damaged;
 
 export const editGallery = z.object({
 	existing: z.string(),
@@ -93,13 +122,25 @@ export const editGallery = z.object({
 
 export type EditGallery = z.infer<typeof editGallery>;
 
+const variantFields = {
+	price: z.coerce.number('Price must be a number').positive('Price must be greater than 0'),
+	amount: z.string('Product Variation is required').trim().min(1, 'Product Variation is required'),
+	sku: z.string().trim().max(64, 'SKU is too long').optional(),
+	// Empty means "use the product's reorder level".
+	reorderLevel: z.coerce
+		.number()
+		.int('Reorder level can only be a whole number')
+		.nonnegative('Reorder level cannot be negative')
+		.optional()
+		.or(z.literal(''))
+};
+
 export const editPrice = z.object({
 	id: z.number('Price Not found'),
-	price: z.coerce.number('Price must be a number').positive('Price must be greater than 0'),
-	amount: z.string('Product Variation is required').trim().min(1, 'Product Variation is required')
+	...variantFields
 });
 
-export type EditPrice = z.infer<typeof editPrice>;
+export type EditPrice = typeof editPrice;
 
 /** Same fields as `editPrice`, without its rules — a bad existing row must still be deletable. */
 export const deletePrice = z.object({
@@ -108,9 +149,6 @@ export const deletePrice = z.object({
 	amount: z.string()
 });
 
-export const addPrice = z.object({
-	price: z.coerce.number('Price must be a number').positive('Price must be greater than 0'),
-	amount: z.string('Product Variation is required').trim().min(1, 'Product Variation is required')
-});
+export const addPrice = z.object(variantFields);
 
-export type AddPrice = z.infer<typeof addPrice>;
+export type AddPrice = typeof addPrice;

@@ -60,8 +60,6 @@ export const actions: Actions = {
 			category,
 			description,
 			descriptionAm,
-			quantity,
-
 			supplier,
 			reorderLevel,
 			image,
@@ -89,7 +87,6 @@ export const actions: Actions = {
 						categoryId: category,
 						description,
 						descriptionAm: translation(descriptionAm),
-						quantity,
 						supplierId: supplier || null,
 						reorderLevel,
 						featuredImage,

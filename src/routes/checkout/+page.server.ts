@@ -355,6 +355,7 @@ async function resolveLineItems(
 		// product's id with another product's variant cannot mislabel the order.
 		return {
 			productId: variant.productId as number,
+			priceId: variant.id,
 			productName: variant.productName,
 			quantity: Number(item.quantity),
 			amount: variant.amount,

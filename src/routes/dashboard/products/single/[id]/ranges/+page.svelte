@@ -8,13 +8,18 @@
 	import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
 	import QueryBuilder from '$lib/QueryBuilder.svelte';
 	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
-	import { Select, SelectContent, SelectItem, SelectTrigger } from '@nahu/admin-kit/components/ui/select/index.js';
+	import {
+		Select,
+		SelectContent,
+		SelectItem,
+		SelectTrigger
+	} from '@nahu/admin-kit/components/ui/select/index.js';
 	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 
 	import { Frown, ArrowLeft } from '@lucide/svelte';
 	import type { CalendarDate } from '@internationalized/date';
 
-	type RangeFilters = { supplier: string; type: string };
+	type RangeFilters = { supplier: string; type: string; variant: string };
 
 	function updateFilters(params: Record<string, string | undefined>) {
 		const url = new URL(page.url);
@@ -38,7 +43,8 @@
 			start: payload.dateRange?.start.toString(),
 			end: payload.dateRange?.end.toString(),
 			supplier: payload.customFilters.supplier || undefined,
-			type: payload.customFilters.type || undefined
+			type: payload.customFilters.type || undefined,
+			variant: payload.customFilters.variant || undefined
 		});
 	}
 </script>
@@ -60,12 +66,35 @@
 		initialSearch={data.search}
 		initialStart={data.start}
 		initialEnd={data.end}
-		initialCustomFilters={{ supplier: data.supplierFilter, type: data.typeFilter }}
-		searchPlaceholder="Reason..."
+		initialCustomFilters={{
+			supplier: data.supplierFilter,
+			type: data.typeFilter,
+			variant: data.variantFilter
+		}}
+		searchPlaceholder="Reason or batch..."
 		totalResults={data.allTransactions.length}
 		onQueryChange={handleQueryChange}
 	>
 		{#snippet children(filters, update)}
+			<div class="flex flex-col gap-2">
+				<Label class="text-sm font-medium text-foreground">Variant</Label>
+				<Select
+					type="single"
+					value={String(filters.variant ?? '')}
+					onValueChange={(v) => update('variant', v)}
+				>
+					<SelectTrigger class="w-full">
+						{data.variantOptions.find((v) => String(v.id) === filters.variant)?.name ?? 'Any'}
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="">Any</SelectItem>
+						{#each data.variantOptions as variant (variant.id)}
+							<SelectItem value={String(variant.id)}>{variant.name}</SelectItem>
+						{/each}
+					</SelectContent>
+				</Select>
+			</div>
+
 			<div class="flex flex-col gap-2">
 				<Label class="text-sm font-medium text-foreground">Supplier</Label>
 				<Select

@@ -8,7 +8,12 @@
 	import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
 	import QueryBuilder from '$lib/QueryBuilder.svelte';
 	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
-	import { Select, SelectContent, SelectItem, SelectTrigger } from '@nahu/admin-kit/components/ui/select/index.js';
+	import {
+		Select,
+		SelectContent,
+		SelectItem,
+		SelectTrigger
+	} from '@nahu/admin-kit/components/ui/select/index.js';
 	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 
 	import { Frown, ArrowLeft } from '@lucide/svelte';

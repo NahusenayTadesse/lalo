@@ -6,6 +6,9 @@
 	interface Item {
 		name: string;
 		quantity: number;
+		/** Replaces the "Qty: n" line. */
+		detail?: string;
+		href?: string;
 	}
 
 	interface Props {
@@ -13,9 +16,18 @@
 		description: string;
 		items: Item[];
 		icon: any;
+		badge?: string;
+		emptyText?: string;
 	}
 
-	const { title, description, items, icon: Icon }: Props = $props();
+	const {
+		title,
+		description,
+		items,
+		icon: Icon,
+		badge = 'Low Stock',
+		emptyText = 'No items need reordering'
+	}: Props = $props();
 	const isEmpty = $derived(items.length === 0);
 </script>
 
@@ -38,17 +50,21 @@
 					<div class="rounded-full bg-muted p-3 mb-3">
 						<AlertCircleIcon class="size-5 text-muted-foreground" />
 					</div>
-					<p class="text-sm text-muted-foreground">No items need reordering</p>
+					<p class="text-sm text-muted-foreground">{emptyText}</p>
 				</div>
 			{:else}
 				<div class="flex flex-col gap-2 max-h-64 overflow-y-auto">
 					{#each items as item, index (index)}
 						<div class="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors duration-200 group" style="animation-delay: {(index + 1) * 50}ms;">
 							<div class="flex-1 min-w-0">
-								<p class="text-sm font-medium truncate text-foreground">{item.name}</p>
-								<p class="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+								{#if item.href}
+									<a href={item.href} class="block text-sm font-medium truncate text-foreground hover:underline">{item.name}</a>
+								{:else}
+									<p class="text-sm font-medium truncate text-foreground">{item.name}</p>
+								{/if}
+								<p class="text-xs text-muted-foreground">{item.detail ?? `Qty: ${item.quantity}`}</p>
 							</div>
-							<Badge variant="outline" class="ml-2 shrink-0 bg-destructive/10 text-destructive border-destructive/20">Low Stock</Badge>
+							<Badge variant="outline" class="ml-2 shrink-0 bg-destructive/10 text-destructive border-destructive/20">{badge}</Badge>
 						</div>
 					{/each}
 				</div>

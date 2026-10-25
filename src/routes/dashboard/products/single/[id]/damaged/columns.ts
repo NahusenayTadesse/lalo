@@ -33,6 +33,18 @@ export const columns = [
 		sortable: true
 	},
 	{
+		accessorKey: 'variant',
+		header: 'Variant',
+		cell: ({ row }) => row.original.variant ?? 'Whole product'
+	},
+
+	{
+		accessorKey: 'batchNumber',
+		header: 'Batch',
+		cell: ({ row }) => row.original.batchNumber ?? '—'
+	},
+
+	{
 		// `damagedBy` is a freetext name entered on the damage form, not a user
 		// account — there's no id to link it to, so it's rendered as plain text.
 		accessorKey: 'damagedBy',

@@ -8,16 +8,16 @@ import { db } from '$lib/server/db';
 import {
 	products,
 	productImages,
-	productAdjustments,
 	damagedProducts,
 	prices as priceList,
 	transactions
 } from '$lib/server/db/schema';
-import { eq, and, sql, isNotNull, desc } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
+import { StockError, receiveStock, removeStock, syncProductTotal } from '$lib/server/inventory';
 import { fail, message } from 'sveltekit-superforms';
 import { setFlash } from 'sveltekit-flash-message/server';
 
-import { saveUploadedFile } from '$lib/server/upload';
+import { deleteUploadedFile, saveUploadedFile } from '$lib/server/upload';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
@@ -69,12 +69,7 @@ export const actions: Actions = {
 		}
 	},
 	adjust: async ({ request, params, locals }) => {
-		const { id } = params;
 		const form = await superValidate(request, zod4(adjust));
-
-		if (!id) {
-			return message(form, { type: 'error', text: 'Product ID not provided' }, { status: 400 });
-		}
 
 		if (!form.valid) {
 			return message(
@@ -84,40 +79,60 @@ export const actions: Actions = {
 			);
 		}
 
-		const { intent, quantity, reason, employeeResponsible, costPerItem, reciept, supplier } =
-			form.data;
-		const productId = Number(id);
-		const adjustment = intent === 'add' ? quantity : -quantity;
-		// `productAdjustments` has no columns for these yet, so they're folded into `reason`
-		// rather than silently discarded.
-		const fullReason = [reason, `Employee: ${employeeResponsible}`, `Cost/unit: ${costPerItem}`]
-			.filter(Boolean)
-			.join(' — ');
+		const {
+			intent,
+			variantId,
+			quantity,
+			reason,
+			employeeResponsible,
+			costPerItem,
+			reciept,
+			supplier,
+			batchNumber,
+			manufacturedAt,
+			expiresAt,
+			batchId
+		} = form.data;
+
+		if (!(await variantBelongsTo(variantId, Number(params.id)))) {
+			return message(
+				form,
+				{ type: 'error', text: 'That variant is not on this product' },
+				{ status: 400 }
+			);
+		}
+
+		const fullReason = [reason, `Employee: ${employeeResponsible}`].filter(Boolean).join(' — ');
+		// Written before the transaction so a slow upload doesn't hold a connection open.
+		const recieptLink =
+			intent === 'add' && reciept instanceof File && reciept.size > 0
+				? await saveUploadedFile(reciept)
+				: undefined;
 
 		try {
-			await db.transaction(async (tx) => {
-				if (adjustment < 0) {
-					const [current] = await tx
-						.select({ quantity: products.quantity })
-						.from(products)
-						.where(eq(products.id, productId));
-
-					if (!current || current.quantity + adjustment < 0) {
-						throw new Error(`Cannot remove ${quantity} — only ${current?.quantity ?? 0} in stock.`);
-					}
+			const text = await db.transaction(async (tx) => {
+				if (intent === 'remove') {
+					await removeStock(
+						tx,
+						{
+							variantId,
+							quantity,
+							batchId: batchId || null,
+							type: 'correction',
+							reason: fullReason
+						},
+						locals.user?.id
+					);
+					return `Removed ${quantity} from stock`;
 				}
 
 				let transactionId: number | undefined;
-
-				if (reciept) {
-					const recieptLink = await saveUploadedFile(reciept);
-
+				if (recieptLink) {
 					const [tranId] = await tx
 						.insert(transactions)
 						.values({
-							// What the stock cost. This used to store the unit count in the
-							// money column.
-							amount: (costPerItem * quantity).toFixed(2),
+							// What the stock cost.
+							amount: ((costPerItem ?? 0) * quantity).toFixed(2),
 							recieptLink,
 							createdBy: locals.user?.id
 						})
@@ -125,29 +140,34 @@ export const actions: Actions = {
 					transactionId = tranId.id;
 				}
 
-				await tx.insert(productAdjustments).values({
-					productsId: productId,
-					supplierId: intent === 'add' && supplier ? supplier : undefined,
-					adjustment,
-					reason: fullReason,
-					transactionId,
-					createdBy: locals.user?.id
-				});
-
-				await tx
-					.update(products)
-					.set({
-						quantity: sql`quantity + ${adjustment}`,
-						updatedBy: locals.user?.id
-					})
-					.where(eq(products.id, productId));
+				const batch = await receiveStock(
+					tx,
+					{
+						variantId,
+						quantity,
+						batchNumber,
+						manufacturedAt,
+						expiresAt,
+						costPerUnit: costPerItem ?? null,
+						supplierId: supplier || null,
+						transactionId,
+						reason: fullReason || undefined
+					},
+					locals.user?.id
+				);
+				return `Received ${quantity} as batch ${batch.batchNumber}`;
 			});
 
-			return message(form, { type: 'success', text: 'Product Updated Successfully' });
+			return message(form, { type: 'success', text });
 		} catch (err) {
+			if (recieptLink) await deleteUploadedFile(recieptLink);
+			if (!(err instanceof StockError)) console.error('Stock adjustment failed:', err);
 			return message(
 				form,
-				{ type: 'error', text: (err as Error)?.message ?? 'Unexpected error' },
+				{
+					type: 'error',
+					text: err instanceof StockError ? err.message : 'Could not change the stock'
+				},
 				{ status: 400 }
 			);
 		}
@@ -186,48 +206,55 @@ export const actions: Actions = {
 			);
 		}
 
-		const { quantity, damagedBy, reason } = form.data;
+		const { variantId, batchId, quantity, damagedBy, reason } = form.data;
 		const productId = Number(id);
+
+		if (!(await variantBelongsTo(variantId, productId))) {
+			return message(
+				form,
+				{ type: 'error', text: 'That variant is not on this product' },
+				{ status: 400 }
+			);
+		}
 
 		try {
 			await db.transaction(async (tx) => {
-				const [current] = await tx
-					.select({ quantity: products.quantity })
-					.from(products)
-					.where(eq(products.id, productId));
+				const draws = await removeStock(
+					tx,
+					{
+						variantId,
+						quantity,
+						batchId: batchId || null,
+						type: 'damage',
+						reason: ['Damaged', reason, `By: ${damagedBy}`].filter(Boolean).join(' — ')
+					},
+					locals.user?.id
+				);
 
-				if (!current || current.quantity - quantity < 0) {
-					throw new Error(
-						`Cannot mark ${quantity} damaged — only ${current?.quantity ?? 0} in stock.`
-					);
-				}
-
-				// 1. Update damaged products record
-				await tx.insert(damagedProducts).values({
-					productId,
-					quantity,
-					createdBy: locals.user?.id,
-					damagedBy,
-					// NOT NULL column, optional field: no reason used to fail the insert.
-					reason: reason ?? ''
-				});
-
-				// 2. Decrement the main product inventory
-				await tx
-					.update(products)
-					.set({
-						quantity: sql`quantity - ${quantity}`,
-						updatedBy: locals.user?.id
-					})
-					.where(eq(products.id, productId));
+				// One record per batch the units came out of.
+				await tx.insert(damagedProducts).values(
+					draws.map((d) => ({
+						productId,
+						variantId,
+						batchId: d.batchId,
+						quantity: d.quantity,
+						createdBy: locals.user?.id,
+						damagedBy,
+						// NOT NULL column, optional field: no reason used to fail the insert.
+						reason: reason ?? ''
+					}))
+				);
 			});
 
 			return message(form, { type: 'success', text: 'Damaged supply added Successfully!' });
 		} catch (err) {
-			console.error('Error marking adding damaged supply:', err);
+			if (!(err instanceof StockError)) console.error('Error marking adding damaged supply:', err);
 			return message(
 				form,
-				{ type: 'error', text: (err as Error)?.message ?? 'Unexpected error' },
+				{
+					type: 'error',
+					text: err instanceof StockError ? err.message : 'Could not record the damage'
+				},
 				{ status: 400 }
 			);
 		}
@@ -289,29 +316,34 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: `Unexpected Error: ${err?.message}` });
 		}
 	},
-	editPrice: async ({ request }) => {
+	editPrice: async ({ request, params }) => {
 		const form = await superValidate(request, zod4(editPrice));
 
 		if (!form.valid) {
 			return message(form, { type: 'error', text: 'Invalid form data' });
 		}
 
-		const { id, price, amount } = form.data;
+		const { id, price, amount, sku, reorderLevel } = form.data;
+
+		if (sku && (await skuTaken(sku, id))) {
+			return message(form, { type: 'error', text: `SKU ${sku} is already used` }, { status: 400 });
+		}
 
 		try {
 			await db
 				.update(priceList)
 				.set({
-					id,
 					price: String(price),
-					amount
+					amount,
+					sku: sku || null,
+					reorderLevel: reorderLevel === '' || reorderLevel === undefined ? null : reorderLevel
 				})
-				.where(eq(priceList.id, id));
+				.where(and(eq(priceList.id, id), eq(priceList.productId, Number(params.id))));
 
 			return message(form, { type: 'success', text: 'Product Price updated Successfully!' });
 		} catch (err) {
 			console.error('Error editing product price:', err);
-			return message(form, { type: 'error', text: `Unexpected Error: ${err?.message}` });
+			return message(form, { type: 'error', text: 'Could not update the variant' });
 		}
 	},
 	addPrice: async ({ request, params }) => {
@@ -322,22 +354,28 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: 'Invalid form data' });
 		}
 
-		const { price, amount } = form.data;
+		const { price, amount, sku, reorderLevel } = form.data;
+
+		if (sku && (await skuTaken(sku))) {
+			return message(form, { type: 'error', text: `SKU ${sku} is already used` }, { status: 400 });
+		}
 
 		try {
 			await db.insert(priceList).values({
 				productId: Number(id),
 				price: String(price),
-				amount
+				amount,
+				sku: sku || null,
+				reorderLevel: reorderLevel === '' || reorderLevel === undefined ? null : reorderLevel
 			});
 
 			return message(form, { type: 'success', text: 'Product Price added Successfully!' });
 		} catch (err) {
 			console.error('Error adding product price:', err);
-			return message(form, { type: 'error', text: `Unexpected Error: ${err?.message}` });
+			return message(form, { type: 'error', text: 'Could not add the variant' });
 		}
 	},
-	deletePrice: async ({ request }) => {
+	deletePrice: async ({ request, params }) => {
 		const form = await superValidate(request, zod4(deletePrice));
 
 		if (!form.valid) {
@@ -345,9 +383,32 @@ export const actions: Actions = {
 		}
 
 		const { id, price, amount } = form.data;
+		const productId = Number(params.id);
 
 		try {
-			await db.delete(priceList).where(eq(priceList.id, id));
+			const [variant] = await db
+				.select({ quantity: priceList.quantity })
+				.from(priceList)
+				.where(and(eq(priceList.id, id), eq(priceList.productId, productId)));
+
+			// Deleting it would take its batches, and the stock in them, with it.
+			if (variant && variant.quantity > 0) {
+				return message(
+					form,
+					{
+						type: 'error',
+						text: `${amount} still has ${variant.quantity} in stock. Remove or sell it first.`
+					},
+					{ status: 400 }
+				);
+			}
+
+			await db.transaction(async (tx) => {
+				await tx
+					.delete(priceList)
+					.where(and(eq(priceList.id, id), eq(priceList.productId, productId)));
+				await syncProductTotal(tx, productId);
+			});
 
 			return message(form, {
 				type: 'success',
@@ -355,10 +416,26 @@ export const actions: Actions = {
 			});
 		} catch (err) {
 			console.error('Error deleting Variant price:', err);
-			return message(form, { type: 'error', text: `Unexpected Error: ${err?.message}` });
+			return message(form, { type: 'error', text: 'Could not delete the variant' });
 		}
 	}
 };
+
+async function variantBelongsTo(variantId: number, productId: number) {
+	const [row] = await db
+		.select({ id: priceList.id })
+		.from(priceList)
+		.where(and(eq(priceList.id, variantId), eq(priceList.productId, productId)));
+	return Boolean(row);
+}
+
+async function skuTaken(sku: string, exceptId?: number) {
+	const [row] = await db
+		.select({ id: priceList.id })
+		.from(priceList)
+		.where(and(eq(priceList.sku, sku), exceptId ? ne(priceList.id, exceptId) : undefined));
+	return Boolean(row);
+}
 
 const uploadGallery = async (gallery: File[] | undefined) => {
 	try {

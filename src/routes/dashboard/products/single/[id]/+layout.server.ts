@@ -11,9 +11,10 @@ import {
 	orderItems,
 	orders,
 	prices,
-	productImages
+	productImages,
+	stockBatches
 } from '$lib/server/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, desc } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
@@ -101,10 +102,52 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 		.select({
 			id: prices.id,
 			amount: prices.amount,
-			price: sql<number>`CAST(${prices.price} AS DOUBLE)`
+			price: sql<number>`CAST(${prices.price} AS DOUBLE)`,
+			sku: prices.sku,
+			quantity: prices.quantity,
+			reorderLevel: prices.reorderLevel
 		})
 		.from(prices)
-		.where(eq(prices.productId, Number(id)));
+		.where(eq(prices.productId, Number(id)))
+		.then((rows) =>
+			rows.map((v) => {
+				// A variant without its own level uses the product's.
+				const effectiveReorder = v.reorderLevel ?? product.reorderLevel ?? null;
+				return {
+					...v,
+					effectiveReorder,
+					lowStock:
+						effectiveReorder != null && effectiveReorder > 0 && v.quantity <= effectiveReorder
+				};
+			})
+		);
+
+	// Every batch, emptied ones included: they are the product's receiving history.
+	const batches = await db
+		.select({
+			id: stockBatches.id,
+			variantId: stockBatches.variantId,
+			variant: prices.amount,
+			batchNumber: stockBatches.batchNumber,
+			quantityReceived: stockBatches.quantityReceived,
+			quantityRemaining: stockBatches.quantityRemaining,
+			costPerUnit: stockBatches.costPerUnit,
+			supplier: suppliers.name,
+			manufacturedAt: stockBatches.manufacturedAt,
+			expiresAt: stockBatches.expiresAt,
+			receivedAt: sql<string>`DATE_FORMAT(${stockBatches.receivedAt}, '%Y-%m-%d')`,
+			notes: stockBatches.notes
+		})
+		.from(stockBatches)
+		.innerJoin(prices, eq(prices.id, stockBatches.variantId))
+		.leftJoin(suppliers, eq(suppliers.id, stockBatches.supplierId))
+		.where(eq(prices.productId, Number(id)))
+		.orderBy(
+			desc(sql`${stockBatches.quantityRemaining} > 0`),
+			sql`${stockBatches.expiresAt} IS NULL`,
+			stockBatches.expiresAt,
+			desc(stockBatches.receivedAt)
+		);
 
 	const categories = await db
 		.select({
@@ -125,6 +168,7 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 		allCategories,
 		images,
 		priceList,
+		batches,
 		priceEdit,
 		priceAdd
 	};

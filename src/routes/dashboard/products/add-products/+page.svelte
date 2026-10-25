@@ -112,16 +112,6 @@
 		<InputComp
 			{form}
 			{errors}
-			type="number"
-			name="quantity"
-			label="Quantity"
-			placeholder="Enter the number of items the product currently has"
-			required
-		/>
-
-		<InputComp
-			{form}
-			{errors}
 			type="select"
 			name="supplier"
 			label="Product Supplier"

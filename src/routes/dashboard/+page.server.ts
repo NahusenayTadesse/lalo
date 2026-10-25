@@ -1,7 +1,17 @@
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
-import { products, orders, orderItems, transactions } from '$lib/server/db/schema';
-import { lte, eq, sql, and } from 'drizzle-orm';
+import {
+	products,
+	orders,
+	orderItems,
+	transactions,
+	prices,
+	stockBatches
+} from '$lib/server/db/schema';
+import { eq, sql, and, gt, asc, isNotNull } from 'drizzle-orm';
+
+/** How far ahead a batch's expiry shows on the dashboard. */
+const EXPIRY_WINDOW_DAYS = 7;
 
 /**
  * "Delivered today", in Addis Ababa time.
@@ -17,13 +27,48 @@ const deliveredToday = and(
 );
 
 export const load: PageServerLoad = async () => {
+	// Per variant: one package selling out is a reorder even while another has
+	// plenty. A variant with no level of its own uses the product's; 0 means
+	// "don't alert".
+	const reorderLevel = sql`COALESCE(${prices.reorderLevel}, ${products.reorderLevel}, 0)`;
 	const reorderProducts = await db
 		.select({
-			name: products.name,
-			quantity: products.quantity
+			name: sql<string>`CONCAT(${products.name}, ' — ', ${prices.amount})`,
+			quantity: prices.quantity,
+			detail: sql<string>`CONCAT('Qty: ', ${prices.quantity}, ' (reorder at ', ${reorderLevel}, ')')`,
+			href: sql<string>`CONCAT('/dashboard/products/single/', ${products.id})`
 		})
-		.from(products)
-		.where(and(eq(products.isActive, true), lte(products.quantity, products.reorderLevel)));
+		.from(prices)
+		.innerJoin(products, eq(products.id, prices.productId))
+		.where(
+			and(
+				eq(products.isActive, true),
+				sql`${reorderLevel} > 0`,
+				sql`${prices.quantity} <= ${reorderLevel}`
+			)
+		)
+		.orderBy(asc(prices.quantity));
+
+	// Batches still holding stock that expire within the window, or already have.
+	const expiringBatches = await db
+		.select({
+			name: sql<string>`CONCAT(${products.name}, ' — ', ${prices.amount}, ' · ', ${stockBatches.batchNumber})`,
+			quantity: stockBatches.quantityRemaining,
+			detail: sql<string>`CONCAT(${stockBatches.quantityRemaining}, ' left · expires ', DATE_FORMAT(${stockBatches.expiresAt}, '%Y-%m-%d'))`,
+			href: sql<string>`CONCAT('/dashboard/products/single/', ${products.id})`
+		})
+		.from(stockBatches)
+		.innerJoin(prices, eq(prices.id, stockBatches.variantId))
+		.innerJoin(products, eq(products.id, prices.productId))
+		.where(
+			and(
+				eq(products.isActive, true),
+				gt(stockBatches.quantityRemaining, 0),
+				isNotNull(stockBatches.expiresAt),
+				sql`${stockBatches.expiresAt} <= DATE_ADD(DATE(CONVERT_TZ(NOW(), @@session.time_zone, '+03:00')), INTERVAL ${EXPIRY_WINDOW_DAYS} DAY)`
+			)
+		)
+		.orderBy(asc(stockBatches.expiresAt));
 
 	const itemStats = await db
 		.select({
@@ -62,6 +107,7 @@ export const load: PageServerLoad = async () => {
 
 	return {
 		reorderProducts,
+		expiringBatches,
 		dailyStats
 	};
 };

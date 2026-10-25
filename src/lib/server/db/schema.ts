@@ -8,7 +8,9 @@ import {
 	text,
 	timestamp,
 	datetime,
-	index
+	date,
+	index,
+	uniqueIndex
 } from 'drizzle-orm/mysql-core';
 import { secureFields, user } from './auth.schema';
 
@@ -43,19 +45,63 @@ export const products = mysqlTable('products', {
 	nameAm: varchar('name_am', { length: 255 }),
 	descriptionAm: text('description_am'),
 	categoryId: int('category_id').references(() => productCategories.id, { onDelete: 'set null' }),
+	// Cached total of the product's variants' stock, kept in step by
+	// `$lib/server/inventory`. Stock itself lives on the variants and their batches.
 	quantity: int('quantity').notNull().default(0),
 	commissionAmount: decimal('commission_amount', { precision: 10, scale: 2 }).notNull(),
 	supplierId: int('supplier_id').references(() => productSuppliers.id),
+	// The default reorder alert for variants that don't set their own.
 	reorderLevel: int('reorder_level'),
 	...secureFields
 });
 
+/**
+ * A product's variants — one row per package ("500g", "12 pieces") with its price.
+ * The table predates variant stock, hence the name. Each variant carries its own
+ * stock, the cached sum of its batches' `quantityRemaining`.
+ */
 export const prices = mysqlTable('prices', {
 	id: int('id').primaryKey().autoincrement(),
 	productId: int('product_id').references(() => products.id, { onDelete: 'cascade' }),
 	price: decimal('price', { precision: 10, scale: 2 }).notNull(),
-	amount: varchar('amount', { length: 255 }).notNull()
+	amount: varchar('amount', { length: 255 }).notNull(),
+	sku: varchar('sku', { length: 64 }).unique(),
+	quantity: int('quantity').notNull().default(0),
+	// NULL falls back to the product's `reorderLevel`.
+	reorderLevel: int('reorder_level')
 });
+
+/**
+ * One delivery of one variant. Stock only arrives as a batch, and leaves from
+ * batches earliest-expiry-first; `quantityRemaining` is what is left of it.
+ */
+export const stockBatches = mysqlTable(
+	'stock_batches',
+	{
+		id: int('id').primaryKey().autoincrement(),
+		variantId: int('variant_id')
+			.notNull()
+			.references(() => prices.id, { onDelete: 'cascade' }),
+		batchNumber: varchar('batch_number', { length: 64 }).notNull(),
+		quantityReceived: int('quantity_received').notNull(),
+		quantityRemaining: int('quantity_remaining').notNull(),
+		costPerUnit: decimal('cost_per_unit', { precision: 10, scale: 2 }),
+		supplierId: int('supplier_id').references(() => productSuppliers.id, { onDelete: 'set null' }),
+		manufacturedAt: date('manufactured_at', { mode: 'string' }),
+		expiresAt: date('expires_at', { mode: 'string' }),
+		receivedAt: datetime('received_at').notNull(),
+		// The purchase receipt, when one was uploaded.
+		transactionId: int('transaction_id').references(() => transactions.id, {
+			onDelete: 'set null'
+		}),
+		notes: varchar('notes', { length: 255 }),
+		...secureFields
+	},
+	(table) => [
+		uniqueIndex('stock_batches_variant_batch_number_uq').on(table.variantId, table.batchNumber),
+		index('stock_batches_variant_expiry_idx').on(table.variantId, table.expiresAt)
+	]
+);
 
 export const productImages = mysqlTable('product_images', {
 	id: int('id').primaryKey().autoincrement(),
@@ -124,17 +170,34 @@ export const transactions = mysqlTable(
 	// `/files/[name]` looks receipts up by file name on every file request.
 	(table) => [index('transactions_reciept_link_idx').on(table.recieptLink)]
 );
-export const productAdjustments = mysqlTable('product_adjustments', {
-	id: int('id').autoincrement().primaryKey(),
-	productsId: int('product_id')
-		.notNull()
-		.references(() => products.id, { onDelete: 'cascade' }),
-	supplierId: int('supplier_id').references(() => productSuppliers.id),
-	adjustment: int('adjustment').notNull(), // e.g., +50 for new stock, -1 for a sale, -1 for internal use
-	reason: varchar('reason', { length: 255 }),
-	transactionId: int('transaction_id').references(() => transactions.id), // Link directly to the sale that caused the adjustment
-	...secureFields
-});
+/**
+ * The stock ledger: one row per change to one batch. Rows from before variant
+ * stock have no `variantId`/`batchId` and describe the product as a whole.
+ */
+export const productAdjustments = mysqlTable(
+	'product_adjustments',
+	{
+		id: int('id').autoincrement().primaryKey(),
+		productsId: int('product_id')
+			.notNull()
+			.references(() => products.id, { onDelete: 'cascade' }),
+		variantId: int('variant_id').references(() => prices.id, { onDelete: 'set null' }),
+		batchId: int('batch_id').references(() => stockBatches.id, { onDelete: 'set null' }),
+		orderId: int('order_id').references(() => orders.id, { onDelete: 'set null' }),
+		type: mysqlEnum('type', ['receive', 'sale', 'return', 'damage', 'correction']),
+		supplierId: int('supplier_id').references(() => productSuppliers.id),
+		adjustment: int('adjustment').notNull(), // e.g., +50 for new stock, -1 for a sale, -1 for internal use
+		// The variant's stock straight after this change.
+		balanceAfter: int('balance_after'),
+		reason: varchar('reason', { length: 255 }),
+		transactionId: int('transaction_id').references(() => transactions.id), // Link directly to the sale that caused the adjustment
+		...secureFields
+	},
+	(table) => [
+		index('product_adjustments_variant_idx').on(table.variantId),
+		index('product_adjustments_batch_idx').on(table.batchId)
+	]
+);
 
 export const orders = mysqlTable('orders', {
 	id: int('id').autoincrement().primaryKey(),
@@ -154,17 +217,45 @@ export const orderItems = mysqlTable('order_items', {
 	id: int('id').autoincrement().primaryKey(),
 	orderId: int('order_id').references(() => orders.id),
 	productId: int('product_id').references(() => products.id),
+	// The variant sold. `amount` and `price` stay as the snapshot printed on the
+	// order; this is what stock is taken from. NULL only on rows whose variant has
+	// since been deleted.
+	priceId: int('price_id').references(() => prices.id, { onDelete: 'set null' }),
 	quantity: int('quantity').notNull(),
 	price: decimal('price', { precision: 10, scale: 2 }).notNull(),
 	amount: varchar('amount', { length: 255 }).notNull(),
 	...secureFields
 });
 
+/**
+ * Which batches a delivered order's units came out of. Undelivering, editing or
+ * deleting the order puts them back into those same batches.
+ */
+export const orderBatchAllocations = mysqlTable(
+	'order_batch_allocations',
+	{
+		id: int('id').primaryKey().autoincrement(),
+		orderId: int('order_id')
+			.notNull()
+			.references(() => orders.id, { onDelete: 'cascade' }),
+		variantId: int('variant_id')
+			.notNull()
+			.references(() => prices.id, { onDelete: 'cascade' }),
+		batchId: int('batch_id')
+			.notNull()
+			.references(() => stockBatches.id, { onDelete: 'cascade' }),
+		quantity: int('quantity').notNull()
+	},
+	(table) => [index('order_batch_allocations_order_idx').on(table.orderId)]
+);
+
 export const damagedProducts = mysqlTable('damaged_products', {
 	id: int('id').primaryKey().autoincrement(),
 	productId: int('product_id')
 		.notNull()
 		.references(() => products.id, { onDelete: 'cascade' }),
+	variantId: int('variant_id').references(() => prices.id, { onDelete: 'set null' }),
+	batchId: int('batch_id').references(() => stockBatches.id, { onDelete: 'set null' }),
 	quantity: int('quantity').notNull(),
 	damagedBy: varchar('damaged_by', { length: 36 }).notNull(),
 	reason: varchar('reason', { length: 255 }).notNull(),

@@ -42,7 +42,6 @@
 		<GalleryField
 			{form}
 			{errors}
-			
 			name="gallery"
 			label="Product Gallery"
 			placeholder="Edit and Upload New Product Gallery"

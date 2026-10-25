@@ -12,12 +12,16 @@
 		data,
 		price,
 		id,
-		amount
+		amount,
+		sku = null,
+		reorderLevel = null
 	}: {
 		data: SuperValidated<Infer<EditPrice>>;
 		price: number | string;
 		id: number;
 		amount: string;
+		sku?: string | null;
+		reorderLevel?: number | null;
 	} = $props();
 	const { form, errors, enhance, delayed, message } = superForm(data, {});
 	import { toast } from 'svelte-sonner';
@@ -37,9 +41,11 @@
 		}
 	});
 
-	$form.price = price;
+	$form.price = Number(price);
 	$form.amount = amount;
 	$form.id = id;
+	$form.sku = sku ?? '';
+	$form.reorderLevel = reorderLevel ?? '';
 </script>
 
 <DialogComp bind:open title={formatETB(Number(price))} variant="ghost" IconComp={SquarePen}>
@@ -61,6 +67,22 @@
 				label="Variation of Product"
 				placeholder="Enter Product Variation"
 				required
+			/>
+			<InputComp
+				{form}
+				{errors}
+				type="text"
+				name="sku"
+				label="SKU"
+				placeholder="Optional stock-keeping code"
+			/>
+			<InputComp
+				{form}
+				{errors}
+				type="number"
+				name="reorderLevel"
+				label="Reorder Level"
+				placeholder="Empty uses the product's level"
 			/>
 			<Button type="submit" size="lg">
 				{#if $delayed}

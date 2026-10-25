@@ -3,6 +3,14 @@ import DataTableLinks from '@nahu/admin-kit/components/Table/data-table-links.sv
 import DataTableActions from './data-table-actions.svelte';
 import DataTableSort from '@nahu/admin-kit/components/Table/data-table-sort.svelte';
 
+const TYPE_LABELS: Record<string, string> = {
+	receive: 'Received',
+	sale: 'Sold',
+	return: 'Returned',
+	damage: 'Damaged',
+	correction: 'Correction'
+};
+
 export const columns = [
 	{
 		accessorKey: 'index',
@@ -29,6 +37,36 @@ export const columns = [
 			}),
 
 		sortable: true
+	},
+
+	{
+		accessorKey: 'type',
+		header: 'Type',
+		cell: ({ row }) => TYPE_LABELS[row.original.type] ?? 'Adjustment'
+	},
+
+	{
+		accessorKey: 'variant',
+		header: 'Variant',
+		cell: ({ row }) => row.original.variant ?? 'Whole product'
+	},
+
+	{
+		accessorKey: 'batchNumber',
+		header: 'Batch',
+		cell: ({ row }) => row.original.batchNumber ?? '—'
+	},
+
+	{
+		accessorKey: 'balanceAfter',
+		header: 'Stock After',
+		cell: ({ row }) => row.original.balanceAfter ?? '—'
+	},
+
+	{
+		accessorKey: 'reason',
+		header: 'Reason',
+		cell: ({ row }) => row.original.reason ?? '—'
 	},
 
 	{

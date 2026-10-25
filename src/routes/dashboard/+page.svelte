@@ -47,9 +47,17 @@
 		<div class="mb-8 grid gap-6 md:grid-cols-2">
 			<ReorderList
 				title="Products to Reorder"
-				description="Items below reorder level"
+				description="Variants at or below their reorder level"
 				items={data.reorderProducts}
 				icon={PackageIcon}
+			/>
+			<ReorderList
+				title="Expiring Batches"
+				description="Stock expiring within a week, or already expired"
+				items={data.expiringBatches}
+				icon={PackageIcon}
+				badge="Expiring"
+				emptyText="No batches expiring soon"
 			/>
 		</div>
 

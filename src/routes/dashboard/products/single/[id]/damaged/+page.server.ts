@@ -1,9 +1,13 @@
 import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { user, damagedProducts, products } from '$lib/server/db/schema';
+import { user, damagedProducts, products, prices, stockBatches } from '$lib/server/db/schema';
 import { and, asc, eq, like, or, sql } from 'drizzle-orm';
 
-import { currentMonthFilter, getCurrentMonthRangeDates, isValidDateString } from '$lib/global.svelte';
+import {
+	currentMonthFilter,
+	getCurrentMonthRangeDates,
+	isValidDateString
+} from '$lib/global.svelte';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url }) => {
@@ -14,7 +18,10 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	const search = url.searchParams.get('search')?.trim() ?? '';
 	const reasonFilter = url.searchParams.get('reason') ?? '';
 
-	if ((startParam || endParam) && (!isValidDateString(startParam) || !isValidDateString(endParam))) {
+	if (
+		(startParam || endParam) &&
+		(!isValidDateString(startParam) || !isValidDateString(endParam))
+	) {
 		error(400, 'Invalid date range');
 	}
 
@@ -47,6 +54,8 @@ export const load: PageServerLoad = async ({ params, url }) => {
 			id: damagedProducts.id,
 			date: sql<string>`DATE_FORMAT(${damagedProducts.createdAt}, '%W %Y-%m-%d')`,
 			quantity: damagedProducts.quantity,
+			variant: prices.amount,
+			batchNumber: stockBatches.batchNumber,
 			reason: damagedProducts.reason,
 			damagedBy: damagedProducts.damagedBy,
 			changedById: user.id,
@@ -54,6 +63,8 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		})
 		.from(damagedProducts)
 		.leftJoin(user, eq(damagedProducts.createdBy, user.id))
+		.leftJoin(prices, eq(prices.id, damagedProducts.variantId))
+		.leftJoin(stockBatches, eq(stockBatches.id, damagedProducts.batchId))
 		.where(whereClause)
 		.orderBy(asc(damagedProducts.createdAt));
 

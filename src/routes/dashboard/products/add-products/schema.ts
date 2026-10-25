@@ -23,11 +23,8 @@ export const add = z.object({
 		.string()
 		.max(1000, { message: "Amharic description can't be more than 1000 characters." })
 		.optional(),
-	quantity: z.coerce
-		.number()
-		.int({ message: 'Quantity can only be full numbers, no decimals.' })
-		.nonnegative({ message: 'Quantity cannot be negative.' })
-		.default(0),
+	// No `quantity`: stock belongs to a variant, and a new product has none yet.
+	// It is received per variant, as a batch, from the product's page.
 
 	supplier: z.coerce.number('Supplier is required').optional(),
 	reorderLevel: z.coerce
