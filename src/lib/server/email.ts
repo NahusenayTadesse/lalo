@@ -405,3 +405,38 @@ export const customerResetPasswordTemplate = (url: string) => ({
         </div>
     `
 });
+
+export const customerDispatchedTemplate = (
+	orderId: number,
+	trip: {
+		pickup: boolean;
+		driverName: string | null;
+		driverPhone: string | null;
+		vehicle: string | null;
+		expected: string | null;
+		cashToCollect: number | null;
+	}
+) => ({
+	subject: trip.pickup
+		? `Your Order Is Ready for Pickup (#${orderId})`
+		: `Your Order Is on Its Way! (#${orderId})`,
+	html: `
+        <div style="max-width: 600px; margin: auto; font-family: sans-serif; border: 1px solid #eee;">
+            <div style="background-color: #bc3d00; padding: 20px; text-align: center;">
+                <img src="https://lalobakerysolutions.com/logo192.png" alt="Lalo Bakery Logo" width="80" style="display: block; margin: 0 auto 10px;">
+                <h1 style="color: white; margin: 0; font-size: 20px;">${trip.pickup ? 'Ready for Pickup' : 'Out for Delivery 🚚'}</h1>
+            </div>
+            <div style="padding: 20px; color: #333;">
+                <p>Your order <strong>#${orderId}</strong> ${trip.pickup ? 'is ready to collect from our shop.' : 'has left our shop and is on its way to you.'}</p>
+                ${trip.expected ? `<p>Expected ${trip.pickup ? 'from' : 'arrival'}: <strong>${escapeHtml(trip.expected)}</strong></p>` : ''}
+                ${trip.driverName ? `<p>Driver: <strong>${escapeHtml(trip.driverName)}</strong>${trip.driverPhone ? ` — <a href="tel:${escapeHtml(trip.driverPhone)}">${escapeHtml(trip.driverPhone)}</a>` : ''}</p>` : ''}
+                ${trip.vehicle ? `<p>Vehicle: ${escapeHtml(trip.vehicle)}</p>` : ''}
+                ${trip.cashToCollect ? `<p>Amount to pay on delivery: <strong>${trip.cashToCollect.toFixed(2)} ETB</strong></p>` : ''}
+                <p>Once you have it, you can confirm receipt from <a href="https://lalobakerysolutions.com/account/orders">your account</a>.</p>
+            </div>
+            <div style="background: #f9f9f9; padding: 15px; text-align: center; color: #777; font-size: 12px;">
+                Lalo Bakery Solutions | Quality you can taste.
+            </div>
+        </div>
+    `
+});

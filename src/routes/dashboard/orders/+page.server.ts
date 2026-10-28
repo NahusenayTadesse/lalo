@@ -1,12 +1,15 @@
 import { superValidate, message, setError } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
-import { eq, and, or, like, gte, lte, desc, sql, count, inArray } from 'drizzle-orm';
+import { eq, and, or, like, desc, sql, count, inArray } from 'drizzle-orm';
 import {
-	sendEmail,
-	customerDeliveredTemplate,
-	adminDeliveredTemplate,
-	ADMIN_EMAIL
-} from '$lib/server/email';
+	buildWhere,
+	contains,
+	enumFacet,
+	facetCounts,
+	orderBy,
+	parseTableQuery,
+	serverTable
+} from '$lib/server/table';
 
 import { add, edit } from './schema';
 import { db } from '$lib/server/db';
@@ -19,48 +22,63 @@ import {
 	transactions,
 	paymentMethods,
 	placeNames,
-	freeDelivery
+	freeDelivery,
+	deliveries
 } from '$lib/server/db/schema';
 import { resolveDeliveryFee } from '$lib/server/delivery';
 import { StockError, stockTarget, syncOrderStock } from '$lib/server/inventory';
+import {
+	cancelOrderDelivery,
+	DeliveryError,
+	orderHoldsStock,
+	queueDelivery,
+	syncCashToCollect
+} from '$lib/server/deliveries';
 import { PICKUP_LABEL } from '$lib/delivery';
 import { idSchema } from '$lib/server/crud';
 import { addCustomer } from '$lib/ZodSchema';
 import { saveUploadedFile } from '$lib/server/upload';
 import type { PageServerLoad, Actions } from './$types';
 
-const DEFAULT_PAGE_SIZE = 20;
-const ALLOWED_PAGE_SIZES = [10, 20, 50, 100];
 const STATUSES = ['pending', 'delivered', 'cancelled'] as const;
+type PaymentStatus = (typeof transactions.paymentStatus.enumValues)[number];
 
 export const load: PageServerLoad = async ({ url }) => {
+	// The status buttons above the table: pending unless asked otherwise, `all` for every order.
 	const statusParam = url.searchParams.get('status') ?? 'pending';
 	const status = STATUSES.includes(statusParam as (typeof STATUSES)[number]) ? statusParam : 'all';
-	const start = url.searchParams.get('start');
-	const end = url.searchParams.get('end');
-	const search = url.searchParams.get('search')?.trim() ?? '';
-	const paymentMethodFilter = url.searchParams.get('paymentMethod');
-	// `Math.max(1, NaN)` is NaN, so `?page=abc` reached `.offset(NaN)` and 500'd.
-	const parsedPage = parseInt(url.searchParams.get('page') ?? '1', 10);
-	const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
-	const pageSizeParam = parseInt(url.searchParams.get('pageSize') ?? '');
-	const PAGE_SIZE = ALLOWED_PAGE_SIZES.includes(pageSizeParam) ? pageSizeParam : DEFAULT_PAGE_SIZE;
-	const offset = (page - 1) * PAGE_SIZE;
 
-	const whereClause = and(
-		status !== 'all' ? eq(orders.status, status as (typeof STATUSES)[number]) : undefined,
-		start ? gte(orders.createdAt, new Date(start)) : undefined,
-		end ? lte(orders.createdAt, new Date(`${end}T23:59:59`)) : undefined,
-		paymentMethodFilter ? eq(transactions.paymentMethodId, Number(paymentMethodFilter)) : undefined,
-		search
-			? or(
-					like(customers.name, `%${search}%`),
-					like(customers.phone, `%${search}%`),
-					like(customers.email, `%${search}%`),
-					like(orders.deliveryAddress, `%${search}%`)
-				)
-			: undefined
-	);
+	const query = parseTableQuery(url, ['paymentMethodName', 'paymentStatus'], 20, [
+		'name',
+		'phone',
+		'email',
+		'deliveryAddress',
+		'fee',
+		'paymentMethodName',
+		'paymentStatus',
+		'createdAt',
+		'status'
+	]);
+
+	const spec = {
+		base: [status !== 'all' ? eq(orders.status, status as (typeof STATUSES)[number]) : undefined],
+		dateColumn: orders.createdAt,
+		search: (term: string) =>
+			or(
+				like(customers.name, contains(term)),
+				like(customers.phone, contains(term)),
+				like(customers.email, contains(term)),
+				like(orders.deliveryAddress, contains(term))
+			),
+		filters: {
+			paymentMethodName: (v: string) => eq(transactions.paymentMethodId, Number(v)),
+			paymentStatus: (v: string) =>
+				(transactions.paymentStatus.enumValues as readonly string[]).includes(v)
+					? eq(transactions.paymentStatus, v as PaymentStatus)
+					: undefined
+		}
+	};
+	const whereClause = buildWhere(query, spec);
 
 	// `addCustomerForm` feeds the shared add-customer dialog; it posts across to
 	// /dashboard/customers?/addCustomer, which is where that action lives.
@@ -142,18 +160,35 @@ export const load: PageServerLoad = async ({ url }) => {
 			fee: orders.fee,
 			paymentMethod: transactions.paymentMethodId,
 			paymentMethodName: paymentMethods.name,
+			paymentStatus: transactions.paymentStatus,
 			recieptLink: transactions.recieptLink,
 			status: orders.status,
+			deliveryId: deliveries.id,
+			deliveryStatus: deliveries.status,
 			createdAt: sql<string>`DATE_FORMAT(${orders.createdAt}, '%Y-%m-%d')`
 		})
 		.from(orders)
 		.leftJoin(customers, eq(orders.customerId, customers.id))
 		.leftJoin(transactions, eq(orders.transactionId, transactions.id))
 		.leftJoin(paymentMethods, eq(transactions.paymentMethodId, paymentMethods.id))
+		.leftJoin(deliveries, eq(deliveries.orderId, orders.id))
 		.where(whereClause)
-		.orderBy(desc(orders.createdAt))
-		.limit(PAGE_SIZE)
-		.offset(offset);
+		.orderBy(
+			...(orderBy(query, {
+				name: customers.name,
+				phone: customers.phone,
+				email: customers.email,
+				deliveryAddress: orders.deliveryAddress,
+				fee: orders.fee,
+				paymentMethodName: paymentMethods.name,
+				paymentStatus: transactions.paymentStatus,
+				createdAt: orders.createdAt,
+				status: orders.status
+			}) ?? [desc(orders.createdAt)]),
+			desc(orders.id)
+		)
+		.limit(query.limit)
+		.offset(query.offset);
 
 	const [{ total }] = await db
 		.select({ total: count(orders.id) })
@@ -162,7 +197,27 @@ export const load: PageServerLoad = async ({ url }) => {
 		.leftJoin(transactions, eq(orders.transactionId, transactions.id))
 		.where(whereClause);
 
-	const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+	/** Every facet joins what the search and filters can reach, minus its own filter. */
+	const facets = await facetCounts({
+		paymentMethodName: () =>
+			db
+				.select({ value: paymentMethods.id, label: paymentMethods.name, count: count() })
+				.from(orders)
+				.leftJoin(customers, eq(orders.customerId, customers.id))
+				.innerJoin(transactions, eq(orders.transactionId, transactions.id))
+				.innerJoin(paymentMethods, eq(transactions.paymentMethodId, paymentMethods.id))
+				.where(buildWhere(query, spec, { except: 'paymentMethodName' }))
+				.groupBy(paymentMethods.id, paymentMethods.name),
+		paymentStatus: () =>
+			db
+				.select({ value: transactions.paymentStatus, count: count() })
+				.from(orders)
+				.leftJoin(customers, eq(orders.customerId, customers.id))
+				.innerJoin(transactions, eq(orders.transactionId, transactions.id))
+				.where(buildWhere(query, spec, { except: 'paymentStatus' }))
+				.groupBy(transactions.paymentStatus)
+				.then(enumFacet)
+	});
 
 	const orderIds = allData.map((o) => o.id);
 	const allItems = orderIds.length
@@ -195,21 +250,8 @@ export const load: PageServerLoad = async ({ url }) => {
 		paymentMethodList,
 		placeList,
 		freeDeliveryThreshold,
-		filters: {
-			status,
-			start,
-			end,
-			search,
-			paymentMethod: paymentMethodFilter,
-			pageSize: PAGE_SIZE
-		},
-		pagination: {
-			currentPage: page,
-			totalPages,
-			totalCount: total,
-			hasNextPage: page < totalPages,
-			hasPrevPage: page > 1
-		}
+		status,
+		table: serverTable(query, total, facets)
 	};
 };
 
@@ -284,9 +326,9 @@ export const actions: Actions = {
 			id,
 			selectedProducts,
 			customer,
-			status,
 			reciept,
 			paymentMethod,
+			paymentConfirmed,
 			address,
 			deliveryAddress
 		} = form.data;
@@ -310,11 +352,11 @@ export const actions: Actions = {
 			);
 		}
 
-		if (status === 'delivered' && !paymentMethod) {
-			setError(form, 'paymentMethod', 'Payment Method is required for Delivered Orders');
+		if (paymentConfirmed && !paymentMethod) {
+			setError(form, 'paymentMethod', 'Choose how the order was paid');
 			return message(
 				form,
-				{ type: 'error', text: 'Payment Method is required for Delivered Orders' },
+				{ type: 'error', text: 'Choose how the order was paid before confirming the payment' },
 				{ status: 400 }
 			);
 		}
@@ -332,10 +374,21 @@ export const actions: Actions = {
 				return message(form, { type: 'error', text: 'Order not found' }, { status: 404 });
 			}
 
+			// Delivering happens on the deliveries page, where the driver, the time and
+			// who handed it over are recorded; reopening a delivered order does too.
+			// Here a delivered order keeps its status whatever the form says.
 			const wasDelivered = existingOrder.status === 'delivered';
-			const isDelivered = status === 'delivered';
-			const becameDelivered = !wasDelivered && isDelivered;
-			const leftDelivered = wasDelivered && !isDelivered;
+			if (form.data.status === 'delivered' && !wasDelivered) {
+				return message(
+					form,
+					{
+						type: 'error',
+						text: 'Orders are marked delivered from the Deliveries page, where the driver and hand-over are recorded.'
+					},
+					{ status: 400 }
+				);
+			}
+			const status = wasDelivered ? 'delivered' : form.data.status;
 
 			// Written to disk before the transaction so a slow upload doesn't hold a
 			// connection open. An empty file input means "keep the existing receipt".
@@ -345,15 +398,13 @@ export const actions: Actions = {
 			await db.transaction(async (tx) => {
 				let transactionId = existingOrder.transactionId ?? undefined;
 
-				// The payment record used to be written only when a receipt file was
-				// uploaded, so a cash order marked delivered lost its payment method, and
-				// nothing ever set `paymentStatus` — every payment total read 0.
-				// A delivered order always carries a payment method (checked above), so it
-				// counts as paid; taking it back out of delivered makes it pending again.
-				// `amount` includes the delivery fee: it is what the customer paid.
+				// Paid when staff confirm it — the bank transfer checked, the cash counted —
+				// and pending otherwise. Confirming it is what puts the order in the
+				// delivery queue. `amount` includes the delivery fee: it is what the
+				// customer paid.
 				const payment = {
 					amount: total.toFixed(2),
-					paymentStatus: isDelivered ? ('paid' as const) : ('pending' as const),
+					paymentStatus: paymentConfirmed ? ('paid' as const) : ('pending' as const),
 					...(paymentMethod ? { paymentMethodId: paymentMethod } : {}),
 					...(recieptLink ? { recieptLink } : {})
 				};
@@ -377,7 +428,6 @@ export const actions: Actions = {
 						customerId: customer,
 						status,
 						address: address || null,
-						deliveredAt: becameDelivered ? sql`NOW()` : isDelivered ? undefined : null,
 						deliveryAddress: deliveryAddress || null,
 						fee,
 						...(transactionId ? { transactionId } : {}),
@@ -394,50 +444,29 @@ export const actions: Actions = {
 					}))
 				);
 
-				// A delivered order holds its items out of stock; any other status holds
-				// none. The order's batch allocations record what it holds now, so this
-				// one call covers delivering, un-delivering, and editing the items of an
-				// order that stays delivered.
-				const reason = becameDelivered
-					? `Order #${id} delivered`
-					: leftDelivered
-						? `Order #${id} un-delivered`
-						: `Order #${id} items changed`;
+				const actor = { userId: locals?.user?.id };
+				if (status === 'cancelled') await cancelOrderDelivery(tx, id, actor);
 
+				// An order holds its items out of stock from dispatch on — on the truck or
+				// delivered — and none before. The batch allocations record what it holds,
+				// so this keeps an edit to the items of an order already out in step.
 				await syncOrderStock(
 					tx,
 					id,
-					isDelivered ? stockTarget(lineItems) : new Map(),
-					{ reason, transactionId },
+					(await orderHoldsStock(tx, id)) ? stockTarget(lineItems) : new Map(),
+					{ reason: `Order #${id} items changed`, transactionId },
 					locals?.user?.id
 				);
-			});
 
-			if (becameDelivered) {
-				const customerInfo = await db
-					.select({ name: customers.name, email: customers.email })
-					.from(customers)
-					.where(eq(customers.id, customer))
-					.then((rows) => rows[0]);
-
-				const emailItems = toEmailItems(lineItems);
-
-				if (customerInfo?.email) {
-					const mail = customerDeliveredTemplate(id, emailItems, total);
-					sendEmail(customerInfo.email, mail.subject, mail.html).catch((err) =>
-						console.error('Email Error (Customer):', err)
-					);
+				if (status === 'pending' && paymentConfirmed) {
+					await queueDelivery(tx, id, actor);
 				}
-
-				const adminMail = adminDeliveredTemplate(id, emailItems, total);
-				sendEmail(ADMIN_EMAIL, adminMail.subject, adminMail.html).catch((err) =>
-					console.error('Email Error (Admin):', err)
-				);
-			}
+				await syncCashToCollect(tx, id);
+			});
 
 			return message(form, { type: 'success', text: 'Order Successfully Updated' });
 		} catch (err) {
-			if (err instanceof StockError) {
+			if (err instanceof StockError || err instanceof DeliveryError) {
 				return message(form, { type: 'error', text: err.message }, { status: 400 });
 			}
 			console.error('Failed to update order:', err);
@@ -578,14 +607,4 @@ function sumLineItems(lineItems: Array<{ quantity: number; price: string }>): nu
 		0
 	);
 	return cents / 100;
-}
-
-function toEmailItems(lineItems: StaffLineItem[]) {
-	return lineItems.map((item) => ({
-		product: item.productId,
-		name: item.productName ?? undefined,
-		quantity: item.quantity,
-		amount: item.amount,
-		price: Number(item.price)
-	}));
 }

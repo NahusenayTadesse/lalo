@@ -38,9 +38,8 @@ export const add = z.object({
 	selectedProducts: lineItems,
 	address,
 	deliveryAddress,
-	// No 'delivered' here on purpose. Delivering an order also takes a payment
-	// method and a receipt, and moves stock — all of which live in the edit
-	// action. Allowing it at creation time silently skipped every one of those.
+	// No 'delivered' here on purpose: orders are delivered from the deliveries
+	// page, which moves the stock and records who took it and who received it.
 	status: z.enum(['pending', 'cancelled'], { message: 'Status is required' }).default('pending')
 });
 
@@ -50,6 +49,8 @@ export const edit = z.object({
 	selectedProducts: lineItems,
 	address,
 	deliveryAddress,
+	// 'delivered' only so a delivered order's own status round-trips; the action
+	// refuses it for any other order.
 	status: z
 		.enum(['pending', 'delivered', 'cancelled'], { message: 'Status is required' })
 		.default('pending'),
@@ -58,7 +59,9 @@ export const edit = z.object({
 		.refine((file) => file.size <= MAX_FILE_SIZE, `Max file size is 10MB.`)
 		.refine((file) => ACCEPTED_FILE_TYPES.includes(file.type), 'Invalid file type.')
 		.optional(),
-	paymentMethod: z.number().optional()
+	paymentMethod: z.number().optional(),
+	// Staff have checked the money arrived. Confirming it queues the order for delivery.
+	paymentConfirmed: z.boolean().default(false)
 	// `fee` is deliberately absent: it is derived from `address` and the order
 	// subtotal, and recomputed server-side on every save.
 });

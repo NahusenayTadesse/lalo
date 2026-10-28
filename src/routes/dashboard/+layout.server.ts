@@ -2,8 +2,8 @@ import { db } from '$lib/server/db';
 import { requireAdmin } from '$lib/server/authz';
 import type { LayoutServerLoad } from './$types';
 
-import { orders, contactMessages } from '$lib/server/db/schema';
-import { eq, count } from 'drizzle-orm';
+import { orders, contactMessages, deliveries } from '$lib/server/db/schema';
+import { eq, count, sql } from 'drizzle-orm';
 
 export const load: LayoutServerLoad = async ({ locals, depends }) => {
 	// Enforcement proper lives in `hooks.server.ts`, which also covers form
@@ -18,6 +18,15 @@ export const load: LayoutServerLoad = async ({ locals, depends }) => {
 		.where(eq(orders.status, 'pending'))
 		.then((rows) => rows[0]?.count ?? 0);
 
+	// Deliveries needing someone: waiting to go out, failed, or out and late.
+	const deliveryNumber = await db
+		.select({ count: count() })
+		.from(deliveries)
+		.where(
+			sql`${deliveries.status} IN ('ready', 'failed') OR (${deliveries.status} = 'dispatched' AND ${deliveries.scheduledFor} < NOW())`
+		)
+		.then((rows) => rows[0]?.count ?? 0);
+
 	const messageNumber = await db
 		.select({ count: count() })
 		.from(contactMessages)
@@ -29,6 +38,7 @@ export const load: LayoutServerLoad = async ({ locals, depends }) => {
 		permList: locals.permList,
 		isSuperAdmin: locals.isSuperAdmin,
 		ordersNumber,
+		deliveryNumber,
 		messageNumber
 	};
 };

@@ -12,6 +12,7 @@
 
 	const counters = $derived({
 		'/dashboard/orders': data?.ordersNumber ?? 0,
+		'/dashboard/deliveries': data?.deliveryNumber ?? 0,
 		'/dashboard/messages': data?.messageNumber ?? 0
 	});
 </script>

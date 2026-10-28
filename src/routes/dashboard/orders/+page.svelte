@@ -1,32 +1,22 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
+	import { rowNumber } from '@nahu/admin-kit/components/Table/row-number';
+	import { navigateWithQuery } from '@nahu/admin-kit/queryFilters';
 	import { renderComponent } from '@nahu/admin-kit/components/ui/data-table/index.js';
 	import DataTable from '@nahu/admin-kit/components/Table/data-table.svelte';
 	import DataTableSort from '@nahu/admin-kit/components/Table/data-table-sort.svelte';
 	import Statuses from '@nahu/admin-kit/components/Table/statuses.svelte';
 	import Edit from './edit.svelte';
 	import Delete from './delete.svelte';
+	import DeliveryCell from './delivery-cell.svelte';
 	import OrderFormFields from './order-form-fields.svelte';
 	import OrderItems from '$lib/components/order-items.svelte';
 	import Copy from '@nahu/admin-kit/Copy.svelte';
+	import DataTableLinks from '@nahu/admin-kit/components/Table/data-table-links.svelte';
+	import { FileText } from '@lucide/svelte';
 	import { formatEthiopianDate } from '$lib/global.svelte.js';
 
 	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
-	import { Label } from '@nahu/admin-kit/components/ui/label/index.js';
-	import { Select, SelectContent, SelectItem, SelectTrigger } from '@nahu/admin-kit/components/ui/select/index.js';
-	import QueryBuilder from '$lib/QueryBuilder.svelte';
-	import FilterMenu from '$lib/components/Table/FilterMenu.svelte';
-	import type { CalendarDate } from '@internationalized/date';
-	import {
-		Sheet,
-		Loader,
-		CircleCheckBig,
-		OctagonMinus,
-		Plus,
-		ChevronLeft,
-		ChevronRight
-	} from '@lucide/svelte';
+	import { Sheet, Loader, CircleCheckBig, OctagonMinus, Plus } from '@lucide/svelte';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
 	import AddCustomer from '$lib/forms/AddCustomer.svelte';
 	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
@@ -59,24 +49,6 @@
 	const hasItems = $derived($form.selectedProducts.length > 0);
 	let addOrderTotal = $state(0);
 
-	// ---------------------------------------------------------------------
-	// Query builder — every control writes to the URL, +page.server.ts reads
-	// it back and does the filtering/pagination server-side.
-	// ---------------------------------------------------------------------
-
-	function updateFilters(params: Record<string, string | number | undefined>) {
-		const url = new URL(page.url);
-		for (const [key, value] of Object.entries(params)) {
-			if (value !== undefined && value !== '') {
-				url.searchParams.set(key, String(value));
-			} else {
-				url.searchParams.delete(key);
-			}
-		}
-		if (!('page' in params)) url.searchParams.set('page', '1');
-		goto(url, { keepFocus: true, noScroll: true });
-	}
-
 	const statusPresets = [
 		{ value: 'pending', label: 'Pending', icon: Loader },
 		{ value: 'delivered', label: 'Delivered', icon: CircleCheckBig },
@@ -84,36 +56,11 @@
 		{ value: 'all', label: 'All', icon: Sheet }
 	];
 
-	type OrderFilters = { paymentMethod: string };
-
-	function handleQueryChange(payload: {
-		search: string;
-		pageSize: number;
-		dateRange: { start: CalendarDate; end: CalendarDate } | null;
-		customFilters: OrderFilters;
-	}) {
-		updateFilters({
-			search: payload.search,
-			pageSize: payload.pageSize === 20 ? undefined : payload.pageSize,
-			start: payload.dateRange?.start?.toString(),
-			end: payload.dateRange?.end?.toString(),
-			paymentMethod: payload.customFilters.paymentMethod || undefined
-		});
-	}
-
-	const goToPage = (p: number) => updateFilters({ page: p });
-
-	// ---- client-side (no round trip) filter over the current page's rows,
-	// handy while eyeballing a mixed "All" status page ----
-	let filteredList = $derived(data.allData);
-
-	// ---------------------------------------------------------------------
-
 	const columns = [
 		{
 			accessorKey: 'index',
 			header: '#',
-			cell: (info) => info.row.index + 1,
+			cell: rowNumber,
 			sortable: false
 		},
 		{
@@ -141,39 +88,92 @@
 					image: row.original.recieptLink,
 					data: data?.editForm,
 					icon: false,
-					status: row.original.status ?? 'pending'
+					status: row.original.status ?? 'pending',
+					paymentConfirmed: row.original.paymentStatus === 'paid'
 				});
 			}
 		},
 		{
 			accessorKey: 'phone',
-			header: 'Phone',
+			header: ({ column }) =>
+				renderComponent(DataTableSort, {
+					name: 'Phone',
+					onclick: column.getToggleSortingHandler()
+				}),
 			sortable: true,
 			cell: ({ row }) => renderComponent(Copy, { data: row.original.phone })
 		},
 		{
 			accessorKey: 'email',
-			header: 'Email',
+			header: ({ column }) =>
+				renderComponent(DataTableSort, {
+					name: 'Email',
+					onclick: column.getToggleSortingHandler()
+				}),
 			sortable: true,
 			cell: ({ row }) => renderComponent(Copy, { data: row.original.email })
 		},
 		{
 			accessorKey: 'deliveryAddress',
-			header: 'Delivery Address',
+			header: ({ column }) =>
+				renderComponent(DataTableSort, {
+					name: 'Delivery Address',
+					onclick: column.getToggleSortingHandler()
+				}),
 			sortable: true,
 			cell: ({ row }) => renderComponent(Copy, { data: row.original.deliveryAddress })
 		},
 		{
 			accessorKey: 'fee',
-			header: 'Fee',
+			header: ({ column }) =>
+				renderComponent(DataTableSort, {
+					name: 'Fee',
+					onclick: column.getToggleSortingHandler()
+				}),
 			sortable: true,
 			cell: ({ row }) => 'ETB ' + Number(row.original.fee ?? 0)
 		},
 		{
 			accessorKey: 'paymentMethodName',
-			header: 'Payment Method',
+			header: ({ column }) =>
+				renderComponent(DataTableSort, {
+					name: 'Payment Method',
+					onclick: column.getToggleSortingHandler()
+				}),
 			sortable: true,
 			cell: ({ row }) => renderComponent(Copy, { data: row.original.paymentMethodName ?? '—' })
+		},
+		{
+			// Whether staff have confirmed the money arrived, apart from the order's own
+			// status: confirming it is what queues the order for delivery.
+			accessorKey: 'paymentStatus',
+			header: ({ column }) =>
+				renderComponent(DataTableSort, {
+					name: 'Payment',
+					onclick: column.getToggleSortingHandler()
+				}),
+			sortable: true,
+			cell: ({ row }) =>
+				row.original.paymentStatus
+					? renderComponent(Statuses, { status: row.original.paymentStatus })
+					: '—'
+		},
+		{
+			// Bank-transfer receipts need checking before the order is confirmed, so
+			// they're one click away rather than inside the "delivered" dialog.
+			accessorKey: 'recieptLink',
+			header: 'Receipt',
+			sortable: false,
+			cell: ({ row }) =>
+				row.original.recieptLink
+					? renderComponent(DataTableLinks, {
+							link: '/files',
+							id: row.original.recieptLink,
+							name: 'View',
+							target: '_blank',
+							IconComp: FileText
+						})
+					: '—'
 		},
 		{
 			accessorKey: 'items',
@@ -190,15 +190,34 @@
 		},
 		{
 			accessorKey: 'createdAt',
-			header: 'Created At',
+			header: ({ column }) =>
+				renderComponent(DataTableSort, {
+					name: 'Created At',
+					onclick: column.getToggleSortingHandler()
+				}),
 			sortable: true,
 			cell: ({ row }) => formatEthiopianDate(new Date(row.original.createdAt))
 		},
 		{
 			accessorKey: 'status',
-			header: 'Status',
+			header: ({ column }) =>
+				renderComponent(DataTableSort, {
+					name: 'Status',
+					onclick: column.getToggleSortingHandler()
+				}),
 			sortable: true,
 			cell: ({ row }) => renderComponent(Statuses, { status: row.original.status })
+		},
+		{
+			accessorKey: 'deliveryStatus',
+			header: 'Delivery',
+			sortable: false,
+			cell: ({ row }) =>
+				renderComponent(DeliveryCell, {
+					orderId: row.original.id,
+					orderStatus: row.original.status,
+					deliveryStatus: row.original.deliveryStatus
+				})
 		},
 		{
 			accessorKey: 'edit',
@@ -221,7 +240,8 @@
 					image: row.original.recieptLink,
 					data: data?.editForm,
 					icon: true,
-					status: row.original.status ?? 'pending'
+					status: row.original.status ?? 'pending',
+					paymentConfirmed: row.original.paymentStatus === 'paid'
 				});
 			}
 		},
@@ -248,8 +268,8 @@
 		<div class="flex flex-row flex-wrap items-center gap-2">
 			{#each statusPresets as preset (preset.value)}
 				<Button
-					variant={data.filters.status === preset.value ? 'default' : 'outline'}
-					onclick={() => updateFilters({ status: preset.value })}
+					variant={data.status === preset.value ? 'default' : 'outline'}
+					onclick={() => navigateWithQuery({ status: preset.value, page: 1 })}
 				>
 					<preset.icon />
 					{preset.label}
@@ -311,89 +331,21 @@
 					/>
 
 					<p class="text-xs text-muted-foreground">
-						To mark an order delivered, save it first and use Edit — that is where the payment
-						method, receipt and stock adjustment are handled.
+						Save the order, then confirm its payment under Edit — or queue it for cash on delivery
+						from the Delivery column. It is dispatched and delivered from the Deliveries page.
 					</p>
 				</form>
 			</DialogComp>
 		</div>
 	</div>
-
-	<QueryBuilder
-		title="Order Filters"
-		description="Search, filter by date, payment method, and page size — applied server-side"
-		showDate={true}
-		showSearch={true}
-		showPageSize={true}
-		initialSearch={data.filters.search}
-		initialPageSize={data.filters.pageSize}
-		initialStart={data.filters.start ?? undefined}
-		initialEnd={data.filters.end ?? undefined}
-		initialCustomFilters={{ paymentMethod: data.filters.paymentMethod ?? '' }}
-		searchPlaceholder="Customer name, phone, email or delivery address..."
-		totalResults={data.pagination.totalCount}
-		onQueryChange={handleQueryChange}
-	>
-		{#snippet children(filters, update)}
-			<div class="flex flex-col gap-2">
-				<Label class="text-sm font-medium text-foreground">Payment Method</Label>
-				<Select
-					type="single"
-					value={String(filters.paymentMethod ?? '')}
-					onValueChange={(v) => update('paymentMethod', v)}
-				>
-					<SelectTrigger class="w-full">
-						{data.paymentMethodList.find((p) => String(p.value) === filters.paymentMethod)?.name ??
-							'Any'}
-					</SelectTrigger>
-					<SelectContent>
-						<SelectItem value="">Any</SelectItem>
-						{#each data.paymentMethodList as method (method.value)}
-							<SelectItem value={String(method.value)}>{method.name}</SelectItem>
-						{/each}
-					</SelectContent>
-				</Select>
-			</div>
-		{/snippet}
-	</QueryBuilder>
 </div>
 
-<div class="mt-4">
-	<FilterMenu bind:filteredList data={data.allData} filterKeys={['status', 'paymentMethodName']} />
-</div>
-
-{#key filteredList}
-	<DataTable {columns} data={filteredList} search={true} />
-{/key}
-
-{#if data.pagination.totalPages > 1}
-	<div class="mt-6 flex items-center justify-center gap-2">
-		<Button
-			variant="outline"
-			size="sm"
-			disabled={!data.pagination.hasPrevPage}
-			onclick={() => goToPage(data.pagination.currentPage - 1)}
-		>
-			<ChevronLeft size={16} />
-		</Button>
-
-		{#each Array.from({ length: data.pagination.totalPages }, (_, i) => i + 1) as p (p)}
-			<Button
-				variant={p === data.pagination.currentPage ? 'default' : 'outline'}
-				size="sm"
-				onclick={() => goToPage(p)}
-			>
-				{p}
-			</Button>
-		{/each}
-
-		<Button
-			variant="outline"
-			size="sm"
-			disabled={!data.pagination.hasNextPage}
-			onclick={() => goToPage(data.pagination.currentPage + 1)}
-		>
-			<ChevronRight size={16} />
-		</Button>
-	</div>
-{/if}
+<DataTable
+	{columns}
+	data={data.allData}
+	fileName="Orders"
+	server={data.table}
+	facetKeys={['paymentMethodName', 'paymentStatus']}
+	facetLabels={{ paymentMethodName: 'Payment Method', paymentStatus: 'Payment' }}
+	dateFilter="Created"
+/>

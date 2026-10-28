@@ -249,6 +249,113 @@ export const orderBatchAllocations = mysqlTable(
 	(table) => [index('order_batch_allocations_order_idx').on(table.orderId)]
 );
 
+/**
+ * The drivers staff pick from when dispatching. A delivery copies the driver's
+ * details at dispatch, so editing or retiring a driver never rewrites history,
+ * and a one-off hired driver can be typed in without being saved here.
+ */
+export const deliveryDrivers = mysqlTable('delivery_drivers', {
+	id: int('id').primaryKey().autoincrement(),
+	name: varchar('name', { length: 100 }).notNull(),
+	phone: varchar('phone', { length: 20 }).notNull(),
+	vehiclePlate: varchar('vehicle_plate', { length: 20 }),
+	vehicleType: varchar('vehicle_type', { length: 50 }),
+	notes: varchar('notes', { length: 255 }),
+	...secureFields
+});
+
+export const DELIVERY_STATUSES = [
+	'ready',
+	'dispatched',
+	'delivered',
+	'failed',
+	'cancelled'
+] as const;
+
+/**
+ * One order's trip to the customer; at most one per order. `$lib/server/deliveries`
+ * owns every change to it:
+ *
+ *   ready ─dispatch→ dispatched ─deliver→ delivered
+ *     ↑                  │ fail                │ reopen
+ *     └──── requeue ── failed     dispatched ←─┘
+ *
+ * Stock leaves at dispatch — that is when the goods leave the shop, and the batch
+ * allocations then say exactly which batches went out on the truck. A failed trip
+ * puts them back; `orders.status` turns `delivered` only on delivery.
+ *
+ * The destination and driver are snapshots, taken when the delivery is queued and
+ * dispatched, so a customer moving house later doesn't move past deliveries.
+ */
+export const deliveries = mysqlTable(
+	'deliveries',
+	{
+		id: int('id').primaryKey().autoincrement(),
+		orderId: int('order_id')
+			.notNull()
+			.unique()
+			.references(() => orders.id, { onDelete: 'cascade' }),
+		status: mysqlEnum('status', DELIVERY_STATUSES).notNull().default('ready'),
+		method: mysqlEnum('method', ['delivery', 'pickup']).notNull().default('delivery'),
+		area: varchar('area', { length: 255 }),
+		address: varchar('address', { length: 255 }),
+		recipientName: varchar('recipient_name', { length: 100 }),
+		recipientPhone: varchar('recipient_phone', { length: 20 }),
+		driverId: int('driver_id').references(() => deliveryDrivers.id, { onDelete: 'set null' }),
+		driverName: varchar('driver_name', { length: 100 }),
+		driverPhone: varchar('driver_phone', { length: 20 }),
+		vehiclePlate: varchar('vehicle_plate', { length: 20 }),
+		vehicleType: varchar('vehicle_type', { length: 50 }),
+		// The arrival time promised to the customer.
+		scheduledFor: datetime('scheduled_for'),
+		dispatchedAt: datetime('dispatched_at'),
+		// Who approved the goods leaving the shop.
+		dispatchedBy: varchar('dispatched_by', { length: 255 }).references(() => user.id, {
+			onDelete: 'set null'
+		}),
+		deliveredAt: datetime('delivered_at'),
+		// Who confirmed the hand-over: a staff member, or the customer themselves.
+		confirmedBy: varchar('confirmed_by', { length: 255 }).references(() => user.id, {
+			onDelete: 'set null'
+		}),
+		confirmedVia: mysqlEnum('confirmed_via', ['staff', 'customer']),
+		receivedBy: varchar('received_by', { length: 100 }),
+		// A photo of the signed delivery note, in the uploads folder.
+		proofLink: varchar('proof_link', { length: 255 }),
+		// Cash the driver has to collect: what was still unpaid when it was queued.
+		cashToCollect: decimal('cash_to_collect', { precision: 10, scale: 2 }),
+		attempts: int('attempts').notNull().default(0),
+		failureReason: varchar('failure_reason', { length: 255 }),
+		notes: varchar('notes', { length: 500 }),
+		...secureFields
+	},
+	(table) => [
+		index('deliveries_status_idx').on(table.status),
+		index('deliveries_driver_idx').on(table.driverId),
+		index('deliveries_dispatched_at_idx').on(table.dispatchedAt)
+	]
+);
+
+/** Everything that happened to a delivery, and who did it, for the audit trail. */
+export const deliveryEvents = mysqlTable(
+	'delivery_events',
+	{
+		id: int('id').primaryKey().autoincrement(),
+		deliveryId: int('delivery_id')
+			.notNull()
+			.references(() => deliveries.id, { onDelete: 'cascade' }),
+		// queued, dispatched, delivered, failed, requeued, reopened, cancelled, updated
+		event: varchar('event', { length: 32 }).notNull(),
+		note: varchar('note', { length: 255 }),
+		userId: varchar('user_id', { length: 255 }).references(() => user.id, {
+			onDelete: 'set null'
+		}),
+		byCustomer: boolean('by_customer').notNull().default(false),
+		createdAt: timestamp('created_at').defaultNow().notNull()
+	},
+	(table) => [index('delivery_events_delivery_idx').on(table.deliveryId)]
+);
+
 export const damagedProducts = mysqlTable('damaged_products', {
 	id: int('id').primaryKey().autoincrement(),
 	productId: int('product_id')

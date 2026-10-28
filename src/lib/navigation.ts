@@ -12,6 +12,7 @@ import {
 	Plus,
 	Sheet,
 	Star,
+	Truck,
 	UserRoundCog,
 	Users
 } from '@lucide/svelte';
@@ -22,6 +23,7 @@ export const NAVIGATION: NavItem[] = [
 	{ title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
 	{ title: 'Customers', url: '/dashboard/customers', icon: Users },
 	{ title: 'Orders', url: '/dashboard/orders', icon: ListOrdered },
+	{ title: 'Deliveries', url: '/dashboard/deliveries', icon: Truck },
 	{
 		title: 'Products',
 		url: '/dashboard/products',
@@ -65,7 +67,8 @@ export const SEARCH_EXTRA: SearchEntry[] = [
 	{ label: 'Product Categories', url: '/dashboard/products/categories' },
 	{ label: 'Inactive Products', url: '/dashboard/products/inactive' },
 	{ label: 'Add Roles', url: '/dashboard/admin-panel/roles/add-roles' },
-	{ label: 'Add Users', url: '/dashboard/admin-panel/users/add-users' }
+	{ label: 'Add Users', url: '/dashboard/admin-panel/users/add-users' },
+	{ label: 'Drivers', url: '/dashboard/deliveries/drivers' }
 ];
 
 /** Where each kind of record's page lives, so table cells can link to it. */

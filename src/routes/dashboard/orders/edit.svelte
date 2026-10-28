@@ -8,6 +8,7 @@
 	import { superForm } from 'sveltekit-superforms';
 	import Errors from '@nahu/admin-kit/formComponents/Errors.svelte';
 	import { toast } from 'svelte-sonner';
+	import { resolve } from '$app/paths';
 	import InputComp from '@nahu/admin-kit/formComponents/InputComp.svelte';
 	import DialogComp from '$lib/formComponents/DialogComp.svelte';
 	import OrderFormFields from './order-form-fields.svelte';
@@ -57,6 +58,7 @@
 		orderItems,
 		icon = false,
 		status = 'pending',
+		paymentConfirmed = false,
 		paymentMethodList
 	}: {
 		// `Infer<typeof edit>`, not `Infer<Edit>` — the latter is already an inferred
@@ -76,6 +78,8 @@
 		icon: boolean;
 		paymentMethod?: number;
 		status: Status;
+		/** Staff have already confirmed the payment. */
+		paymentConfirmed?: boolean;
 		paymentMethodList: Item[];
 		image?: '';
 	} = $props();
@@ -104,6 +108,7 @@
 	$form.status = status;
 	$form.address = address ?? '';
 	$form.deliveryAddress = deliveryAddress ?? '';
+	$form.paymentConfirmed = paymentConfirmed;
 
 	if (paymentMethod) {
 		$form.paymentMethod = paymentMethod;
@@ -173,38 +178,60 @@
 			{placeList}
 			{freeDeliveryThreshold}
 			bind:total
-			statusItems={[
-				{ value: 'pending', name: 'Pending' },
-				{ value: 'delivered', name: 'Delivered' },
-				{ value: 'cancelled', name: 'Cancelled' }
-			]}
+			statusItems={status === 'delivered'
+				? [{ value: 'delivered', name: 'Delivered' }]
+				: [
+						{ value: 'pending', name: 'Pending' },
+						{ value: 'cancelled', name: 'Cancelled' }
+					]}
 		/>
 
-		{#if $form.status === 'delivered'}
-			<div class="flex flex-col gap-4 rounded-lg border border-primary/30 bg-primary/5 p-3">
-				<p class="text-xs text-muted-foreground">
-					Marking this delivered moves stock and emails the customer.
-				</p>
+		<p class="text-xs text-muted-foreground">
+			{#if status === 'delivered'}
+				Delivered orders are reopened from the
+				<a href="{resolve('/dashboard/deliveries')}?status=all&search={id}" class="underline"
+					>Deliveries</a
+				> page.
+			{:else}
+				Dispatching and delivering happen on the
+				<a href={resolve('/dashboard/deliveries')} class="underline">Deliveries</a> page. Cancelling stops
+				the delivery and puts any stock already sent out back.
+			{/if}
+		</p>
 
-				<InputComp
-					label="Payment Method"
-					name="paymentMethod"
-					type="combo"
-					{form}
-					{errors}
-					items={paymentMethodList}
-				/>
+		<div class="flex flex-col gap-4 rounded-lg border border-primary/30 bg-primary/5 p-3">
+			<p class="text-sm font-medium">Payment</p>
+			<InputComp
+				label="Payment Method"
+				name="paymentMethod"
+				type="combo"
+				{form}
+				{errors}
+				items={paymentMethodList}
+			/>
 
-				<InputComp
-					label="Reciept"
-					name="reciept"
-					type="file"
-					{form}
-					{image}
-					{errors}
-					placeholder="Upload Screenshot or PDF of Reciept"
-				/>
-			</div>
-		{/if}
+			<InputComp
+				label="Reciept"
+				name="reciept"
+				type="file"
+				{form}
+				{image}
+				{errors}
+				placeholder="Upload Screenshot or PDF of Reciept"
+			/>
+
+			<InputComp
+				label="Confirmed"
+				name="paymentConfirmed"
+				type="checkboxSingle"
+				{form}
+				{errors}
+				placeholder="Payment received and checked"
+			/>
+			<p class="text-xs text-muted-foreground">
+				Confirming the payment puts the order in the delivery queue. A cash-on-delivery order can
+				be queued from the Delivery column without it.
+			</p>
+		</div>
 	</form>
 </DialogComp>
