@@ -15,6 +15,7 @@ import {
 	stockBatches
 } from '$lib/server/db/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
+import { today } from '$lib/expiry';
 import { error } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
@@ -105,6 +106,11 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 			price: sql<number>`CAST(${prices.price} AS DOUBLE)`,
 			sku: prices.sku,
 			quantity: prices.quantity,
+			// Units still on the shelf whose batch has expired: counted in `quantity`
+			// until written off, but they can't be sold.
+			expired: sql<number>`(SELECT COALESCE(SUM(b.quantity_remaining), 0) FROM stock_batches b WHERE b.variant_id = ${prices.id} AND b.expires_at < ${today()})`.mapWith(
+				Number
+			),
 			reorderLevel: prices.reorderLevel
 		})
 		.from(prices)
@@ -113,11 +119,12 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 			rows.map((v) => {
 				// A variant without its own level uses the product's.
 				const effectiveReorder = v.reorderLevel ?? product.reorderLevel ?? null;
+				const sellable = v.quantity - v.expired;
 				return {
 					...v,
+					sellable,
 					effectiveReorder,
-					lowStock:
-						effectiveReorder != null && effectiveReorder > 0 && v.quantity <= effectiveReorder
+					lowStock: effectiveReorder != null && effectiveReorder > 0 && sellable <= effectiveReorder
 				};
 			})
 		);

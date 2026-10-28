@@ -22,7 +22,8 @@
 		Plus,
 		ArrowDown,
 		Tag,
-		TriangleAlert
+		TriangleAlert,
+		CalendarX
 	} from '@lucide/svelte';
 	import type { Snapshot } from '@sveltejs/kit';
 	import Delete from '$lib/forms/Delete.svelte';
@@ -32,11 +33,12 @@
 	import Damaged from './damaged.svelte';
 	import { Badge } from '@nahu/admin-kit/components/ui/badge/index.js';
 	import ExpiryCell from '@nahu/admin-kit/components/Table/expiry-cell.svelte';
-
-	/** Days ahead that a batch counts as expiring soon. */
-	const EXPIRY_WARNING_DAYS = 7;
+	import ConfirmAction from '@nahu/admin-kit/components/ConfirmAction.svelte';
+	import { EXPIRY_WARNING_DAYS } from '$lib/expiry';
 
 	const lowStockVariants = $derived(data.priceList.filter((v) => v.lowStock));
+	const expiredUnits = $derived(data.priceList.reduce((sum, v) => sum + v.expired, 0));
+	const expiredText = $derived(`${expiredUnits} expired unit${expiredUnits === 1 ? '' : 's'}`);
 
 	function scrollToPrices() {
 		const element = document.getElementById('price-section-anchor');
@@ -50,6 +52,7 @@
 		{ name: 'Category', value: data.product?.category },
 		{ name: 'Price', value: data.product?.price },
 		{ name: 'Total Stock (all variants)', value: data.product?.quantity },
+		{ name: 'Expired, not yet written off', value: expiredUnits },
 		{ name: 'Product Description', value: data.product?.description },
 		{ name: 'Default Reorder Level', value: data.product?.reorderLevel },
 		{ name: 'Product Supplier', value: data?.product?.supplier },
@@ -140,15 +143,22 @@
 			cell: ({ row }) => row.original.sku ?? '—'
 		},
 		{
-			accessorKey: 'quantity',
+			accessorKey: 'sellable',
 			header: ({ column }) =>
 				renderComponent(DataTableSort, {
 					name: 'In Stock',
 					onclick: column.getToggleSortingHandler()
 				}),
 			sortable: true,
+			// Sellable stock; expired units are still on the shelf until written off.
 			cell: ({ row }) =>
-				row.original.lowStock ? `${row.original.quantity} (low)` : row.original.quantity
+				[
+					row.original.sellable,
+					row.original.lowStock ? '(low)' : '',
+					row.original.expired ? `+ ${row.original.expired} expired` : ''
+				]
+					.filter(Boolean)
+					.join(' ')
 		},
 		{
 			accessorKey: 'effectiveReorder',
@@ -255,10 +265,16 @@
 <SingleView title={data?.product?.name} photo={String(data?.product?.image)} class="w-full!">
 	{#each lowStockVariants as variant (variant.id)}
 		<Badge variant="secondary" class="ml-4 gap-1 bg-amber-500 text-white">
-			<TriangleAlert class="h-3.5 w-3.5" /> Low stock: {variant.amount} has {variant.quantity} left (reorder
+			<TriangleAlert class="h-3.5 w-3.5" /> Low stock: {variant.amount} has {variant.sellable} left (reorder
 			at {variant.effectiveReorder})
 		</Badge>
 	{/each}
+	{#if expiredUnits > 0}
+		<Badge variant="destructive" class="ml-4 gap-1">
+			<CalendarX class="h-3.5 w-3.5" />
+			{expiredText} on the shelf: write them off
+		</Badge>
+	{/if}
 	<div class="mt-4 flex w-full flex-row flex-wrap items-start justify-start gap-2 pl-4">
 		<Button onclick={() => (editForm = !editForm)}>
 			{#if !editForm}
@@ -291,6 +307,16 @@
 		<Button href="/dashboard/products/single/{page.params.id}/damaged">
 			<History /> See Damaged History
 		</Button>
+		{#if expiredUnits > 0}
+			<ConfirmAction
+				action="?/writeOffExpired"
+				label="Write Off Expired ({expiredUnits})"
+				title="Write off the expired stock?"
+				description="Every expired batch of {data.product?.name} that still holds stock is emptied and recorded as damaged: {expiredText} in all."
+				icon={CalendarX}
+				variant="destructive"
+			/>
+		{/if}
 
 		<Delete redirect="/dashboard/products" />
 	</div>

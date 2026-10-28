@@ -1,4 +1,5 @@
 import { z } from 'zod/v4';
+import { today } from '$lib/expiry';
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 5MB limit
 const ACCEPTED_FILE_TYPES = [
 	'image/jpeg', // Common for both platforms
@@ -89,9 +90,25 @@ export const adjust = z
 		employeeResponsible: z.coerce.string('Employee is required'),
 		reason: z.string().max(255).optional()
 	})
-	.refine((d) => !d.expiresAt || !d.manufacturedAt || d.expiresAt >= d.manufacturedAt, {
-		message: 'Expiry date is before the manufacture date',
-		path: ['expiresAt']
+	.superRefine((d, ctx) => {
+		if (d.intent !== 'add') return;
+		// Food: a batch without an expiry date can't be sold safely, and one that has
+		// already expired can't be sold at all.
+		if (!d.expiresAt) {
+			ctx.addIssue({ code: 'custom', message: 'Expiry date is required', path: ['expiresAt'] });
+		} else if (d.expiresAt < today()) {
+			ctx.addIssue({
+				code: 'custom',
+				message: 'This batch has already expired',
+				path: ['expiresAt']
+			});
+		} else if (d.manufacturedAt && d.expiresAt < d.manufacturedAt) {
+			ctx.addIssue({
+				code: 'custom',
+				message: 'Expiry date is before the manufacture date',
+				path: ['expiresAt']
+			});
+		}
 	});
 export type AdjustForm = typeof adjust;
 

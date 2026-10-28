@@ -8,10 +8,15 @@ import {
 	prices,
 	stockBatches
 } from '$lib/server/db/schema';
-import { eq, sql, and, gt, asc, isNotNull } from 'drizzle-orm';
+import { eq, sql, and, gt, gte, lt, lte, asc, isNotNull, type SQL } from 'drizzle-orm';
+import { setFlash } from 'sveltekit-flash-message/server';
+import { EXPIRY_WARNING_DAYS, today } from '$lib/expiry';
+import { StockError, writeOffExpired } from '$lib/server/inventory';
+import type { Actions } from './$types';
 
-/** How far ahead a batch's expiry shows on the dashboard. */
-const EXPIRY_WINDOW_DAYS = 7;
+/** `YYYY-MM-DD`, `days` after `from`. */
+const addDays = (from: string, days: number) =>
+	new Date(Date.parse(from) + days * 86_400_000).toISOString().slice(0, 10);
 
 /**
  * "Delivered today", in Addis Ababa time.
@@ -27,15 +32,18 @@ const deliveredToday = and(
 );
 
 export const load: PageServerLoad = async () => {
+	const now = today();
+
 	// Per variant: one package selling out is a reorder even while another has
 	// plenty. A variant with no level of its own uses the product's; 0 means
-	// "don't alert".
+	// "don't alert". Expired units don't count: they can't be sold.
 	const reorderLevel = sql`COALESCE(${prices.reorderLevel}, ${products.reorderLevel}, 0)`;
+	const sellable = sql<number>`${prices.quantity} - (SELECT COALESCE(SUM(b.quantity_remaining), 0) FROM stock_batches b WHERE b.variant_id = ${prices.id} AND b.expires_at < ${now})`;
 	const reorderProducts = await db
 		.select({
 			name: sql<string>`CONCAT(${products.name}, ' — ', ${prices.amount})`,
-			quantity: prices.quantity,
-			detail: sql<string>`CONCAT('Qty: ', ${prices.quantity}, ' (reorder at ', ${reorderLevel}, ')')`,
+			quantity: sellable.mapWith(Number),
+			detail: sql<string>`CONCAT('Qty: ', ${sellable}, ' (reorder at ', ${reorderLevel}, ')')`,
 			href: sql<string>`CONCAT('/dashboard/products/single/', ${products.id})`
 		})
 		.from(prices)
@@ -44,31 +52,43 @@ export const load: PageServerLoad = async () => {
 			and(
 				eq(products.isActive, true),
 				sql`${reorderLevel} > 0`,
-				sql`${prices.quantity} <= ${reorderLevel}`
+				sql`${sellable} <= ${reorderLevel}`
 			)
 		)
-		.orderBy(asc(prices.quantity));
+		.orderBy(asc(sellable));
 
-	// Batches still holding stock that expire within the window, or already have.
-	const expiringBatches = await db
-		.select({
-			name: sql<string>`CONCAT(${products.name}, ' — ', ${prices.amount}, ' · ', ${stockBatches.batchNumber})`,
-			quantity: stockBatches.quantityRemaining,
-			detail: sql<string>`CONCAT(${stockBatches.quantityRemaining}, ' left · expires ', DATE_FORMAT(${stockBatches.expiresAt}, '%Y-%m-%d'))`,
-			href: sql<string>`CONCAT('/dashboard/products/single/', ${products.id})`
-		})
-		.from(stockBatches)
-		.innerJoin(prices, eq(prices.id, stockBatches.variantId))
-		.innerJoin(products, eq(products.id, prices.productId))
-		.where(
-			and(
-				eq(products.isActive, true),
-				gt(stockBatches.quantityRemaining, 0),
-				isNotNull(stockBatches.expiresAt),
-				sql`${stockBatches.expiresAt} <= DATE_ADD(DATE(CONVERT_TZ(NOW(), @@session.time_zone, '+03:00')), INTERVAL ${EXPIRY_WINDOW_DAYS} DAY)`
+	// Batches still holding stock, by expiry: already expired (to write off), and
+	// expiring within the warning window (to sell first).
+	const batchesExpiring = (detail: string, ...range: SQL[]) =>
+		db
+			.select({
+				name: sql<string>`CONCAT(${products.name}, ' — ', ${prices.amount}, ' · ', ${stockBatches.batchNumber})`,
+				quantity: stockBatches.quantityRemaining,
+				detail: sql<string>`CONCAT(${stockBatches.quantityRemaining}, ${detail}, DATE_FORMAT(${stockBatches.expiresAt}, '%Y-%m-%d'))`,
+				href: sql<string>`CONCAT('/dashboard/products/single/', ${products.id})`
+			})
+			.from(stockBatches)
+			.innerJoin(prices, eq(prices.id, stockBatches.variantId))
+			.innerJoin(products, eq(products.id, prices.productId))
+			.where(
+				and(
+					eq(products.isActive, true),
+					gt(stockBatches.quantityRemaining, 0),
+					isNotNull(stockBatches.expiresAt),
+					...range
+				)
 			)
-		)
-		.orderBy(asc(stockBatches.expiresAt));
+			.orderBy(asc(stockBatches.expiresAt));
+
+	const expiredBatches = await batchesExpiring(
+		' left · expired ',
+		lt(stockBatches.expiresAt, now)
+	);
+	const expiringBatches = await batchesExpiring(
+		' left · expires ',
+		gte(stockBatches.expiresAt, now),
+		lte(stockBatches.expiresAt, addDays(now, EXPIRY_WARNING_DAYS))
+	);
 
 	const itemStats = await db
 		.select({
@@ -107,7 +127,38 @@ export const load: PageServerLoad = async () => {
 
 	return {
 		reorderProducts,
+		expiredBatches,
 		expiringBatches,
 		dailyStats
 	};
+};
+
+export const actions: Actions = {
+	/** Every expired batch, of every product, that still holds stock goes out as damage. */
+	writeOffExpired: async ({ locals, cookies }) => {
+		try {
+			const written = await db.transaction((tx) =>
+				writeOffExpired(tx, { by: locals.user?.name ?? 'Staff' }, locals.user?.id)
+			);
+			const units = written.reduce((sum, b) => sum + b.quantity, 0);
+			setFlash(
+				{
+					type: 'success',
+					message: units
+						? `Wrote off ${units} expired unit${units === 1 ? '' : 's'} from ${written.length} batch${written.length === 1 ? '' : 'es'}`
+						: 'Nothing has expired'
+				},
+				cookies
+			);
+		} catch (err) {
+			if (!(err instanceof StockError)) console.error('Expired write-off failed:', err);
+			setFlash(
+				{
+					type: 'error',
+					message: err instanceof StockError ? err.message : 'Could not write off the expired stock'
+				},
+				cookies
+			);
+		}
+	}
 };

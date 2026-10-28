@@ -58,8 +58,8 @@
 		<Dialog.Header>
 			<Dialog.Title>Change Stock of {name}</Dialog.Title>
 			<Dialog.Description>
-				Received stock is booked in as a batch. Removed stock comes out of the batch you pick, or
-				the one expiring soonest.
+				Received stock is booked in as a batch with its expiry date. Removed stock comes out of the
+				batch you pick, or the one expiring soonest.
 			</Dialog.Description>
 		</Dialog.Header>
 		<ScrollArea class="h-auto max-h-[calc(100vh-200px)] rounded-md border p-2">
@@ -128,6 +128,7 @@
 							{form}
 							{errors}
 							oldDays={false}
+							required={true}
 						/>
 						<InputComp
 							label="Supplier"

@@ -1,14 +1,21 @@
 <script lang="ts">
 	/**
 	 * What went in the delivery: each line of the order, and under it the batches
-	 * its units left the shop in. No batches until it is dispatched.
+	 * its units left the shop in, with their expiry. No batches until it is
+	 * dispatched.
 	 */
 	let {
 		items,
 		batches
 	}: {
 		items: { product: string | null; amount: string; quantity: number }[];
-		batches: { product: string | null; variant: string; batchNumber: string; quantity: number }[];
+		batches: {
+			product: string | null;
+			variant: string;
+			batchNumber: string;
+			expiresAt?: string | null;
+			quantity: number;
+		}[];
 	} = $props();
 
 	const linesWithBatches = $derived(
@@ -29,9 +36,11 @@
 					{#each line.batches as batch (batch.batchNumber)}
 						<span
 							class="rounded border bg-muted px-1 font-mono text-[11px]"
-							title="{batch.quantity} from batch {batch.batchNumber}"
+							title="{batch.quantity} from batch {batch.batchNumber}{batch.expiresAt
+								? `, expires ${batch.expiresAt}`
+								: ''}"
 						>
-							{batch.batchNumber} ×{batch.quantity}
+							{batch.batchNumber} ×{batch.quantity}{batch.expiresAt ? ` · exp ${batch.expiresAt}` : ''}
 						</span>
 					{/each}
 				</div>

@@ -1,12 +1,14 @@
-import { and, asc, desc, eq, gt, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import {
+	damagedProducts,
 	orderBatchAllocations,
 	prices,
 	productAdjustments,
 	products,
 	stockBatches
 } from '$lib/server/db/schema';
+import { today } from '$lib/expiry';
 
 /**
  * Every stock movement goes through here, so that three things always agree:
@@ -17,6 +19,10 @@ import {
  * Batches with no expiry date go last, and among equals the oldest delivery goes
  * first. Sales never draw from an expired batch; damage and corrections can,
  * since writing off expired stock is exactly what they are for.
+ *
+ * This is food, so every batch received must say when it expires, and stock
+ * that has already expired is refused at the door. Expired units stay counted
+ * until `writeOffExpired` takes them out as damage.
  */
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -24,11 +30,6 @@ export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type AdjustmentType = 'receive' | 'sale' | 'return' | 'damage' | 'correction';
 
 export class StockError extends Error {}
-
-/** Today in Addis Ababa, as the `YYYY-MM-DD` that `expires_at` is compared against. */
-function todayInAddis() {
-	return new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
-}
 
 /** Earliest expiry first, undated last, then oldest delivery first. */
 const fefoOrder = [
@@ -51,7 +52,7 @@ const latestExpiryFirst = [
  * counter, e.g. `B260325-03`, unique within the variant.
  */
 async function nextBatchNumber(tx: Tx, variantId: number) {
-	const stamp = todayInAddis().slice(2).replaceAll('-', '');
+	const stamp = today().slice(2).replaceAll('-', '');
 	const prefix = `B${stamp}-`;
 	const [{ n }] = await tx
 		.select({ n: sql<number>`COUNT(*)`.mapWith(Number) })
@@ -170,6 +171,14 @@ export type ReceiveInput = {
  * means a typo, and merging would blur their expiry dates and costs.
  */
 export async function receiveStock(tx: Tx, input: ReceiveInput, userId: string | undefined) {
+	if (!input.expiresAt) throw new StockError('Every batch needs an expiry date.');
+	if (input.expiresAt < today()) {
+		throw new StockError(`That batch expired on ${input.expiresAt}; expired stock can't be received.`);
+	}
+	if (input.manufacturedAt && input.expiresAt < input.manufacturedAt) {
+		throw new StockError('The expiry date is before the manufacture date.');
+	}
+
 	const variant = await lockVariant(tx, input.variantId);
 	const batchNumber = input.batchNumber?.trim() || (await nextBatchNumber(tx, variant.id));
 
@@ -231,7 +240,7 @@ async function drawFefo(
 	quantity: number,
 	{ allowExpired }: { allowExpired: boolean }
 ): Promise<Draw[]> {
-	const today = todayInAddis();
+	const now = today();
 	const batches = await tx
 		.select({ id: stockBatches.id, remaining: stockBatches.quantityRemaining })
 		.from(stockBatches)
@@ -241,7 +250,7 @@ async function drawFefo(
 				gt(stockBatches.quantityRemaining, 0),
 				allowExpired
 					? undefined
-					: or(isNull(stockBatches.expiresAt), sql`${stockBatches.expiresAt} >= ${today}`)
+					: or(isNull(stockBatches.expiresAt), sql`${stockBatches.expiresAt} >= ${now}`)
 			)
 		)
 		.orderBy(...fefoOrder)
@@ -322,6 +331,64 @@ export async function removeStock(tx: Tx, input: RemoveInput, userId: string | u
 		userId
 	);
 	return draws;
+}
+
+/**
+ * Writes off every expired batch that still holds stock — one product's, or with
+ * no `productId` every product's — as damage, one damaged-products record per
+ * batch. Returns what was taken out.
+ */
+export async function writeOffExpired(
+	tx: Tx,
+	{ productId, by }: { productId?: number; by: string },
+	userId: string | undefined
+) {
+	const expired = await tx
+		.select({
+			batchId: stockBatches.id,
+			variantId: stockBatches.variantId,
+			productId: prices.productId,
+			quantity: stockBatches.quantityRemaining,
+			batchNumber: stockBatches.batchNumber,
+			expiresAt: stockBatches.expiresAt
+		})
+		.from(stockBatches)
+		.innerJoin(prices, eq(prices.id, stockBatches.variantId))
+		.where(
+			and(
+				productId === undefined ? undefined : eq(prices.productId, productId),
+				gt(stockBatches.quantityRemaining, 0),
+				isNotNull(stockBatches.expiresAt),
+				lt(stockBatches.expiresAt, today())
+			)
+		)
+		.orderBy(asc(stockBatches.id))
+		.for('update');
+
+	for (const batch of expired) {
+		const reason = `Expired on ${batch.expiresAt} (batch ${batch.batchNumber})`;
+		await removeStock(
+			tx,
+			{
+				variantId: batch.variantId,
+				quantity: batch.quantity,
+				batchId: batch.batchId,
+				type: 'damage',
+				reason
+			},
+			userId
+		);
+		await tx.insert(damagedProducts).values({
+			productId: batch.productId as number,
+			variantId: batch.variantId,
+			batchId: batch.batchId,
+			quantity: batch.quantity,
+			damagedBy: by.slice(0, 36),
+			reason,
+			createdBy: userId
+		});
+	}
+	return expired;
 }
 
 /**

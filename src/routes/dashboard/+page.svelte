@@ -1,11 +1,19 @@
 <script lang="ts">
 	import ReorderList from '$lib/components/dashboard/reorder-list.svelte';
-	import { PackageIcon } from '@lucide/svelte';
+	import { CalendarClock, CalendarX, PackageIcon } from '@lucide/svelte';
+	import ConfirmAction from '@nahu/admin-kit/components/ConfirmAction.svelte';
+	import { EXPIRY_WARNING_DAYS } from '$lib/expiry';
 
 	import Reports from '$lib/components/dashboard/reports.svelte';
 	import DailyStats from '$lib/components/dashboard/daily-stats.svelte';
 
 	let { data } = $props();
+
+	const expiredUnits = $derived(data.expiredBatches.reduce((sum, b) => sum + b.quantity, 0));
+	const plural = (n: number, word: string, many = `${word}s`) => `${n} ${n === 1 ? word : many}`;
+	const writeOffText = $derived(
+		`Every expired batch that still holds stock is emptied and recorded as damaged: ${plural(expiredUnits, 'unit')} across ${plural(data.expiredBatches.length, 'batch', 'batches')}.`
+	);
 </script>
 
 <svelte:head>
@@ -52,13 +60,35 @@
 				icon={PackageIcon}
 			/>
 			<ReorderList
-				title="Expiring Batches"
-				description="Stock expiring within a week, or already expired"
+				title="Expiring Soon"
+				description="Stock expiring within {EXPIRY_WARNING_DAYS} days: sell these first"
 				items={data.expiringBatches}
-				icon={PackageIcon}
+				icon={CalendarClock}
 				badge="Expiring"
 				emptyText="No batches expiring soon"
 			/>
+			<div class="flex flex-col gap-3 md:col-span-2">
+				<ReorderList
+					title="Expired Stock"
+					description="Can't be sold or delivered. Write it off so stock counts stay true."
+					items={data.expiredBatches}
+					icon={CalendarX}
+					badge="Expired"
+					emptyText="Nothing on the shelf has expired"
+				/>
+				{#if expiredUnits > 0}
+					<div class="flex justify-end">
+						<ConfirmAction
+							action="?/writeOffExpired"
+							label="Write Off All Expired ({expiredUnits})"
+							title="Write off all expired stock?"
+							description={writeOffText}
+							icon={CalendarX}
+							variant="destructive"
+						/>
+					</div>
+				{/if}
+			</div>
 		</div>
 
 		<!-- Report Section -->

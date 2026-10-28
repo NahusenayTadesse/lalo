@@ -13,7 +13,13 @@ import {
 	transactions
 } from '$lib/server/db/schema';
 import { eq, and, ne } from 'drizzle-orm';
-import { StockError, receiveStock, removeStock, syncProductTotal } from '$lib/server/inventory';
+import {
+	StockError,
+	receiveStock,
+	removeStock,
+	syncProductTotal,
+	writeOffExpired
+} from '$lib/server/inventory';
 import { fail, message } from 'sveltekit-superforms';
 import { setFlash } from 'sveltekit-flash-message/server';
 
@@ -257,6 +263,38 @@ export const actions: Actions = {
 				},
 				{ status: 400 }
 			);
+		}
+	},
+	/** Every expired batch of this product that still holds stock goes out as damage. */
+	writeOffExpired: async ({ params, locals, cookies }) => {
+		try {
+			const written = await db.transaction((tx) =>
+				writeOffExpired(
+					tx,
+					{ productId: Number(params.id), by: locals.user?.name ?? 'Staff' },
+					locals.user?.id
+				)
+			);
+			const units = written.reduce((sum, b) => sum + b.quantity, 0);
+			setFlash(
+				{
+					type: 'success',
+					message: units
+						? `Wrote off ${units} expired unit${units === 1 ? '' : 's'} from ${written.length} batch${written.length === 1 ? '' : 'es'}`
+						: 'Nothing has expired'
+				},
+				cookies
+			);
+		} catch (err) {
+			if (!(err instanceof StockError)) console.error('Expired write-off failed:', err);
+			setFlash(
+				{
+					type: 'error',
+					message: err instanceof StockError ? err.message : 'Could not write off the expired stock'
+				},
+				cookies
+			);
+			return fail(400);
 		}
 	},
 	editGallery: async ({ params, locals, request }) => {
