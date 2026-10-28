@@ -86,7 +86,8 @@ export const columns = [
 		accessorKey: 'orderCount',
 		header: ({ column }) =>
 			renderComponent(DataTableSort, {
-				name: 'Order Counts',
+				// Counts pending orders only — see the join in `+page.server.ts`.
+				name: 'Pending Orders',
 				onclick: column.getToggleSortingHandler()
 			}),
 		sortable: true,

@@ -9,7 +9,6 @@
 	// Fallback safe extraction from your PageServerLoad return
 	let customer = $derived(data.customer);
 	let orderCounts = $derived(data.orderCounts || []);
-	let allMethods = $derived(data.allMethods || []);
 	let allData = $derived(data.allData || []);
 	let allItems = $derived(data.allItems || []);
 
@@ -21,7 +20,9 @@
 			text: 'text-warning-foreground',
 			border: 'border-warning/20'
 		},
-		completed: {
+		// Orders are `delivered`, never `completed` — under the old key delivered
+		// orders fell through to the grey default.
+		delivered: {
 			bg: 'bg-success/10', // Or custom extensions, defaults to primary/secondary
 			text: 'text-primary',
 			border: 'border-primary/20'
@@ -38,8 +39,10 @@
 		}
 	};
 
-	function getStatusStyles(status: string) {
-		return statusConfig[status.toLowerCase()] || statusConfig.default;
+	// `orders.status` is nullable — older orders were saved without one — and calling
+	// `.toLowerCase()` on null would take the page down.
+	function getStatusStyles(status: string | null) {
+		return statusConfig[(status ?? '').toLowerCase()] || statusConfig.default;
 	}
 </script>
 
@@ -84,10 +87,11 @@
 		</div>
 	</section>
 
-	<div class="grid gap-6 md:grid-cols-3">
-		<div
-			class="rounded-xl border border-border bg-card text-card-foreground shadow-sm md:col-span-2"
-		>
+	<!-- The "Active Payment Channels — your verified methods" panel that sat beside this
+	     table listed the shop's payment methods, not the customer's, and its "Manage
+	     Methods" button did nothing. -->
+	<div class="grid gap-6">
+		<div class="rounded-xl border border-border bg-card text-card-foreground shadow-sm">
 			<div class="p-6">
 				<h3 class="text-lg leading-none font-semibold tracking-tight">Recent Orders</h3>
 				<p class="mt-1 text-sm text-muted-foreground">
@@ -130,59 +134,6 @@
 				</table>
 			</div>
 		</div>
-
-		<div
-			class="flex flex-col justify-between rounded-xl border border-border bg-card text-card-foreground shadow-sm"
-		>
-			<div>
-				<div class="p-6">
-					<h3 class="text-lg leading-none font-semibold tracking-tight">Active Payment Channels</h3>
-					<p class="mt-1 text-sm text-muted-foreground">
-						Your verified methods for automated checkout.
-					</p>
-				</div>
-				<div class="space-y-4 p-6 pt-0">
-					{#each allMethods as method}
-						<div
-							class="flex items-start gap-4 rounded-lg border border-border p-3 transition-colors hover:bg-muted/30"
-						>
-							<div class="rounded-md bg-secondary p-2 text-secondary-foreground">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									width="18"
-									height="18"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									><rect width="20" height="14" x="2" y="5" rx="2" /><line
-										x1="2"
-										x2="22"
-										y1="10"
-										y2="10"
-									/></svg
-								>
-							</div>
-							<div class="space-y-0.5">
-								<p class="text-sm leading-none font-medium">{method.name}</p>
-								<p class="text-xs text-muted-foreground">
-									{method.description ?? 'No description provided.'}
-								</p>
-							</div>
-						</div>
-					{/each}
-				</div>
-			</div>
-			<div class="rounded-b-xl border-t border-border bg-muted/20 p-6">
-				<button
-					class="w-full rounded-md border border-input bg-background px-4 py-2 text-center text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-				>
-					Manage Methods
-				</button>
-			</div>
-		</div>
 	</div>
 
 	<div class="rounded-xl border border-border bg-card text-card-foreground shadow-sm">
@@ -215,9 +166,6 @@
 								<tr class="transition-colors hover:bg-muted/40">
 									<td class="p-4 font-medium">
 										{item.product}
-										<span class="mt-0.5 block font-mono text-xs text-muted-foreground"
-											>ID: {item.productId}</span
-										>
 									</td>
 									<td class="p-4 text-center font-mono">{item.quantity}</td>
 									<td class="p-4 text-right font-mono">ETB {item.price.toFixed(2)}</td>

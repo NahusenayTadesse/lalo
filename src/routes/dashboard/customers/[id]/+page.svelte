@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { zod4Client } from 'sveltekit-superforms/adapters';
+	import { untrack } from 'svelte';
 
 	let { data } = $props();
 
@@ -22,6 +23,7 @@
 		{ name: 'Phone', value: data.customer?.phone },
 		{ name: 'Email', value: data.customer?.email },
 		{ name: 'Address', value: data.customer?.address },
+		{ name: 'Delivery Address', value: data.customer?.deliveryAddress },
 		{ name: 'Status', value: data.customer?.status ? 'Active' : 'Inactive' },
 
 		{
@@ -33,7 +35,7 @@
 			value: data?.orderCounts?.find((item) => item.status === 'delivered')?.count ?? 0
 		},
 		{
-			name: 'Number of Delivered Orders',
+			name: 'Number of Cancelled Orders',
 			value: data?.orderCounts?.find((item) => item.status === 'cancelled')?.count ?? 0
 		},
 		{ name: 'Number of Days Since Joined', value: data.customer?.daysSinceJoined + ' Days' }
@@ -100,11 +102,23 @@
 		}
 	];
 
-	$form.name = data?.customer?.customerName;
-	$form.phone = data?.customer?.phone;
-	$form.email = data?.customer?.email;
-	$form.address = data?.customer?.address;
-	$form.status = data?.customer?.status;
+	// In an effect, not at the top level: navigating from one customer to another
+	// reuses this component, and top-level assignments would keep the first
+	// customer's values in the form.
+	$effect(() => {
+		const customer = data?.customer;
+		if (!customer) return;
+		// untrack: writing `$form` also reads it, and tracking that would reset the
+		// fields on every keystroke.
+		untrack(() => {
+			$form.name = customer.customerName;
+			$form.phone = customer.phone ?? '';
+			$form.email = customer.email ?? '';
+			$form.address = customer.address ?? '';
+			$form.deliveryAddress = customer.deliveryAddress ?? '';
+			$form.status = customer.status;
+		});
+	});
 </script>
 
 <svelte:head>
@@ -177,6 +191,15 @@
 					{errors}
 					required={false}
 					placeholder="Enter Customer Address"
+				/>
+				<InputComp
+					label="Delivery Address"
+					name="deliveryAddress"
+					type="text"
+					{form}
+					{errors}
+					required={false}
+					placeholder="Enter Customer Delivery Address"
 				/>
 
 				<InputComp

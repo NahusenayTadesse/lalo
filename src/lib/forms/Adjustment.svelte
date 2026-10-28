@@ -13,10 +13,12 @@
 
 	let {
 		data,
-		name = 'product'
+		name = 'product',
+		supplierList = []
 	}: {
 		data: SuperValidated<Infer<InventoryAdjustmentForm>>;
 		name: string;
+		supplierList?: { value: number; name: string }[];
 	} = $props();
 	const { form, errors, enhance, delayed, message } = superForm(data, {});
 	import { toast } from 'svelte-sonner';
@@ -94,6 +96,15 @@
 					/>
 
 					{#if $form.intent === 'add'}
+						<InputComp
+							label="Supplier"
+							name="supplier"
+							type="select"
+							{form}
+							{errors}
+							required={false}
+							items={supplierList}
+						/>
 						<InputComp
 							label="Cost per Unit"
 							name="costPerItem"

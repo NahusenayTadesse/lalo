@@ -15,10 +15,17 @@ export const auth = betterAuth({
 		enabled: true,
 		revokeSessionsOnPasswordReset: true,
 
-		sendResetPassword: async ({ user, url, token }, request) => {
+		sendResetPassword: async ({ user, url }) => {
 			const template = customerResetPasswordTemplate(url);
 
-			await sendEmail(user.email, template.subject, template.html);
+			try {
+				await sendEmail(user.email, template.subject, template.html);
+			} catch (err) {
+				// Without this the client only saw a generic better-auth error and the log
+				// had nothing saying the mail server was the cause.
+				console.error(`Password reset email to ${user.email} failed:`, err);
+				throw err;
+			}
 		},
 
 		onPasswordReset: async ({ user }, request) => {

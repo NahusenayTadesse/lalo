@@ -51,7 +51,7 @@ export const actions: Actions = {
 					text: 'Please check the form for errors'
 				},
 				{
-					status: 500
+					status: 400
 				}
 			);
 		}

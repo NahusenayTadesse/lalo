@@ -32,7 +32,7 @@ export const actions: Actions = {
 					text: 'Please check the form for errors'
 				},
 				{
-					status: 500
+					status: 400
 				}
 			);
 		}
@@ -65,7 +65,7 @@ export const actions: Actions = {
 
 			return message(form, {
 				type: 'success',
-				text: 'Sign Up Successful!'
+				text: 'Signed in successfully'
 			});
 		} catch (error) {
 			if (error instanceof APIError) {
@@ -76,7 +76,8 @@ export const actions: Actions = {
 						text: error?.message
 					},
 					{
-						status: 500
+						// Wrong email/password is the caller's mistake, not a server error.
+						status: 400
 					}
 				);
 			}
@@ -84,7 +85,7 @@ export const actions: Actions = {
 				form,
 				{
 					type: 'error',
-					text: 'Registration Failed'
+					text: 'Login failed. Please try again.'
 				},
 				{
 					status: 500

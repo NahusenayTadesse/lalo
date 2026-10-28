@@ -1,9 +1,28 @@
 import { db } from '$lib/server/db';
 import { products, productCategories, prices } from '$lib/server/db/schema';
-import type { LayoutServerLoad } from './$types';
-import { eq, sql, and, like, asc, countDistinct, inArray } from 'drizzle-orm';
+import type { PageServerLoad } from './$types';
+import {
+	eq,
+	sql,
+	and,
+	like,
+	asc,
+	countDistinct,
+	inArray,
+	max as sqlMax,
+	min as sqlMin
+} from 'drizzle-orm';
 
-export const load: LayoutServerLoad = async ({ url }) => {
+/**
+ * Escapes `LIKE` metacharacters. Drizzle parameterises the value, so this isn't
+ * about injection — but an unescaped `%` or `_` still acts as a wildcard, and a
+ * search for `%` returned the entire catalogue.
+ */
+const escapeLike = (value: string) => value.replace(/[\\%_]/g, (c) => `\\${c}`);
+
+// A page load, not a layout load: as `+layout.server.ts` this ran the listing, count,
+// category and price queries on every product page too, which uses none of them.
+export const load: PageServerLoad = async ({ url }) => {
 	const search = url.searchParams.get('search') || '';
 	// `?? '1'` only covers a *missing* parameter: `parseInt('abc')` is NaN and
 	// `Math.max(1, NaN)` is NaN, which reached the client as `currentPage: null`
@@ -21,7 +40,7 @@ export const load: LayoutServerLoad = async ({ url }) => {
 	// so that a product matches when *any* of its variants is in range.
 	const whereClause = and(
 		eq(products.isActive, true),
-		search ? like(products.name, `%${search}%`) : undefined,
+		search ? like(products.name, `%${escapeLike(search)}%`) : undefined,
 		selectedCats.length > 0 ? inArray(productCategories.name, selectedCats) : undefined
 	);
 
@@ -68,7 +87,10 @@ export const load: LayoutServerLoad = async ({ url }) => {
 		.leftJoin(productCategories, eq(productCategories.id, products.categoryId))
 		.innerJoin(prices, cheapestVariantInRange)
 		.where(whereClause)
-		.orderBy(asc(products.createdAt))
+		// `id` breaks ties. Most of the catalogue was bulk-imported within the same
+		// second, and rows tied on the sort key have no defined order under
+		// LIMIT/OFFSET — products repeated on one page and never showed on another.
+		.orderBy(asc(products.createdAt), asc(products.id))
 		.limit(pageSize)
 		.offset(offset);
 
@@ -107,9 +129,22 @@ export const load: LayoutServerLoad = async ({ url }) => {
 			}))
 	}));
 
+	// The price filter's bounds come from the catalogue itself. The page hard-coded
+	// 0–2000 while prices run past 8000, so touching the slider hid every product
+	// whose cheapest package was over 2000.
+	const [priceBounds] = await db
+		.select({ min: sqlMin(prices.price), max: sqlMax(prices.price) })
+		.from(prices)
+		.innerJoin(products, eq(prices.productId, products.id))
+		.where(eq(products.isActive, true));
+
 	return {
 		productList,
 		categories,
+		priceBounds: {
+			min: Math.floor(Number(priceBounds?.min ?? 0)),
+			max: Math.ceil(Number(priceBounds?.max ?? 0))
+		},
 		pagination: {
 			currentPage: page,
 			totalPages,

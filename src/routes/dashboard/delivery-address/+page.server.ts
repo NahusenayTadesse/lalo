@@ -59,14 +59,20 @@ export const actions: Actions = {
 
 			return message(form, { type: 'success', text: 'Delivery Address Successfully Added' });
 		} catch (err: any) {
-			if (err.code === 'ER_DUP_ENTRY') setError(form, 'name', 'Delivery Address already exists.');
-			return message(form, {
-				type: 'error',
-				text:
-					err.code === 'ER_DUP_ENTRY'
-						? 'Delivery Address is already exists. Please choose another one.'
-						: err.message
-			});
+			if (err.code === 'ER_DUP_ENTRY') {
+				setError(form, 'name', 'Delivery area already exists.');
+				return message(
+					form,
+					{ type: 'error', text: 'Delivery area already exists.' },
+					{ status: 400 }
+				);
+			}
+			console.error('Add delivery area failed:', err);
+			return message(
+				form,
+				{ type: 'error', text: 'Could not add the delivery area' },
+				{ status: 500 }
+			);
 		}
 	},
 	edit: async ({ request, locals }) => {
@@ -84,20 +90,26 @@ export const actions: Actions = {
 				.where(eq(department.id, Number(id)));
 			return message(form, { type: 'success', text: 'Delivery Address Successfully Updated' });
 		} catch (err: any) {
-			if (err.code === 'ER_DUP_ENTRY') return;
-			setError(form, 'name', 'Delivery Addressname already exists.');
-			return message(form, {
-				type: 'error',
-				text:
-					err.code === 'ER_DUP_ENTRY'
-						? 'Delivery Address name is already taken. Please choose another one.'
-						: err.message
-			});
+			// This used to return nothing on a duplicate (so the dialog did nothing) and
+			// report every *other* error as a duplicate name.
+			if (err.code === 'ER_DUP_ENTRY') {
+				setError(form, 'name', 'Delivery area already exists.');
+				return message(
+					form,
+					{ type: 'error', text: 'Delivery area already exists.' },
+					{ status: 400 }
+				);
+			}
+			console.error('Update delivery area failed:', err);
+			return message(
+				form,
+				{ type: 'error', text: 'Could not update the delivery area' },
+				{ status: 500 }
+			);
 		}
 	},
 	free: async ({ request, locals }) => {
 		const form = await superValidate(request, zod4(free));
-		console.log('form', form);
 		if (!form.valid) {
 			return fail(400, { form });
 		}
@@ -105,18 +117,22 @@ export const actions: Actions = {
 		const { threshold, suggestionThreshold } = form.data;
 
 		try {
-			await db.delete(freeDelivery);
-			await db
-				.insert(freeDelivery)
-				.values({ threshold: String(threshold), suggestionThreshold: String(suggestionThreshold) });
-
-			return message(form, { type: 'success', text: 'Free Delivery Settings Successfully Updated' });
-		} catch (err: any) {
-	
-			return message(form, {
-				type: 'error',
-				text: err.message
+			// One transaction: if the insert failed after the delete, the settings were gone.
+			await db.transaction(async (tx) => {
+				await tx.delete(freeDelivery);
+				await tx.insert(freeDelivery).values({
+					threshold: String(threshold),
+					suggestionThreshold: String(suggestionThreshold)
+				});
 			});
+
+			return message(form, {
+				type: 'success',
+				text: 'Free Delivery Settings Successfully Updated'
+			});
+		} catch (err: any) {
+			console.error('Free delivery update failed:', err);
+			return message(form, { type: 'error', text: 'Could not save the settings' }, { status: 500 });
 		}
 	}
 };

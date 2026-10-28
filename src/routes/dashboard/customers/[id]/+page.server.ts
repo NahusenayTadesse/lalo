@@ -9,17 +9,18 @@ import {
 	products,
 	orderItems
 } from '$lib/server/db/schema';
-import { eq, sql } from 'drizzle-orm';
-import type { PageServerLoad } from '../$types';
+import { and, eq, inArray, sql } from 'drizzle-orm';
+import type { Actions, PageServerLoad } from './$types';
 import { superValidate } from 'sveltekit-superforms';
-import { type Actions } from '@sveltejs/kit';
+import { error, isHttpError } from '@sveltejs/kit';
 import { fail, message } from 'sveltekit-superforms';
 import { setFlash } from 'sveltekit-flash-message/server';
-import { and } from 'drizzle-orm';
+import { duplicateField } from '$lib/server/crud';
+import { normalizeEthiopianPhone } from '$lib/validators/phone';
 
 export const load: PageServerLoad = async ({ params }) => {
 	try {
-		const { id } = params;
+		const id = Number(params.id);
 
 		const form = await superValidate(zod4(edit));
 
@@ -30,6 +31,7 @@ export const load: PageServerLoad = async ({ params }) => {
 				phone: customers.phone,
 				email: customers.email,
 				address: customers.address,
+				deliveryAddress: customers.deliveryAddress,
 				status: customers.isActive,
 				daysSinceJoined: sql<number>`DATEDIFF(CURRENT_DATE, ${customers.createdAt})`,
 				createdBy: user.name,
@@ -38,7 +40,10 @@ export const load: PageServerLoad = async ({ params }) => {
 			})
 			.from(customers)
 			.leftJoin(user, eq(customers.createdBy, user.id))
+			.where(eq(customers.id, id))
 			.then((rows) => rows[0]);
+
+		if (!customer) error(404, 'Customer not found');
 
 		const orderCounts = await db
 			.select({
@@ -46,7 +51,7 @@ export const load: PageServerLoad = async ({ params }) => {
 				count: sql<number>`count(${orders.id})`.mapWith(Number)
 			})
 			.from(orders)
-			.where(eq(orders.customerId, Number(id)))
+			.where(eq(orders.customerId, id))
 			.groupBy(orders.status);
 
 		const allMethods = await db
@@ -63,32 +68,30 @@ export const load: PageServerLoad = async ({ params }) => {
 				id: orders.id,
 				name: customers.name,
 				status: orders.status,
-				createdAt: sql<string>`DATE_FORMAT(${customers.createdAt}, '%Y-%m-%d')`
+				createdAt: sql<string>`DATE_FORMAT(${orders.createdAt}, '%Y-%m-%d')`
 			})
 			.from(orders)
 			.leftJoin(customers, eq(orders.customerId, customers.id))
-			.where(and(eq(orders.status, 'pending'), eq(orders.customerId, Number(id))));
+			.where(and(eq(orders.status, 'pending'), eq(orders.customerId, id)));
 
-		const allItems = await db
-			.select({
-				id: orderItems.id,
-				orderId: orderItems.orderId,
-				product: products.name,
-				quantity: orderItems.quantity,
-				productId: orderItems.productId,
-				price: orderItems.price,
-				total: sql<number>`${orderItems.quantity} * ${orderItems.price}`.mapWith(Number)
-			})
-			.from(orderItems)
-			.leftJoin(
-				orders,
-				and(
-					eq(orders.id, orderItems.orderId),
-					eq(orders.status, 'pending'),
-					eq(orders.customerId, Number(id))
-				)
-			)
-			.leftJoin(products, eq(orderItems.productId, products.id));
+		// Only the items of the orders listed above. A condition inside a LEFT JOIN
+		// filters nothing, which loaded the whole order-items table on every visit.
+		const orderIds = allData.map((order) => order.id);
+		const allItems = orderIds.length
+			? await db
+					.select({
+						id: orderItems.id,
+						orderId: orderItems.orderId,
+						product: products.name,
+						quantity: orderItems.quantity,
+						productId: orderItems.productId,
+						price: orderItems.price,
+						total: sql<number>`${orderItems.quantity} * ${orderItems.price}`.mapWith(Number)
+					})
+					.from(orderItems)
+					.leftJoin(products, eq(orderItems.productId, products.id))
+					.where(inArray(orderItems.orderId, orderIds))
+			: [];
 
 		return {
 			customer,
@@ -98,8 +101,10 @@ export const load: PageServerLoad = async ({ params }) => {
 			allItems,
 			orderCounts
 		};
-	} catch (error) {
-		console.error('Error loading customer dashboard:', error);
+	} catch (err) {
+		// Let the 404 above through instead of rendering an empty page.
+		if (isHttpError(err)) throw err;
+		console.error('Error loading customer dashboard:', err);
 		return {
 			customer: null,
 			form: null,
@@ -112,67 +117,77 @@ export const load: PageServerLoad = async ({ params }) => {
 
 export const actions: Actions = {
 	edit: async ({ request, locals, cookies, params }) => {
-		const { id } = params;
+		const id = Number(params.id);
 		const form = await superValidate(request, zod4(edit));
 
 		if (!form.valid) {
-			// Stay on the same page and set a flash message
 			setFlash({ type: 'error', message: 'Please check your form.' }, cookies);
 			return fail(400, { form });
 		}
-		const { name, phone, email, status, address } = form.data;
+		const { name, status } = form.data;
+		const phone = normalizeEthiopianPhone(form.data.phone) ?? form.data.phone.trim();
 
 		try {
-			await db.transaction(async (tx) => {
-				await tx
-					.update(customers)
-					.set({
-						name,
-						email,
-						phone,
-						address,
-						isActive: status,
-						updatedBy: locals?.user?.id
-					})
-					.where(eq(customers.id, Number(id)));
+			// Only the `customers` row. A linked login's email belongs to better-auth and
+			// changes through its own verified flow, not from here.
+			const [result] = await db
+				.update(customers)
+				.set({
+					name,
+					phone,
+					// NULL, never '': `email` is UNIQUE and MySQL allows repeated NULLs only.
+					email: form.data.email || null,
+					address: form.data.address || null,
+					deliveryAddress: form.data.deliveryAddress || null,
+					isActive: status,
+					updatedBy: locals?.user?.id
+				})
+				.where(eq(customers.id, id));
 
-				const userId = await db
-					.select({ id: customers.userId })
-					.from(customers)
-					.where(eq(customers.id, Number(id)))
-					.then((rows) => rows[0]);
+			if (result.affectedRows === 0) {
+				return message(form, { type: 'error', text: 'Customer not found' }, { status: 404 });
+			}
 
-				await tx.update(user).set({ email }).where(eq(user.id, userId.id));
-			});
-			// Stay on the same page and set a flash message
-			return message(form, { type: 'success', text: 'Customer updated Successfully Added' });
+			return message(form, { type: 'success', text: 'Customer updated successfully' });
 		} catch (err) {
-			console.error('Error' + err);
-			setFlash({ type: 'error', message: 'Error: Something Went Wrong Try Again' }, cookies);
-
-			return message(form, { type: 'error', text: 'Error: Something Went Wrong Try Again' });
+			if (duplicateField(err, customers) === 'email') {
+				return message(
+					form,
+					{ type: 'error', text: 'Another customer already uses this email' },
+					{ status: 400 }
+				);
+			}
+			console.error('Error updating customer:', err);
+			return message(
+				form,
+				{ type: 'error', text: 'Error: Something Went Wrong Try Again' },
+				{ status: 500 }
+			);
 		}
 	},
 	delete: async ({ cookies, params }) => {
-		const { id } = params;
+		const id = Number(params.id);
 
 		try {
-			if (!id) {
-				setFlash({ type: 'error', message: `Unexpected Error: ${err?.message}` }, cookies);
+			await db.delete(customers).where(eq(customers.id, id));
+		} catch (err) {
+			// `orders.customer_id` has no ON DELETE rule, and an order's history must not
+			// silently disappear with its customer.
+			if ((err as { code?: string })?.code === 'ER_ROW_IS_REFERENCED_2') {
+				setFlash(
+					{
+						type: 'error',
+						message: 'This customer has orders and cannot be deleted. Mark them Inactive instead.'
+					},
+					cookies
+				);
 				return fail(400);
 			}
-
-			await db.delete(customers).where(eq(customers.id, id));
-
-			setFlash({ type: 'success', message: 'Customer Deleted Successfully!' }, cookies);
-			return message(form, {
-				type: 'success',
-				text: 'Customer Deleted Successfully!'
-			});
-		} catch (err) {
 			console.error('Error deleting customer:', err);
-			setFlash({ type: 'error', message: `Unexpected Error: ${err?.message}` }, cookies);
-			return fail(400);
+			setFlash({ type: 'error', message: 'Could not delete this customer.' }, cookies);
+			return fail(500);
 		}
+
+		setFlash({ type: 'success', message: 'Customer Deleted Successfully!' }, cookies);
 	}
 };

@@ -1,10 +1,8 @@
 import { db } from '$lib/server/db';
-import { orders, customers, paymentMethods, products, orderItems } from '$lib/server/db/schema';
-import { eq, sql } from 'drizzle-orm';
-import type { PageServerLoad } from '../$types';
+import { orders, customers, products, orderItems } from '$lib/server/db/schema';
+import { eq, sql, inArray } from 'drizzle-orm';
+import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
-
-import { and } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) return redirect(303, '/');
@@ -28,50 +26,42 @@ export const load: PageServerLoad = async ({ locals }) => {
 			.where(eq(orders.customerId, Number(customer.id)))
 			.groupBy(orders.status);
 
-		const allMethods = await db
-			.select({
-				value: paymentMethods.id,
-				name: paymentMethods.name,
-				description: paymentMethods.description
-			})
-			.from(paymentMethods)
-			.where(eq(paymentMethods.isActive, true));
-
 		const allData = await db
 			.select({
 				id: orders.id,
 				name: customers.name,
 				status: orders.status,
-				createdAt: sql<string>`DATE_FORMAT(${customers.createdAt}, '%Y-%m-%d')`
+				createdAt: sql<string>`DATE_FORMAT(${orders.createdAt}, '%Y-%m-%d')`
 			})
 			.from(orders)
 			.leftJoin(customers, eq(orders.customerId, customers.id))
 			.where(eq(orders.customerId, Number(customer.id)));
 
-		const allItems = await db
-			.select({
-				id: orderItems.id,
-				orderId: orderItems.orderId,
-				product: products.name,
-				quantity: orderItems.quantity,
-				productId: orderItems.productId,
-				price: orderItems.price,
-				total: sql<number>`${orderItems.quantity} * ${orderItems.price}`.mapWith(Number)
-			})
-			.from(orderItems)
-			.leftJoin(
-				orders,
-				and(
-					eq(orders.id, orderItems.orderId),
-					eq(orders.status, 'pending'),
-					eq(orders.customerId, Number(customer.id))
-				)
-			)
-			.leftJoin(products, eq(orderItems.productId, products.id));
+		// Scoped to this customer's own *pending* orders — the page lists these under
+		// "Pending Order Breakdown". Constraining the *join* (the original approach)
+		// filters nothing — a LEFT JOIN keeps every `orderItems` row — which sent the
+		// entire order-items table to every signed-in customer.
+		const orderIds = allData.filter((order) => order.status === 'pending').map((order) => order.id);
+		const allItems = orderIds.length
+			? await db
+					.select({
+						id: orderItems.id,
+						orderId: orderItems.orderId,
+						product: products.name,
+						quantity: orderItems.quantity,
+						productId: orderItems.productId,
+						// A decimal comes back from mysql2 as a string; the page calls `.toFixed`
+						// on it, which threw and took the whole page down.
+						price: sql<number>`${orderItems.price}`.mapWith(Number),
+						total: sql<number>`${orderItems.quantity} * ${orderItems.price}`.mapWith(Number)
+					})
+					.from(orderItems)
+					.leftJoin(products, eq(orderItems.productId, products.id))
+					.where(inArray(orderItems.orderId, orderIds))
+			: [];
 
 		return {
 			customer,
-			allMethods,
 			allData,
 			allItems,
 			orderCounts
@@ -81,7 +71,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		return {
 			customer: null,
 			form: null,
-			allMethods: [],
 			reciepts: [],
 			error: 'Failed to load customer dashboard.'
 		};

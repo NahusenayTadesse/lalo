@@ -12,9 +12,7 @@
 		suggestionThreshold
 	}: { freeDeliveryThreshold?: number | string; suggestionThreshold?: number | string } = $props();
 
-	const cart = $derived(useCart());
-
-	let open = $state(false);
+	const cart = useCart();
 
 	/** Format price to currency */
 	const formatPrice = (price: number) => {
@@ -25,9 +23,11 @@
 	};
 </script>
 
+<!-- Bound to the store, not a local flag: the store's `isOpen` was never updated, so
+     this scroll lock never engaged and the page behind the drawer still scrolled. -->
 <svelte:body style:overflow={cart.isOpen ? 'hidden' : 'auto'} />
 
-<Sheet.Root bind:open>
+<Sheet.Root bind:open={cart.isOpen}>
 	<Sheet.Trigger
 		class="fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
 	>
@@ -64,25 +64,26 @@
 
 			<!-- Footer -->
 			<div class="z-100 space-y-3 border-t border-border bg-muted p-4">
-			   <div>
-				 {#if cart.totalPrice > Number(suggestionThreshold)}
-				     {#if cart.totalPrice < Number(freeDeliveryThreshold)}
-					<p class="text-sm text-muted-foreground">
-						You are {formatPrice(Number(freeDeliveryThreshold) - cart.totalPrice)} away from free delivery
-					</p>
+				<div>
+					<!-- A threshold of 0 means free delivery is off. -->
+					{#if Number(freeDeliveryThreshold) > 0 && cart.totalPrice > Number(suggestionThreshold)}
+						{#if cart.totalPrice < Number(freeDeliveryThreshold)}
+							<p class="text-sm text-muted-foreground">
+								You are {formatPrice(Number(freeDeliveryThreshold) - cart.totalPrice)} away from free
+								delivery
+							</p>
+						{/if}
+						{#if cart.totalPrice >= Number(freeDeliveryThreshold)}
+							<p class="flex flex-row items-center gap-2 text-sm text-muted-foreground">
+								<span class="flex items-center gap-1">
+									<PartyPopper class="size-5 animate-bounce text-amber-400" />
+									You have qualified for free delivery!
+									<span class="animate-pulse text-lg">✨</span>
+								</span>
+							</p>
+						{/if}
 					{/if}
-					{#if cart.totalPrice >= Number(freeDeliveryThreshold)}
-					<p class="text-sm text-muted-foreground flex flex-row items-center gap-2">
-						
-						<span class="flex items-center gap-1">
-							<PartyPopper class="size-5 text-amber-400 animate-bounce" />
-							You have qualified for free delivery!
-							<span class="text-lg animate-pulse">✨</span>
-						</span>
-					</p>
-					{/if}
-				 {/if}
-			   </div>
+				</div>
 				<div class="flex items-center justify-between">
 					<span class="text-sm text-muted-foreground">Total ({cart.totalItems} items)</span>
 					<span class="text-lg font-bold text-primary">{formatPrice(cart.totalPrice)}</span>
@@ -92,9 +93,7 @@
 						<TrashIcon class="size-4" />
 						Clear
 					</Button>
-					<Button size="sm" onclick={() => (open = false)} class="flex-1" href="/checkout"
-						>Checkout</Button
-					>
+					<Button size="sm" onclick={cart.close} class="flex-1" href="/checkout">Checkout</Button>
 				</div>
 			</div>
 		{:else}

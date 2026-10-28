@@ -17,17 +17,16 @@ export const edit = z.object({
 		.string()
 		.max(500, { message: "Product description can't be more than 500 characters." })
 		.optional(),
-	quantity: z.coerce
-		.number()
-		.int({ message: 'Quantity can only be full numbers, no decimals.' })
-		.positive({ message: 'Quantity must be a positive number.' })
-		.default(0),
+	// No `quantity`: stock only changes through the Adjust dialog, which keeps the
+	// ledger. Editing it here overwrote whatever deliveries had changed since the
+	// page loaded, with no record of why.
 
 	supplier: z.coerce.number('Supplier is required').optional(),
+	// `nonnegative`, not `positive`: 0 means "no reorder alert".
 	reorderLevel: z.coerce
 		.number()
 		.int({ message: 'Reorder Level can only be full numbers, no decimals.' })
-		.positive({ message: 'Reorder Level must be a positive number.' })
+		.nonnegative({ message: 'Reorder Level cannot be negative.' })
 		.default(0),
 
 	image: z
@@ -47,7 +46,13 @@ export const adjust = z.object({
 		.min(0, 'Cost per unit must be greater than 0'),
 
 	employeeResponsible: z.coerce.string('Employee is required'),
-	quantity: z.coerce.number('Quantity is required').int().positive('Quantity must be greater than 0'),
+	// Who the stock came from, for an `add`. Recorded on the adjustment so the change
+	// history's supplier filter has something to filter on.
+	supplier: z.coerce.number().int().nonnegative().optional(),
+	quantity: z.coerce
+		.number('Quantity is required')
+		.int()
+		.positive('Quantity must be greater than 0'),
 
 	reason: z.string().max(255).optional(),
 	reciept: z
@@ -60,7 +65,10 @@ export type AdjustForm = z.infer<typeof adjust>;
 
 export const damaged = z.object({
 	damagedBy: z.coerce.string('Employee is required'),
-	quantity: z.coerce.number('Quantity is required').int().positive('Quantity must be greater than 0'),
+	quantity: z.coerce
+		.number('Quantity is required')
+		.int()
+		.positive('Quantity must be greater than 0'),
 
 	reason: z.string().max(255).optional()
 });
@@ -81,15 +89,22 @@ export type EditGallery = z.infer<typeof editGallery>;
 
 export const editPrice = z.object({
 	id: z.number('Price Not found'),
-	price: z.coerce.number('Price must be a number'),
-	amount: z.string('Product Variation is required')
+	price: z.coerce.number('Price must be a number').positive('Price must be greater than 0'),
+	amount: z.string('Product Variation is required').trim().min(1, 'Product Variation is required')
 });
 
 export type EditPrice = z.infer<typeof editPrice>;
 
+/** Same fields as `editPrice`, without its rules — a bad existing row must still be deletable. */
+export const deletePrice = z.object({
+	id: z.number('Price Not found'),
+	price: z.coerce.number(),
+	amount: z.string()
+});
+
 export const addPrice = z.object({
-	price: z.coerce.number('Price must be a number'),
-	amount: z.string('Product Variation is required')
+	price: z.coerce.number('Price must be a number').positive('Price must be greater than 0'),
+	amount: z.string('Product Variation is required').trim().min(1, 'Product Variation is required')
 });
 
 export type AddPrice = z.infer<typeof addPrice>;

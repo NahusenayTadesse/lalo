@@ -1,7 +1,7 @@
 import { superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 
-import { edit, adjust, damaged, editGallery, editPrice, addPrice } from './schema';
+import { edit, adjust, damaged, editGallery, editPrice, addPrice, deletePrice } from './schema';
 
 import { db } from '$lib/server/db';
 import {
@@ -30,46 +30,30 @@ export const actions: Actions = {
 			return fail(400, { form });
 		}
 
-		const { productName, category, description, quantity, supplier, reorderLevel, image } =
-			form.data;
+		const { productName, category, description, supplier, reorderLevel, image } = form.data;
 
 		try {
-			if (image) {
-				const featuredImage = await saveUploadedFile(image);
-
-				await db
-					.update(products)
-					.set({
-						name: productName,
-						description,
-						categoryId: category,
-						quantity,
-						supplierId: supplier ? supplier : 1,
-						reorderLevel,
-						updatedBy: locals?.user?.id,
-						featuredImage
-					})
-					.where(eq(products.id, Number(id)));
-			} else {
-				await db
-					.update(products)
-					.set({
-						name: productName,
-						description,
-						categoryId: category,
-						quantity,
-						supplierId: supplier ? supplier : 1,
-						reorderLevel,
-						updatedBy: locals?.user?.id
-					})
-					.where(eq(products.id, Number(id)));
-			}
+			await db
+				.update(products)
+				.set({
+					name: productName,
+					description,
+					categoryId: category,
+					// An empty supplier used to be stored as supplier #1.
+					supplierId: supplier || null,
+					reorderLevel,
+					updatedBy: locals?.user?.id,
+					// No new upload means "keep the current image".
+					...(image instanceof File && image.size > 0
+						? { featuredImage: await saveUploadedFile(image) }
+						: {})
+				})
+				.where(eq(products.id, Number(id)));
 
 			return message(form, { type: 'success', text: 'Product Updated Successfully' });
 		} catch (err) {
-			console.error(err?.message);
-
-			return message(form, { type: 'error', text: 'Product Update Failed' + err?.message });
+			console.error('Product update failed:', err);
+			return message(form, { type: 'error', text: 'Product Update Failed' }, { status: 500 });
 		}
 	},
 	adjust: async ({ request, params, locals }) => {
@@ -88,7 +72,8 @@ export const actions: Actions = {
 			);
 		}
 
-		const { intent, quantity, reason, employeeResponsible, costPerItem, reciept } = form.data;
+		const { intent, quantity, reason, employeeResponsible, costPerItem, reciept, supplier } =
+			form.data;
 		const productId = Number(id);
 		const adjustment = intent === 'add' ? quantity : -quantity;
 		// `productAdjustments` has no columns for these yet, so they're folded into `reason`
@@ -106,9 +91,7 @@ export const actions: Actions = {
 						.where(eq(products.id, productId));
 
 					if (!current || current.quantity + adjustment < 0) {
-						throw new Error(
-							`Cannot remove ${quantity} — only ${current?.quantity ?? 0} in stock.`
-						);
+						throw new Error(`Cannot remove ${quantity} — only ${current?.quantity ?? 0} in stock.`);
 					}
 				}
 
@@ -120,7 +103,9 @@ export const actions: Actions = {
 					const [tranId] = await tx
 						.insert(transactions)
 						.values({
-							amount: String(adjustment),
+							// What the stock cost. This used to store the unit count in the
+							// money column.
+							amount: (costPerItem * quantity).toFixed(2),
 							recieptLink,
 							createdBy: locals.user?.id
 						})
@@ -130,6 +115,7 @@ export const actions: Actions = {
 
 				await tx.insert(productAdjustments).values({
 					productsId: productId,
+					supplierId: intent === 'add' && supplier ? supplier : undefined,
 					adjustment,
 					reason: fullReason,
 					transactionId,
@@ -210,7 +196,8 @@ export const actions: Actions = {
 					quantity,
 					createdBy: locals.user?.id,
 					damagedBy,
-					reason
+					// NOT NULL column, optional field: no reason used to fail the insert.
+					reason: reason ?? ''
 				});
 
 				// 2. Decrement the main product inventory
@@ -236,6 +223,15 @@ export const actions: Actions = {
 	editGallery: async ({ params, locals, request }) => {
 		const { id } = params;
 		const form = await superValidate(request, zod4(editGallery));
+
+		// Without this, a bad submission reached `existing.split(',')` below and threw.
+		if (!form.valid) {
+			return message(
+				form,
+				{ type: 'error', text: 'Please check the form for errors' },
+				{ status: 400 }
+			);
+		}
 
 		const { existing, gallery } = form.data;
 
@@ -330,7 +326,7 @@ export const actions: Actions = {
 		}
 	},
 	deletePrice: async ({ request }) => {
-		const form = await superValidate(request, zod4(editPrice));
+		const form = await superValidate(request, zod4(deletePrice));
 
 		if (!form.valid) {
 			return message(form, { type: 'error', text: 'Invalid form data' });

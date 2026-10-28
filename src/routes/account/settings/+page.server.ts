@@ -8,19 +8,20 @@ import { eq, count, sql } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import { editUserSchema as schema } from './schema';
 import { placeNames } from '$lib/server/db/schema';
+import { normalizeEthiopianPhone } from '$lib/validators/phone';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) return redirect(303, '/');
 
 	const form = await superValidate(zod4(schema));
 
-		const placeList = await db
-			.select({
-				value: placeNames.name,
-				name: placeNames.name
-			})
-			.from(placeNames)
-			.where(eq(placeNames.isActive, true));
+	const placeList = await db
+		.select({
+			value: placeNames.name,
+			name: placeNames.name
+		})
+		.from(placeNames)
+		.where(eq(placeNames.isActive, true));
 
 	const singleUser = await db
 		.select({
@@ -53,8 +54,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.where(eq(orders.customerId, Number(singleUser.id)))
 		.groupBy(orders.status);
 
-
-
 	if (!singleUser) {
 		error(404, 'User with this ID not found');
 	}
@@ -79,7 +78,9 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: 'Please check your form data.' });
 		}
 
-		const { name, phone, email, address, deliveryAddress } = form.data;
+		const { name, email, address, deliveryAddress } = form.data;
+		// Stored as `+251XXXXXXXXX` (or NULL), the one shape the rest of the app uses.
+		const phone = normalizeEthiopianPhone(form.data.phone) ?? null;
 
 		try {
 			const existingUser = await db
@@ -130,7 +131,6 @@ export const actions: Actions = {
 							deliveryAddress
 						})
 						.where(eq(customers.userId, id));
-	
 				}
 			});
 

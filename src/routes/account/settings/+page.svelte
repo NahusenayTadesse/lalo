@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { zod4Client } from 'sveltekit-superforms/adapters';
+	import { untrack } from 'svelte';
 	import { editUserSchema } from './schema';
 
 	let { data } = $props();
@@ -19,6 +20,9 @@
 
 	import { columns } from './columns.js';
 
+	const countFor = (status: string) =>
+		data?.orderCounts?.find((item) => item.status === status)?.count ?? 0;
+
 	let singleTable = $derived([
 		{ name: 'Name', value: data.singleUser?.name },
 		{ name: 'Email', value: data.singleUser?.email },
@@ -26,20 +30,13 @@
 		{ name: 'General Address', value: data.singleUser?.address ?? 'N/A' },
 		{ name: 'Delivery Address', value: data.singleUser?.deliveryAddress ?? 'N/A' },
 
-		{ name: 'Life Time Orders', value: data.singleUser?.numberOfOrders } + 'Orders',
-
-		{
-			name: 'Number of Pending Orders',
-			value: data?.orderCounts?.find((item) => item.status === 'pending')?.count ?? 0 + ' Orders'
-		},
-		{
-			name: 'Number of Delivered Orders',
-			value: data?.orderCounts?.find((item) => item.status === 'delivered')?.count ?? 0 + ' Orders'
-		},
-		{
-			name: 'Number of Cancelled Orders',
-			value: data?.orderCounts?.find((item) => item.status === 'cancelled')?.count ?? 0 + ' Orders'
-		},
+		// `{ … } + 'Orders'` added a string to the object, which put the text
+		// "[object Object]Orders" in the table instead of a row. And `count ?? 0 + ' Orders'`
+		// parses as `count ?? (0 + ' Orders')`, so only a zero got the suffix.
+		{ name: 'Life Time Orders', value: `${data.singleUser?.numberOfOrders ?? 0} Orders` },
+		{ name: 'Number of Pending Orders', value: `${countFor('pending')} Orders` },
+		{ name: 'Number of Delivered Orders', value: `${countFor('delivered')} Orders` },
+		{ name: 'Number of Cancelled Orders', value: `${countFor('cancelled')} Orders` },
 
 		{
 			name: 'Joined',
@@ -78,12 +75,19 @@
 
 	let edit = $state(false);
 
-	$form.name = data.singleUser?.name;
-	$form.phone = data.singleUser?.phone;
-	$form.email = data.singleUser?.email;
-	$form.address = data.singleUser?.address;
-	$form.deliveryAddress = data.singleUser?.deliveryAddress;
-
+	// Re-synced when the saved profile changes (e.g. after a save), not just once at
+	// startup. `untrack` because writing `$form` also reads it.
+	$effect(() => {
+		const user = data.singleUser;
+		if (!user) return;
+		untrack(() => {
+			$form.name = user.name;
+			$form.phone = user.phone ?? '';
+			$form.email = user.email;
+			$form.address = user.address ?? '';
+			$form.deliveryAddress = user.deliveryAddress ?? '';
+		});
+	});
 </script>
 
 <svelte:head>
@@ -136,24 +140,23 @@
 					required
 				/>
 
-					<InputComp
-				label="General Address"
-				name="address"
-				type="select"
-				{form}
-				{errors}
-				placeholder="+251 9-11-00-00-00"
-				
-				items={data?.placeList}
-			/>
-			<InputComp
-				label="Specific Delivery Address"
-				name="deliveryAddress"
-				type="text"
-				{form}
-				{errors}
-				placeholder="Mexico, Edna Mall, 2nd Floor, Apt 201"
-			/>
+				<InputComp
+					label="General Address"
+					name="address"
+					type="select"
+					{form}
+					{errors}
+					placeholder="+251 9-11-00-00-00"
+					items={data?.placeList}
+				/>
+				<InputComp
+					label="Specific Delivery Address"
+					name="deliveryAddress"
+					type="text"
+					{form}
+					{errors}
+					placeholder="Mexico, Edna Mall, 2nd Floor, Apt 201"
+				/>
 
 				<Button form="edit" type="submit" class="mt-4">
 					{#if $delayed}

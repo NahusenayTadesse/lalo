@@ -100,7 +100,7 @@
 
 	const threshold = $derived(freeDeliveryThreshold === null ? null : Number(freeDeliveryThreshold));
 	const qualifiesForFreeDelivery = $derived(
-		threshold !== null && subtotal > 0 && subtotal >= threshold
+		threshold !== null && threshold > 0 && subtotal > 0 && subtotal >= threshold
 	);
 
 	const areaFee = $derived(placeList.find((p) => p.value === $form.address)?.fee);

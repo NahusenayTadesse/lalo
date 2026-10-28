@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error, isHttpError, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { orders, customers, orderItems, products } from '$lib/server/db/schema';
@@ -28,6 +28,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				status: orders.status,
 				createdAt: sql<string>`DATE_FORMAT(${orders.createdAt}, '%Y-%m-%d %H:%i')`,
 				updatedAt: sql<string>`DATE_FORMAT(${orders.updatedAt}, '%Y-%m-%d %H:%i')`,
+				fee: orders.fee,
 				// Example tracking steps field if you have it, otherwise mock calculated on frontend
 				itemId: orderItems.id,
 				productName: products.name,
@@ -49,8 +50,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 						status: row.status,
 						createdAt: row.createdAt,
 						updatedAt: row.updatedAt,
-						currentStep: row.currentStep, // 1: Order Placed, 2: Processing, 3: In Transit
-						orderTotal: 0,
+						// Starts at the delivery fee: "Estimated Expenditure" quoted items only,
+						// so customers who chose delivery were shown less than they'd pay.
+						orderTotal: Number(row.fee ?? 0),
 						items: []
 					};
 				}
@@ -75,6 +77,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			pendingOrders: Object.values(pendingOrdersMap)
 		};
 	} catch (err) {
+		// The 404 above used to be swallowed here and shown as "no active shipments".
+		if (isHttpError(err)) throw err;
 		console.error('Error loading order tracking snapshot:', err);
 		return {
 			pendingOrders: [],

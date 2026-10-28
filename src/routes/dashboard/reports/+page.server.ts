@@ -23,7 +23,10 @@ export const load: PageServerLoad = async ({ url }) => {
 	const endParam = url.searchParams.get('end');
 	const presetParam = url.searchParams.get('preset');
 
-	if ((startParam || endParam) && (!isValidDateString(startParam) || !isValidDateString(endParam))) {
+	if (
+		(startParam || endParam) &&
+		(!isValidDateString(startParam) || !isValidDateString(endParam))
+	) {
 		error(400, 'Invalid date range');
 	}
 
@@ -44,13 +47,14 @@ export const load: PageServerLoad = async ({ url }) => {
 	const search = url.searchParams.get('search')?.trim() ?? '';
 	const paymentMethodFilter = url.searchParams.get('paymentMethod');
 	const categoryFilter = url.searchParams.get('category');
-	const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1'));
+	// `Math.max(1, NaN)` is NaN, so `?page=abc` reached `.offset(NaN)` and 500'd.
+	const parsedPage = parseInt(url.searchParams.get('page') ?? '1', 10);
+	const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
 	const pageSizeParam = parseInt(url.searchParams.get('pageSize') ?? '');
 	const pageSize = ALLOWED_PAGE_SIZES.includes(pageSizeParam) ? pageSizeParam : DEFAULT_PAGE_SIZE;
 	const offset = (page - 1) * pageSize;
 
-	const whereClause = and(
-		status !== 'all' ? eq(orders.status, status as (typeof STATUSES)[number]) : undefined,
+	const filtersExceptStatus = [
 		start ? gte(orders.createdAt, new Date(start)) : undefined,
 		end ? lte(orders.createdAt, new Date(`${end}T23:59:59`)) : undefined,
 		paymentMethodFilter ? eq(transactions.paymentMethodId, Number(paymentMethodFilter)) : undefined,
@@ -64,7 +68,21 @@ export const load: PageServerLoad = async ({ url }) => {
 					like(orders.deliveryAddress, `%${search}%`)
 				)
 			: undefined
+	];
+
+	/** Every filter as chosen — drives the order counts, status chart and detail table. */
+	const whereClause = and(
+		status !== 'all' ? eq(orders.status, status as (typeof STATUSES)[number]) : undefined,
+		...filtersExceptStatus
 	);
+
+	/**
+	 * Money figures only count delivered orders unless a status is picked explicitly.
+	 * Under "all statuses" they used to include cancelled orders (never paid) and
+	 * pending ones (not paid yet), which overstated revenue.
+	 */
+	const revenueStatus = (status === 'all' ? 'delivered' : status) as (typeof STATUSES)[number];
+	const revenueWhereClause = and(eq(orders.status, revenueStatus), ...filtersExceptStatus);
 
 	const lineTotalSql = sql<number>`${orderItems.quantity} * ${orderItems.price}`;
 
@@ -80,7 +98,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		.innerJoin(products, eq(orderItems.productId, products.id))
 		.leftJoin(transactions, eq(orders.transactionId, transactions.id))
 		.leftJoin(customers, eq(orders.customerId, customers.id))
-		.where(whereClause);
+		.where(revenueWhereClause);
 
 	const dailyTrend = await db
 		.select({
@@ -93,7 +111,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		.innerJoin(products, eq(orderItems.productId, products.id))
 		.leftJoin(transactions, eq(orders.transactionId, transactions.id))
 		.leftJoin(customers, eq(orders.customerId, customers.id))
-		.where(whereClause)
+		.where(revenueWhereClause)
 		.groupBy(sql`DATE(${orders.createdAt})`)
 		.orderBy(asc(sql`DATE(${orders.createdAt})`));
 
@@ -109,7 +127,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		.innerJoin(products, eq(orderItems.productId, products.id))
 		.leftJoin(transactions, eq(orders.transactionId, transactions.id))
 		.leftJoin(customers, eq(orders.customerId, customers.id))
-		.where(whereClause)
+		.where(revenueWhereClause)
 		.groupBy(products.id, products.name)
 		.orderBy(desc(sql`SUM(${lineTotalSql})`))
 		.limit(5);
@@ -134,24 +152,40 @@ export const load: PageServerLoad = async ({ url }) => {
 		.where(whereClause);
 
 	const totalOrders = orderLevelRows.length;
-	const totalDeliveryFees = orderLevelRows.reduce((sum, o) => sum + Number(o.fee ?? 0), 0);
-	const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+	// Same scope as `totalRevenue`, so the average divides like by like.
+	const revenueOrders = orderLevelRows.filter((o) => o.status === revenueStatus);
+	const totalDeliveryFees = revenueOrders.reduce((sum, o) => sum + Number(o.fee ?? 0), 0);
+	const averageOrderValue = revenueOrders.length > 0 ? totalRevenue / revenueOrders.length : 0;
 
 	const statusBreakdown = STATUSES.map((s) => ({
 		status: s,
 		count: orderLevelRows.filter((o) => o.status === s).length
 	}));
 
-	const paymentBreakdownMap = new Map<string, { revenue: number; orders: number }>();
-	for (const o of orderLevelRows) {
-		const key = o.paymentMethodName ?? 'Unpaid / No Method';
-		const entry = paymentBreakdownMap.get(key) ?? { revenue: 0, orders: 0 };
-		entry.revenue += Number(o.totalPaid ?? 0);
-		entry.orders += 1;
-		paymentBreakdownMap.set(key, entry);
-	}
-	const paymentBreakdownFull = Array.from(paymentBreakdownMap.entries())
-		.map(([name, v]) => ({ name, ...v }))
+	// Line totals grouped by payment method, under the same filters as the other
+	// revenue figures. Summing each order's whole `transactions.amount` counted the
+	// full payment even when a category or product search matched only some items.
+	const paymentRevenueRows = await db
+		.select({
+			name: paymentMethods.name,
+			revenue: sql<number>`COALESCE(SUM(${lineTotalSql}), 0)`.mapWith(Number),
+			orders: sql<number>`COUNT(DISTINCT ${orders.id})`.mapWith(Number)
+		})
+		.from(orders)
+		.innerJoin(orderItems, eq(orders.id, orderItems.orderId))
+		.innerJoin(products, eq(orderItems.productId, products.id))
+		.leftJoin(transactions, eq(orders.transactionId, transactions.id))
+		.leftJoin(customers, eq(orders.customerId, customers.id))
+		.leftJoin(paymentMethods, eq(transactions.paymentMethodId, paymentMethods.id))
+		.where(revenueWhereClause)
+		.groupBy(paymentMethods.name);
+
+	const paymentBreakdownFull = paymentRevenueRows
+		.map((row) => ({
+			name: row.name ?? 'Unpaid / No Method',
+			revenue: row.revenue,
+			orders: row.orders
+		}))
 		.sort((a, b) => b.revenue - a.revenue);
 
 	// Cap chart slices at 6 + "Other" — past ~7 color classes, adjacent hues blur.
@@ -162,7 +196,11 @@ export const load: PageServerLoad = async ({ url }) => {
 			: [
 					...paymentBreakdownFull.slice(0, MAX_SLICES),
 					paymentBreakdownFull.slice(MAX_SLICES).reduce(
-						(acc, p) => ({ name: 'Other', revenue: acc.revenue + p.revenue, orders: acc.orders + p.orders }),
+						(acc, p) => ({
+							name: 'Other',
+							revenue: acc.revenue + p.revenue,
+							orders: acc.orders + p.orders
+						}),
 						{ name: 'Other', revenue: 0, orders: 0 }
 					)
 				];
@@ -180,7 +218,7 @@ export const load: PageServerLoad = async ({ url }) => {
 		.leftJoin(productCategories, eq(products.categoryId, productCategories.id))
 		.leftJoin(transactions, eq(orders.transactionId, transactions.id))
 		.leftJoin(customers, eq(orders.customerId, customers.id))
-		.where(whereClause)
+		.where(revenueWhereClause)
 		.groupBy(products.categoryId, productCategories.name)
 		.orderBy(desc(sql`SUM(${lineTotalSql})`));
 
@@ -194,10 +232,12 @@ export const load: PageServerLoad = async ({ url }) => {
 			? categoryBreakdownFull
 			: [
 					...categoryBreakdownFull.slice(0, MAX_SLICES),
-					categoryBreakdownFull.slice(MAX_SLICES).reduce(
-						(acc, c) => ({ name: 'Other', revenue: acc.revenue + c.revenue }),
-						{ name: 'Other', revenue: 0 }
-					)
+					categoryBreakdownFull
+						.slice(MAX_SLICES)
+						.reduce((acc, c) => ({ name: 'Other', revenue: acc.revenue + c.revenue }), {
+							name: 'Other',
+							revenue: 0
+						})
 				];
 
 	// ---- paginated line-item detail table ----

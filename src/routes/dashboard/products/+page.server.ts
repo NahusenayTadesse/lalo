@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { products, productCategories, productSuppliers, prices } from '$lib/server/db/schema';
-import { eq, inArray, and, or, like, count } from 'drizzle-orm';
+import { eq, inArray, and, or, like, count, asc } from 'drizzle-orm';
 import { fail } from '@sveltejs/kit';
 import { setFlash } from 'sveltekit-flash-message/server';
 import type { PageServerLoad } from '../$types';
@@ -45,6 +45,9 @@ export const load: PageServerLoad = async ({ url }) => {
 		.leftJoin(productCategories, eq(productCategories.id, products.categoryId))
 		.leftJoin(productSuppliers, eq(productSuppliers.id, products.supplierId))
 		.where(whereClause)
+		// Without an ORDER BY, LIMIT/OFFSET pages have no defined order, so products
+		// could repeat on one page and never appear on another.
+		.orderBy(asc(products.id))
 		.limit(pageSize)
 		.offset(offset);
 

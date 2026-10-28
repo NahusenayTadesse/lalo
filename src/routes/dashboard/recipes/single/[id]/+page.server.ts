@@ -17,7 +17,6 @@ export const actions: Actions = {
 	edit: async ({ request, cookies, locals, params }) => {
 		const { id } = params;
 		const form = await superValidate(request, zod4(edit));
-		console.log(form);
 
 		if (!form.valid) {
 			// Stay on the same page and set a flash message
@@ -59,24 +58,26 @@ export const actions: Actions = {
 						.where(eq(recipes.id, Number(id)));
 				}
 
-				// 3. Prepare and insert the gallery images
+				// Replace the ingredient list. The delete runs even when the new list is
+				// empty — it used to be skipped, so clearing every ingredient kept them all.
+				await tx.delete(recipeIngredients).where(eq(recipeIngredients.recipeId, Number(id)));
 				if (ingredients.length > 0) {
-					const imageRecords = ingredients.map((url) => ({
-						recipeId: Number(id),
-						name: url.ingredient,
-						amount: url.amount
-					}));
-					await tx.delete(recipeIngredients).where(eq(recipeIngredients.recipeId, Number(id)));
-					await tx.insert(recipeIngredients).values(imageRecords);
+					await tx.insert(recipeIngredients).values(
+						ingredients.map((item) => ({
+							recipeId: Number(id),
+							name: item.ingredient,
+							amount: item.amount
+						}))
+					);
 				}
 
 				// Return the ID or the full object if needed
 			});
 
 			// Stay on the same page and set a flash message
-			setFlash({ type: 'success', message: 'New Recipe Successuflly Added' }, cookies);
+			setFlash({ type: 'success', message: 'Recipe Successfully Updated' }, cookies);
 
-			return message(form, { type: 'success', text: 'New Recipe Successfully Added' });
+			return message(form, { type: 'success', text: 'Recipe Successfully Updated' });
 		} catch (err) {
 			console.error(err);
 			setFlash(

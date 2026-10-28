@@ -150,8 +150,8 @@
 					onValueChange={(v) => update('paymentMethod', v)}
 				>
 					<SelectTrigger class="w-full">
-						{data.paymentMethodList.find((p) => String(p.value) === filters.paymentMethod)
-							?.name ?? 'Any'}
+						{data.paymentMethodList.find((p) => String(p.value) === filters.paymentMethod)?.name ??
+							'Any'}
 					</SelectTrigger>
 					<SelectContent>
 						<SelectItem value="">Any</SelectItem>
@@ -188,20 +188,26 @@
 <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
 	<Card class="border-l-4 border-l-emerald-500">
 		<CardHeader class="pb-2">
-			<CardTitle class="flex items-center justify-between text-sm font-medium text-muted-foreground">
+			<CardTitle
+				class="flex items-center justify-between text-sm font-medium text-muted-foreground"
+			>
 				<span>Total Revenue</span>
 				<Wallet class="size-4 text-emerald-500" />
 			</CardTitle>
 		</CardHeader>
 		<CardContent>
 			<div class="text-2xl font-bold text-emerald-600">{formatETB(data.summary.totalRevenue)}</div>
-			<p class="mt-1 text-xs text-muted-foreground">Sum of order line items</p>
+			<p class="mt-1 text-xs text-muted-foreground">
+				Line items of {data.filters.status === 'all' ? 'delivered' : data.filters.status} orders
+			</p>
 		</CardContent>
 	</Card>
 
 	<Card class="border-l-4 border-l-indigo-500">
 		<CardHeader class="pb-2">
-			<CardTitle class="flex items-center justify-between text-sm font-medium text-muted-foreground">
+			<CardTitle
+				class="flex items-center justify-between text-sm font-medium text-muted-foreground"
+			>
 				<span>Total Orders</span>
 				<ShoppingCart class="size-4 text-indigo-500" />
 			</CardTitle>
@@ -216,20 +222,28 @@
 
 	<Card class="border-l-4 border-l-amber-500">
 		<CardHeader class="pb-2">
-			<CardTitle class="flex items-center justify-between text-sm font-medium text-muted-foreground">
+			<CardTitle
+				class="flex items-center justify-between text-sm font-medium text-muted-foreground"
+			>
 				<span>Avg Order Value</span>
 				<TrendingUp class="size-4 text-amber-500" />
 			</CardTitle>
 		</CardHeader>
 		<CardContent>
-			<div class="text-2xl font-bold text-amber-600">{formatETB(data.summary.averageOrderValue)}</div>
-			<p class="mt-1 text-xs text-muted-foreground">Revenue / orders</p>
+			<div class="text-2xl font-bold text-amber-600">
+				{formatETB(data.summary.averageOrderValue)}
+			</div>
+			<p class="mt-1 text-xs text-muted-foreground">
+				Revenue / {data.filters.status === 'all' ? 'delivered' : data.filters.status} orders
+			</p>
 		</CardContent>
 	</Card>
 
 	<Card class="border-l-4 border-l-violet-500">
 		<CardHeader class="pb-2">
-			<CardTitle class="flex items-center justify-between text-sm font-medium text-muted-foreground">
+			<CardTitle
+				class="flex items-center justify-between text-sm font-medium text-muted-foreground"
+			>
 				<span>Items Sold</span>
 				<Package class="size-4 text-violet-500" />
 			</CardTitle>
@@ -242,7 +256,9 @@
 
 	<Card class="border-l-4 border-l-sky-500">
 		<CardHeader class="pb-2">
-			<CardTitle class="flex items-center justify-between text-sm font-medium text-muted-foreground">
+			<CardTitle
+				class="flex items-center justify-between text-sm font-medium text-muted-foreground"
+			>
 				<span>Delivery Fees</span>
 				<Truck class="size-4 text-sky-500" />
 			</CardTitle>
@@ -282,9 +298,13 @@
 			{:else}
 				<div class="grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
 					{#each data.summary.topProducts as product, i (product.productId)}
-						<div class="flex items-center justify-between gap-2 border-b border-border/50 pb-2 last:border-0">
+						<div
+							class="flex items-center justify-between gap-2 border-b border-border/50 pb-2 last:border-0"
+						>
 							<div class="flex items-center gap-3">
-								<span class="flex size-6 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+								<span
+									class="flex size-6 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary"
+								>
 									{i + 1}
 								</span>
 								<DataTableLinks
@@ -318,8 +338,8 @@
 		<h2 class="my-4 text-2xl">Order Line Items ({data.pagination.totalCount})</h2>
 
 		<p class="text-xs text-muted-foreground">
-			Filters below apply instantly to the rows already on this page — no server round trip.
-			Use the filters above to change what's loaded from the database.
+			Filters below apply instantly to the rows already on this page — no server round trip. Use the
+			filters above to change what's loaded from the database.
 		</p>
 
 		<FilterMenu

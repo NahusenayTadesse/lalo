@@ -25,15 +25,19 @@ export const actions: Actions = {
 	editGallery: async ({ request }) => {
 		const form = await superValidate(request, zod4(editGallery));
 
-		const { manual, catalog } = form.data;
+		if (!form.valid) {
+			return message(
+				form,
+				{ type: 'error', text: 'Please check the form for errors' },
+				{ status: 400 }
+			);
+		}
 
-		console.log(form);
+		const { manual, catalog } = form.data;
 
 		try {
 			await db.transaction(async (tx) => {
 				const existing = await tx.select().from(catalogManual).limit(1);
-
-				console.log(existing);
 
 				if (manual) {
 					const newManual = await saveUploadedFile(manual);
@@ -67,11 +71,7 @@ export const actions: Actions = {
 			return message(form, { type: 'success', text: 'Catalog and Manual added Successfully!' });
 		} catch (err) {
 			console.error('Error marking adding Catalog and Manual:', err);
-			return message(
-				form,
-				{ type: 'error', text: `Unexpected Error: ${err?.message}` },
-				{ status: 500 }
-			);
+			return message(form, { type: 'error', text: 'Could not save the files' }, { status: 500 });
 		}
 	}
 };

@@ -23,6 +23,15 @@ export const actions: Actions = {
 	editGallery: async ({ request }) => {
 		const form = await superValidate(request, zod4(editGallery));
 
+		// Without this, a bad submission reached `existing.split(',')` below and threw.
+		if (!form.valid) {
+			return message(
+				form,
+				{ type: 'error', text: 'Please check the form for errors' },
+				{ status: 400 }
+			);
+		}
+
 		const { existing, images } = form.data;
 
 		try {
@@ -59,11 +68,7 @@ export const actions: Actions = {
 			return message(form, { type: 'success', text: 'Homepage Gallery added Successfully!' });
 		} catch (err) {
 			console.error('Error marking adding homepage gallery:', err);
-			return message(
-				form,
-				{ type: 'error', text: `Unexpected Error: ${err?.message}` },
-				{ status: 500 }
-			);
+			return message(form, { type: 'error', text: 'Could not save the gallery' }, { status: 500 });
 		}
 	}
 };
@@ -71,15 +76,13 @@ export const actions: Actions = {
 const uploadGallery = async (gallery: File[] | undefined) => {
 	try {
 		// 1. Map each file to the upload promise
-		const uploadPromises = gallery.map(async (file) => {
+		const uploadPromises = (gallery ?? []).map(async (file) => {
 			const address = await saveUploadedFile(file);
 			return address; // This is the string returned by your function
 		});
 
 		// 2. Wait for all uploads to complete and store results in an array
 		const uploadedAddresses: string[] = await Promise.all(uploadPromises);
-
-		console.log('All files uploaded:', uploadedAddresses);
 
 		return uploadedAddresses;
 	} catch (error) {

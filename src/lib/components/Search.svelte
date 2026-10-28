@@ -21,7 +21,7 @@
 		{ label: 'Product Categories', path: '/dashboard/products/categories' },
 
 		// Recipes
-		{ label: 'Recipes', path: '/dashboard/recipes/recipes' },
+		{ label: 'Recipes', path: '/dashboard/recipes' },
 		{ label: 'Add Recipe', path: '/dashboard/recipes/add-recipes' },
 
 		{ label: 'Reports', path: '/dashboard/reports' },

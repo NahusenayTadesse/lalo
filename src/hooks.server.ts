@@ -1,3 +1,6 @@
+import { type Handle, sequence } from '@sveltejs/kit/hooks';
+import { getTextDirection } from '$lib/paraglide/runtime.js';
+import { paraglideMiddleware } from '$lib/paraglide/server.js';
 import type { Handle } from '@sveltejs/kit';
 import { error, redirect } from '@sveltejs/kit';
 import { building } from '$app/environment';
@@ -30,4 +33,17 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 	return svelteKitHandler({ event, resolve, auth, building });
 };
 
-export const handle: Handle = handleBetterAuth;
+const handleParaglide: Handle = ({ event, resolve }) =>
+	paraglideMiddleware(event.request, ({ request, locale }) => {
+		return resolve(
+			{ ...event, request },
+			{
+				transformPageChunk: ({ html }) =>
+					html
+						.replace('%paraglide.lang%', locale)
+						.replace('%paraglide.dir%', getTextDirection(locale))
+			}
+		);
+	});
+
+export const handle: Handle = sequence(handleBetterAuth, handleParaglide);

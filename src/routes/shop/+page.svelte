@@ -10,19 +10,39 @@
 
 	let { data } = $props();
 
+	/** The slider's range, from the catalogue's real prices (see the load). */
+	const priceFloor = $derived(data.priceBounds.min);
+	const priceCeiling = $derived(Math.max(data.priceBounds.max, data.priceBounds.min + 1));
+
+	// The filter inputs follow the URL — back/forward and "Reset" included — while
+	// still being editable: a writable `$derived` takes the input's value until the
+	// URL next changes. Initialising them once from the URL (as before) left them
+	// showing stale values after navigation.
+	const params = $derived(sveltePage.url.searchParams);
+	let minPrice = $derived(Number(params.get('min')) || priceFloor);
+	let maxPrice = $derived(Number(params.get('max')) || priceCeiling);
+	let selectedCategories = $derived(params.get('categories')?.split(',').filter(Boolean) ?? []);
+
+	// Search is the exception, and stays `$state` synced by an effect: the customer may
+	// keep typing while the debounced navigation is in flight, and a derived would
+	// overwrite those keystrokes with the older term when the URL catches up.
+	// `pushedSearch` is the term this page last put in the URL.
 	let searchQuery = $state(sveltePage.url.searchParams.get('search') ?? '');
-	let minPrice = $state(Number(sveltePage.url.searchParams.get('min')) || 0);
-	let maxPrice = $state(Number(sveltePage.url.searchParams.get('max')) || 2000);
-	let selectedCategories = $state(
-		sveltePage.url.searchParams.get('categories')?.split(',').filter(Boolean) ?? []
-	);
+	let pushedSearch: string | undefined;
 
-	const hasActiveFilters = $derived(sveltePage.url.searchParams.toString() !== '');
+	$effect(() => {
+		const urlSearch = params.get('search') ?? '';
+		if (urlSearch !== pushedSearch) searchQuery = urlSearch;
+		pushedSearch = undefined;
+	});
 
-	// All unique categories from the current product list
-	const categories = $derived(
-		Array.from(new Set(data?.productList.map((p) => p.category).filter(Boolean))).sort()
-	);
+	// A filter is active only if one actually narrows the list. Checking for *any*
+	// query string counted `?page=1`, which every filter change adds, so "Reset
+	// Filters" appeared after any interaction — including clearing the filters.
+	const hasActiveFilters = $derived.by(() => {
+		const params = sveltePage.url.searchParams;
+		return ['search', 'min', 'max', 'categories'].some((key) => params.get(key));
+	});
 
 	const isAllSelected = $derived(selectedCategories.length === 0);
 
@@ -39,14 +59,27 @@
 		goto(newUrl, { keepFocus: true, noScroll: true });
 	}
 
+	// Debounced: navigating on every keystroke re-ran the listing, count, category
+	// and price queries once per character typed.
+	let searchTimer: ReturnType<typeof setTimeout> | undefined;
 	function handleSearch() {
-		updateFilters({ search: searchQuery });
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(() => {
+			pushedSearch = searchQuery;
+			updateFilters({ search: searchQuery });
+		}, 300);
 	}
 
 	function applyPriceFilter() {
 		const newUrl = new URL(sveltePage.url);
-		newUrl.searchParams.set('min', minPrice.toString());
-		newUrl.searchParams.set('max', maxPrice.toString());
+		// Only a bound that actually narrows the catalogue goes into the URL, so the
+		// full range reads as "no price filter".
+		const min = Number(minPrice);
+		const max = Number(maxPrice);
+		if (Number.isFinite(min) && min > priceFloor) newUrl.searchParams.set('min', String(min));
+		else newUrl.searchParams.delete('min');
+		if (Number.isFinite(max) && max < priceCeiling) newUrl.searchParams.set('max', String(max));
+		else newUrl.searchParams.delete('max');
 		newUrl.searchParams.set('page', '1');
 		goto(newUrl, { keepFocus: true, noScroll: true });
 	}
@@ -71,18 +104,36 @@
 		selectedCategories = [];
 		const newUrl = new URL(sveltePage.url);
 		newUrl.searchParams.delete('categories');
+		newUrl.searchParams.set('page', '1');
 		goto(newUrl, { keepFocus: true, noScroll: true });
 	}
 
 	function resetFilters() {
-		searchQuery = '';
-		minPrice = 0;
-		maxPrice = 2000;
-		selectedCategories = [];
+		clearTimeout(searchTimer);
 		goto(sveltePage.url.pathname);
 	}
 
 	const goToPage = (p: number) => updateFilters({ page: p });
+
+	/**
+	 * Page buttons to show: the first, the last, and two either side of the current
+	 * page, with `null` marking a gap. One button per page was fine at 7 pages and
+	 * unusable at 70.
+	 */
+	const pageButtons = $derived.by(() => {
+		const { currentPage, totalPages } = data.pagination;
+		const wanted = new Set([1, totalPages]);
+		for (let p = currentPage - 2; p <= currentPage + 2; p++) {
+			if (p >= 1 && p <= totalPages) wanted.add(p);
+		}
+		const sorted = [...wanted].sort((a, b) => a - b);
+		const buttons: (number | null)[] = [];
+		sorted.forEach((p, i) => {
+			if (i > 0 && p - sorted[i - 1] > 1) buttons.push(null);
+			buttons.push(p);
+		});
+		return buttons;
+	});
 </script>
 
 <svelte:head>
@@ -189,16 +240,16 @@
 						<input
 							type="range"
 							bind:value={minPrice}
-							min="0"
-							max="2000"
+							min={priceFloor}
+							max={priceCeiling}
 							onchange={applyPriceFilter}
 							class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary"
 						/>
 						<input
 							type="range"
 							bind:value={maxPrice}
-							min="0"
-							max="2000"
+							min={priceFloor}
+							max={priceCeiling}
 							onchange={applyPriceFilter}
 							class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary"
 						/>
@@ -220,10 +271,12 @@
 							/>
 							<Label for="category-all" class="flex-1 cursor-pointer text-sm">All</Label>
 						</div>
-						{#each data?.categories as category (category)}
+						{#each data?.categories as category (category.name)}
 							<div class="flex items-center gap-3">
+								<!-- The id used the row object ("category-[object Object]") while the
+								     label pointed at the name, so clicking the label did nothing. -->
 								<Checkbox
-									id={`category-${category}`}
+									id={`category-${category.name}`}
 									checked={selectedCategories.includes(category.name)}
 									onCheckedChange={() => applyCategoryFilter(category.name)}
 									class="cursor-pointer"
@@ -267,14 +320,19 @@
 								<ChevronLeft size={16} />
 							</Button>
 
-							{#each Array.from({ length: data.pagination.totalPages }, (_, i) => i + 1) as p (p)}
-								<Button
-									variant={p === data.pagination.currentPage ? 'default' : 'outline'}
-									size="sm"
-									onclick={() => goToPage(p)}
-								>
-									{p}
-								</Button>
+							{#each pageButtons as p, i (p ?? `gap-${i}`)}
+								{#if p === null}
+									<span class="px-1 text-muted-foreground" aria-hidden="true">…</span>
+								{:else}
+									<Button
+										variant={p === data.pagination.currentPage ? 'default' : 'outline'}
+										size="sm"
+										onclick={() => goToPage(p)}
+										aria-current={p === data.pagination.currentPage ? 'page' : undefined}
+									>
+										{p}
+									</Button>
+								{/if}
 							{/each}
 
 							<Button

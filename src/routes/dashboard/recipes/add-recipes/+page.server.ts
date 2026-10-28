@@ -22,7 +22,6 @@ import { saveUploadedFile } from '$lib/server/upload.js';
 export const actions: Actions = {
 	add: async ({ request, cookies, locals }) => {
 		const form = await superValidate(request, zod4(add));
-		console.log(form);
 
 		if (!form.valid) {
 			// Stay on the same page and set a flash message

@@ -2,6 +2,7 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
+	import { untrack } from 'svelte';
 	import { edit } from './schema.js';
 	let { data } = $props();
 
@@ -12,7 +13,17 @@
 	import InputComp from '$lib/formComponents/InputComp.svelte';
 
 	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import { ArrowLeft, Pencil, Save, History, X, Plus, ArrowDown, Tag, TriangleAlert } from '@lucide/svelte';
+	import {
+		ArrowLeft,
+		Pencil,
+		Save,
+		History,
+		X,
+		Plus,
+		ArrowDown,
+		Tag,
+		TriangleAlert
+	} from '@lucide/svelte';
 	import type { Snapshot } from '@sveltejs/kit';
 	import Delete from '$lib/forms/Delete.svelte';
 	import SingleView from '$lib/components/SingleView.svelte';
@@ -62,14 +73,20 @@
 		}
 	);
 
-	if (data.product) {
-		$form.productName = data.product.name;
-		$form.category = data.product.categoryId;
-		$form.description = data.product.description;
-		$form.quantity = data.product.quantity;
-		$form.reorderLevel = data.product.reorderLevel;
-		$form.supplier = data.product.supplierId;
-	}
+	// An effect keyed on the product, not top-level assignments: moving from one
+	// product to another reuses this component, and the form kept the first
+	// product's values. `untrack` because writing `$form` also reads it.
+	$effect(() => {
+		const product = data.product;
+		if (!product) return;
+		untrack(() => {
+			$form.productName = product.name;
+			$form.category = product.categoryId;
+			$form.description = product.description;
+			$form.reorderLevel = product.reorderLevel;
+			$form.supplier = product.supplierId;
+		});
+	});
 
 	export const snapshot: Snapshot = { capture, restore };
 
@@ -179,7 +196,11 @@
 			{/if}
 		</Button>
 		{#key data?.product}
-			<Adjustment data={data.adjustForm} name={data.product?.name} />
+			<Adjustment
+				data={data.adjustForm}
+				name={data.product?.name}
+				supplierList={data.supplierList}
+			/>
 		{/key}
 		<Button href="/dashboard/products/single/{page.params.id}/ranges">
 			<History /> See Change History
@@ -263,16 +284,6 @@
 					name="description"
 					label="Product Discription"
 					placeholder="Enter Product Description"
-					required
-				/>
-
-				<InputComp
-					{form}
-					{errors}
-					type="number"
-					name="quantity"
-					label="Quantity"
-					placeholder="Enter the number of items the product currently has"
 					required
 				/>
 

@@ -2,10 +2,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { Readable } from 'node:stream';
 
-import { env } from '$env/dynamic/private';
-import { redirect } from '@sveltejs/kit';
-
-const FILES_DIR = env.FILES_DIR ?? '.temp-files';
+import { eq } from 'drizzle-orm';
+import { db } from '$lib/server/db';
+import { customers, orders, transactions } from '$lib/server/db/schema';
+import { ADMIN_ROLE, getRoleName } from '$lib/server/authz';
+import { FILES_DIR } from '$lib/server/upload';
 
 /** Absolute path of the directory files may be served from. */
 const FILES_ROOT = path.resolve(FILES_DIR);
@@ -27,8 +28,37 @@ function isInsideFilesDir(candidate: string) {
 	return candidate === FILES_ROOT || candidate.startsWith(FILES_ROOT + path.sep);
 }
 
+/**
+ * Whether the caller may see `name`, and whether it is private.
+ *
+ * Product images, logos and the catalogue are public. Payment receipts are not:
+ * they are bank-transfer screenshots with names and account numbers, and a leaked
+ * link used to work for anyone, forever. A receipt is shown only to an admin, or to
+ * the signed-in customer whose order it belongs to. Stock-adjustment receipts
+ * have no order, so they are admin-only.
+ */
+async function checkAccess(name: string, locals: App.Locals) {
+	const receipt = await db
+		.select({ ownerUserId: customers.userId })
+		.from(transactions)
+		.leftJoin(orders, eq(orders.transactionId, transactions.id))
+		.leftJoin(customers, eq(orders.customerId, customers.id))
+		.where(eq(transactions.recieptLink, name))
+		.limit(1)
+		.then((rows) => rows[0]);
+
+	if (!receipt) return { allowed: true, isPrivate: false };
+	if (!locals.user) return { allowed: false, isPrivate: true };
+	if (receipt.ownerUserId && receipt.ownerUserId === locals.user.id) {
+		return { allowed: true, isPrivate: true };
+	}
+
+	const roleName = locals.roleName ?? (await getRoleName(locals.user.id));
+	return { allowed: roleName === ADMIN_ROLE, isPrivate: true };
+}
+
 /** @type {import('./$types').RequestHandler} */
-export async function GET({ params, request }) {
+export async function GET({ params, request, locals }) {
 	const file_path = path.resolve(FILES_ROOT, params.name);
 
 	// Same 404 as a missing file, so the response can't be used to probe for
@@ -38,6 +68,12 @@ export async function GET({ params, request }) {
 	}
 
 	if (!fs.existsSync(file_path) || !fs.statSync(file_path).isFile()) {
+		return new Response('not found', { status: 404 });
+	}
+
+	// Same 404 as a missing file, so receipt names can't be confirmed by probing.
+	const access = await checkAccess(params.name, locals);
+	if (!access.allowed) {
 		return new Response('not found', { status: 404 });
 	}
 
@@ -52,7 +88,8 @@ export async function GET({ params, request }) {
 		ETag: etag,
 		'Content-Type': mimes.lookup(file_path),
 		'Content-Length': stats.size,
-		'Cache-Control': 'max-age=600',
+		// A receipt must not sit in a shared cache where the next visitor gets it.
+		'Cache-Control': access.isPrivate ? 'private, no-store' : 'max-age=600',
 		'Last-Modified': stats.mtime.toUTCString()
 	};
 

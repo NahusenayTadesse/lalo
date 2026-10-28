@@ -1,5 +1,333 @@
 # Shopping Flow Bug Report — Shop, Product Page, Cart, Checkout
 
+This file holds two audits. The **2026-09-14 re-audit** comes first. It covers the shop, product page,
+cart, checkout and, new this time, the customer **account** pages, with new IDs `S37`–`S53` and an
+updated status for the items still open from the first audit. The **original 2026-08-10 audit** follows
+unchanged, below the second horizontal divider.
+
+---
+
+# Re-audit — 2026-09-14 (shop, checkout, account)
+
+Branch: `main` @ `07a5700`, plus the uncommitted N1–N40 fixes recorded in `bugs.md`.
+
+Scope: `src/routes/shop/**`, `src/routes/checkout/**`, `src/routes/account/**`, the cart
+(`src/lib/hooks/cart.svelte.ts`, `src/lib/components/floating-cart/**`), `product-card.svelte`,
+`product-detail.svelte`, and the login/signup dialogs checkout embeds.
+
+Method: I read the code and checked library behaviour in `node_modules`. S37 depends on superforms'
+`message()`, which I read in `sveltekit-superforms/dist/superValidate.js`. I also ran **read-only
+queries** against the `lalo` database: the database is MariaDB 11.8 without `ONLY_FULL_GROUP_BY`, 105
+products are active, and 25 price rows are above 2000. Nothing was written to the database, and no
+browser session was run. Findings marked **VERIFIED** rest on one of those checks; the rest come from
+reading the code.
+
+| Severity | New | Still open from 2026-08-10 |
+| --- | --- | --- |
+| High | 3 (**all fixed**) | — |
+| Medium | 5 (**all fixed**) | S21 only (deliberately left, see below) |
+| Low | 9 (**all fixed**) | — |
+
+## Fix log — 2026-09-15
+
+Every finding from this re-audit is fixed, along with every still-open item from the first audit
+**except S21**. Checks: `svelte-check` reports no errors in the shop, product page, cart or logout
+files (478 errors project-wide, down from 500). The account files keep only type-annotation errors
+that were already there. Nothing was run in a browser, and no database changes were needed.
+
+- **S21 (stock) was not changed.** 8 of the 105 active products have zero stock, and stock only moves
+  when staff mark an order delivered. Refusing orders on stock would stop those products selling
+  outright. Whether backorders are allowed is a business decision, so it's still open.
+- **S22:** `shop/+layout.server.ts` is now `shop/+page.server.ts`, so the product page no longer runs
+  the listing queries.
+- **S17:** the price slider's bounds now come from the catalogue (`priceBounds` in the load). A full
+  range writes no `min`/`max` to the URL.
+- **S16 / S33:** search is debounced (300 ms). The inputs follow the URL on back/forward and reset.
+  "Reset Filters" appears only when search, price or category filters are set.
+- **S38:** the shop sorts by `created_at, id`. The admin product listings, which had no `ORDER BY`,
+  sort by `id`.
+- **S43:** account money is now computed per order as items + delivery fee, minus what's been
+  received. Cancelled orders never count as owed. A delivered order with no recorded payment does count
+  as owed.
+- **S46:** applied to both copies of the change-password page (`/change-password` and
+  `/account/settings/change-password`), which were identical.
+- **S47:** all three error pages (`/`, `/dashboard`, `/account`) now render the message as text. The
+  only message that relied on HTML was in the recipes duplicate deleted under N32.
+- **S31:** the JSON-LD block now ships, with absolute image URLs and `<` escaped. The script tag name
+  is assembled in code, because a literal one inside the component's `<script>` is read by Svelte as a
+  second script block.
+- **S53:** removed `price-dropdown.svelte`, `shop/single/[id]/schema.ts`, `editGallery.svelte`,
+  `account/columns.ts` and `account/schema.ts`. The deletions are staged with `git rm`.
+
+Also fixed, from `bugs.md`: **M12** (`account/orders` no longer reads the nonexistent `currentStep`;
+nothing displayed it) and the rest of **M13** (`account/orders` now lets its 404 through).
+
+**S41 is a regression I introduced** while fixing N2 in `bugs.md` earlier today.
+
+---
+
+## High
+
+### S37. A failed order empties the customer's cart — ✅ FIXED (2026-09-15)
+
+**Where:** `src/routes/checkout/+page.svelte:48-53` (client); `src/routes/checkout/+page.server.ts:118-121,132`
+(server)
+
+```ts
+onResult: ({ result }) => {
+    if (result.type === 'success') cart.clearCart();   // "success" means HTTP 2xx, not "order placed"
+}
+```
+
+superforms' `message(form, msg)` returns a **success** result whenever the form passed validation and
+no `status` is given (`superValidate.js:71-79`: `return form.valid ? output : kitFail(...)`). Two
+checkout rejections do exactly that:
+
+- `'One of the items in your cart is no longer available'` (line 118), with no status
+- `'We do not deliver to that area'` (line 132), with no status
+
+**Failure scenario:** a signed-in customer's saved delivery area has since been deactivated, or one
+cart item is discontinued between the price check and the submit. They press *Complete Order* and see
+the red "We do not deliver to that area" toast. At the same moment their **whole cart is cleared**,
+and `resetForm: true` wipes the guest's name, email and phone too. No order was placed, and the cart
+was the only record of what they wanted.
+
+**Fix applied:**
+- **Server:** every rejection now carries an error status. "Your cart is empty" and "We do not deliver
+  to that area" return 400; the latter also marks the area field. "No longer available" returns 409.
+  The success message now includes `orderId`.
+- **Client:** the cart is cleared only when that `orderId` comes back. A 409 re-runs the price check,
+  so the discontinued line is removed and listed in the "cart was updated" notice. If some future
+  rejection still comes back as `success` without an `orderId`, the page cancels the form update,
+  keeping what the customer typed, and shows the error.
+
+Not verified in a browser.
+
+### S38. Shop pagination repeats and skips products — VERIFIED (data) — ✅ FIXED (2026-09-15)
+
+**Where:** `src/routes/shop/+layout.server.ts:71`
+
+```ts
+.orderBy(asc(products.createdAt))
+.limit(pageSize)
+.offset(offset);
+```
+
+**VERIFIED:** the 105 active products have only **6 distinct `created_at` values**. 66 of them share
+`2026-06-12 11:15:34` and 35 share the next second, because they were bulk-imported. Rows that tie on
+the sort key have no defined order, and MariaDB can return them differently from one `LIMIT … OFFSET`
+query to the next. So one product can appear on page 1 and again on page 3, while another never
+appears on any page.
+
+**Fix:** add a unique tiebreaker: `.orderBy(asc(products.createdAt), asc(products.id))`. The admin
+products listings have no `orderBy` at all and have the same problem.
+
+### S39. `/account/history` crashes for any customer who has order items — ✅ FIXED (2026-09-15)
+
+**Where:** `src/routes/account/history/+page.svelte:223-224`
+
+```svelte
+<td>ETB {item.price.toFixed(2)}</td>
+```
+
+`orderItems.price` is a `decimal` column, which mysql2 returns as a **string** (`"200.00"`).
+`"200.00".toFixed` is `undefined`, so calling it throws a `TypeError` while the page renders.
+`svelte-check` reports it: `Property 'toFixed' does not exist on type 'string'`.
+
+**Failure scenario:** any customer with at least one order opens *Order History* and gets an error page
+instead of their history. Before today's N2 fix this hit **every** customer, because the query
+returned the whole shop's order items.
+
+**Fix applied:** `price` is mapped to a number in the load, as `total` already was. The page also
+crashed on the same render path for any order with a null `status` (`getStatusStyles` called
+`.toLowerCase()` on it; the old `/orders` action saved orders without a status, see H8 in `bugs.md`),
+and that is now guarded too. The load's `PageServerLoad` import pointed at the parent route's
+`$types`; it now uses its own. `svelte-check` reports no errors in the file.
+
+---
+
+## Medium
+
+### S40. The checkout page crashes when two lines from the same product are removed or repriced — ✅ FIXED (2026-09-15)
+
+**Where:** `src/routes/checkout/+page.svelte:542,547`
+
+```svelte
+{#each repricedItems as change (change.name + change.to)}
+{#each removedItems as name (name)}
+```
+
+`cartKey` exists because the cart holds one line **per variant**, but these notices key on the
+**product name**. If a customer has two packages of one product and that product is deactivated,
+`reconcileCart` removes both lines and pushes the same name twice. Svelte throws a fatal
+`each_key_duplicate` and the checkout page stops rendering. Today's N11 fix makes this path more likely,
+because deactivating a product now drops **all** of its variants from the cart at once. Two variants of
+one product repriced to the same figure trigger it as well.
+
+**Fix applied:** both lists hold `{ priceId, name }` and are keyed by `priceId`. The name now includes
+the package (`Flour (5kg)`), so two lines of one product can be told apart in the notice.
+
+### S41. "Pending Order Breakdown" on `/account/history` now lists items from every order — ✅ FIXED (2026-09-15)
+
+**Where:** `src/routes/account/history/+page.server.ts:52-54` — **regression from today's N2 fix**
+
+The old query tried, and failed, to limit items to *pending* orders. The N2 fix scopes items to
+`allData`, which holds **every** order the customer has ever placed. So the table headed "Pending
+Order Breakdown · Items linked exclusively to your open queries" now also lists delivered and
+cancelled items. (Once S39 is fixed this becomes visible; until then the page crashes before it
+renders.)
+
+**Fix applied:** the item query now only covers the customer's pending orders.
+
+### S42. The receipt link on the account overview is broken — ✅ FIXED (2026-09-15)
+
+**Where:** `src/routes/account/+page.svelte:120-122`
+
+```svelte
+<a href={activity.receiptLink} target="_blank">Receipt</a>
+```
+
+`transactions.reciept_link` stores the bare file name from `saveUploadedFile`, such as
+`3f2c….png`, not a URL. As a relative link it resolves to `/account/3f2c….png`, which is a 404. With
+today's N30 fix, `/files/<name>` does serve the receipt to the order's owner.
+
+**Fix:** `href="/files/{activity.receiptLink}"`.
+
+### S43. The account overview shows ETB 0.00 for unpaid orders, and "Outstanding Dues" misses them — ✅ FIXED (2026-09-15)
+
+**Where:** `src/routes/account/+page.server.ts:28-48,98`; `+page.svelte:50,62,118`
+
+Every money figure on `/account` comes from `transactions`, but a `transactions` row only exists once
+staff record a payment. Checkout never creates one. As a result:
+
+- every pending order in *Recent Orders* shows **ETB 0.00**, since `Number(row.amount || 0)` finds no
+  transaction;
+- **Outstanding Dues** stays 0 for a customer with unpaid orders, because orders with no transaction
+  don't count;
+- a *cancelled* order that still has a `pending` transaction **is** counted as outstanding.
+
+**Fix:** work out each order's value from its items plus `orders.fee`. Count outstanding as the value
+of `pending` orders without a `paid` transaction, and leave cancelled orders out.
+
+### S44. The settings phone field neither validates nor normalises the number — ✅ FIXED (2026-09-15)
+
+**Where:** `src/routes/account/settings/schema.ts:6`, `+page.server.ts:122-131`
+
+`phone: z.string().min(10).max(15).optional()` accepts any 10–15 characters, e.g. `abcdefghij`. It
+rejects a correctly formatted `+251 91 234 5678` (16 characters), and it rejects an empty box, since
+`''` fails `min(10)`. The number is also saved exactly as typed, while signup, checkout, contact and
+(since N37) staff all store `+251XXXXXXXXX`. That breaks the duplicate-phone check N37 added.
+
+**Fix:** use `ethiopianPhone().optional().or(z.literal(''))` in the schema, and
+`normalizeEthiopianPhone` before saving, as signup does.
+
+---
+
+## Low
+
+### S45. The profile summary table has a broken row and inconsistent counts — ✅ FIXED (2026-09-15)
+
+`src/routes/account/settings/+page.svelte:29-42`.
+`{ name: 'Life Time Orders', value: … } + 'Orders'` adds an object to a string, so the array gets the
+string `"[object Object]Orders"` instead of a row, and *Life Time Orders* renders broken.
+`count ?? 0 + ' Orders'` parses as `count ?? (0 + ' Orders')`, so a non-zero count prints `3` while zero
+prints `0 Orders`. The page also still assigns `$form.*` at the top level (H4 in `bugs.md`).
+**Fix:** `{ name: 'Life Time Orders', value: `${n} Orders` }`, and add parentheses around the `??`.
+
+### S46. After a password change, the user is sent to `/login` while still signed in — ✅ FIXED (2026-09-15)
+
+`src/routes/account/settings/change-password/+page.svelte:23-26` calls `goto('/login')` on success. But
+`changePassword` runs with `revokeOtherSessions: true`, which keeps the **current** session, and
+`/login` redirects a signed-in customer to `/`. So they land on the home page with no explanation.
+`confirmPassword` is also only compared on the client: the server schema never checks that it matches.
+**Fix:** stay on the page and show the success toast. Add `.refine((d) => d.newPassword === d.confirmPassword)`
+to the schema.
+
+### S47. Error pages render the error message as raw HTML — ✅ FIXED (2026-09-15)
+
+`src/routes/account/+error.svelte:9` (also `src/routes/+error.svelte:12`,
+`src/routes/dashboard/+error.svelte:8`) use `{@html page.error?.message}`. None of today's messages
+contain user input, and the roles page relies on this to render a `<br />`. But the first
+`error(404, \`No product "${params.id}"\`)` anyone writes becomes a reflected-XSS hole.
+**Fix:** render `{page.error?.message}` as text, and drop the `<br />` from that one message.
+
+### S48. `/account/history` has misleading widgets — ✅ FIXED (2026-09-15)
+
+The "Active Payment Channels — *Your verified methods*" panel lists the shop's payment methods, not
+anything belonging to the customer. Its *Manage Methods* button has no handler. The status colour map
+has an entry for `completed`, but orders are `delivered`, so delivered orders get the grey default. The
+items table prints internal `ID: {productId}` values.
+**Fix:** remove the payment-methods panel, rename `completed` to `delivered`, and drop the id line.
+
+### S49. `/account/orders` quotes a total without the delivery fee — ✅ FIXED (2026-09-15)
+
+`src/routes/account/orders/+page.server.ts:66` sums only line items into "Estimated Expenditure".
+Customers who chose delivery see less than they will be charged. **Fix:** select `orders.fee` and add it.
+
+### S50. The product page image gallery can't return to the main image — ✅ FIXED (2026-09-15)
+
+`src/lib/components/product-detail.svelte:110-150`. The thumbnail row only contains the gallery
+images, not the featured image. After a customer clicks a thumbnail, the only way back to the main
+image is reloading the page. A product with no featured image renders `<img src="/files/null">`, and so
+do the product page's `og:image` and `twitter:image` meta tags (`shop/single/[id]/+page.svelte:40,50`),
+which are also relative URLs that social previews ignore. **Fix:** put `image` first in the thumbnail
+list, fall back to a placeholder, and build absolute URLs from `ORIGIN` for the meta tags.
+
+### S51. The product page keeps the previous product's quantity — ✅ FIXED (2026-09-15)
+
+Following a *Related Products* link reuses `ProductDetail`, so `quantity` (and `currentPriceId`) carry
+over. Set the stepper to 12 on one product, open a related one, and it still says 12. **Fix:** reset both
+with `{#key data.product.productId}` around `<ProductDetail>` in `shop/single/[id]/+page.svelte`.
+
+### S52. The cart survives logout — ✅ FIXED (2026-09-15)
+
+The cart lives in `localStorage` under one key for the browser, not per account, and `/logout` doesn't
+clear it. On a shared computer, the next person sees, and can check out, the previous customer's cart.
+**Fix:** call `cart.clearCart()` in the logout form's submit handler.
+
+### S53. Dead files — ✅ FIXED (2026-09-15)
+
+- `src/lib/components/floating-cart/price-dropdown.svelte`: imported nowhere. It is also broken (keyed
+  by `amount`, and compares a string `price` to `parseFloat`), so it shouldn't be revived as-is.
+- `src/routes/shop/single/[id]/schema.ts` and `editGallery.svelte`: copies of the dashboard product
+  forms, unused on the storefront.
+- `src/routes/account/columns.ts` (columns for "Booked Appointments" and "Services Rendered", from
+  another project) and `src/routes/account/schema.ts`: both unused.
+
+---
+
+## Status of items still open from 2026-08-10
+
+| ID | Status | Note |
+| --- | --- | --- |
+| S16 | ✅ Fixed | Debounced 300 ms. |
+| S17 | ✅ Fixed | Bounds from the data (25 price rows were above the old 2000 cap). |
+| S18 | ✅ Fixed | Checkbox and label both use `category.name`. |
+| S19 | ✅ Fixed | `%`, `_` and `\` escaped before `LIKE`. |
+| S21 | ❌ Open | Needs a decision on backorders (see Fix log). |
+| S22 | ✅ Fixed | Load moved to `+page.server.ts`. |
+| S23 | ✅ Obsolete | Guest checkout replaced the dead-end button with a working guest form. |
+| S24 | ✅ Fixed | The drawer is bound to `cart.isOpen`. |
+| S25 | ✅ Fixed | Product id removed from the cart line. |
+| S26 | ✅ Fixed | Uses the native share sheet, falls back to the clipboard. |
+| S27 | ✅ Fixed | The toast now adds the real quantity. |
+| S30 | ✅ Fixed | The empty `$effect` is gone. |
+| S31 | ✅ Fixed | JSON-LD shipped. |
+| S32 | ✅ Fixed | Unused `categories` derived removed. |
+| S33 | ✅ Fixed | |
+| S34 | ✅ Fixed | First, last, and two pages either side, with gaps. |
+
+## Suggested order of work (re-audit)
+
+1. ~~**S37, S39, S40**~~ ✅ fixed 2026-09-15, along with ~~S41~~.
+2. ~~Everything else~~ ✅ fixed 2026-09-15, except **S21**, which needs a decision on whether
+   backorders are allowed before stock checks are built.
+
+---
+---
+
+# Original audit — 2026-08-10
+
 Audit date: 2026-08-10 · Branch: `main` @ `ee513a4` (+ uncommitted C4/C5/H9 fixes)
 
 **Scope:** `src/routes/shop/**`, `src/routes/checkout/**`, `src/lib/hooks/cart.svelte.ts`,

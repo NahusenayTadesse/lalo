@@ -61,7 +61,7 @@
 			>
 				ETB {metrics.totalOutstanding.toFixed(2)}
 			</div>
-			<p class="mt-1 text-xs text-muted-foreground">Pending, unpaid, or open processing</p>
+			<p class="mt-1 text-xs text-muted-foreground">Orders not yet paid for, including delivery</p>
 		</div>
 
 		<div class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
@@ -119,7 +119,7 @@
 									>
 									{#if activity.receiptLink}
 										<a
-											href={activity.receiptLink}
+											href="/files/{encodeURIComponent(activity.receiptLink)}"
 											target="_blank"
 											rel="noopener noreferrer"
 											class="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"

@@ -20,14 +20,14 @@ export const add = z.object({
 	quantity: z.coerce
 		.number()
 		.int({ message: 'Quantity can only be full numbers, no decimals.' })
-		.positive({ message: 'Quantity must be a positive number.' })
+		.nonnegative({ message: 'Quantity cannot be negative.' })
 		.default(0),
 
 	supplier: z.coerce.number('Supplier is required').optional(),
 	reorderLevel: z.coerce
 		.number()
 		.int({ message: 'Reorder Level can only be full numbers, no decimals.' })
-		.positive({ message: 'Reorder Level must be a positive number.' })
+		.nonnegative({ message: 'Reorder Level cannot be negative.' })
 		.default(0),
 
 	image: z

@@ -39,7 +39,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			value: products.id,
 			name: products.name
 		})
-		.from(products);
+		.from(products)
+		.where(eq(products.isActive, true));
 
 	const fetchedPrices = await db
 		.select({
@@ -49,7 +50,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			price: prices.price,
 			amount: prices.amount
 		})
-		.from(prices);
+		.from(prices)
+		.innerJoin(products, eq(prices.productId, products.id))
+		.where(eq(products.isActive, true));
 
 	const ownCustomerId = await getOwnCustomerId(locals.user.id);
 
@@ -258,7 +261,8 @@ function variantLabel(input: string): string {
 /**
  * Turns the posted line items into rows to insert, taking every price from the
  * `prices` table rather than from the request. Throws if a product/variant pair
- * doesn't exist, which rolls the surrounding transaction back.
+ * doesn't exist or the product is deactivated, which rolls the surrounding
+ * transaction back.
  */
 async function resolveLineItems(
 	tx: Pick<typeof db, 'select'>,
@@ -269,7 +273,8 @@ async function resolveLineItems(
 	const variants = await tx
 		.select({ productId: prices.productId, amount: prices.amount, price: prices.price })
 		.from(prices)
-		.where(inArray(prices.productId, productIds));
+		.innerJoin(products, eq(prices.productId, products.id))
+		.where(and(inArray(prices.productId, productIds), eq(products.isActive, true)));
 
 	return selectedProducts.map((product) => {
 		const productId = Number(product.product);

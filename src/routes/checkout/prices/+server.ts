@@ -1,8 +1,8 @@
 import { json, error } from '@sveltejs/kit';
-import { inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 
 import { db } from '$lib/server/db';
-import { prices } from '$lib/server/db/schema';
+import { prices, products } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
 /** Upper bound on how many cart lines will be priced in one request. */
@@ -17,8 +17,9 @@ const MAX_IDS = 100;
  * quotes what the customer saw a week ago and the order records today's price.
  * The checkout page calls this before it will let anyone submit.
  *
- * Variants that no longer exist are simply absent from the response, which is
- * how the caller detects a discontinued item.
+ * Variants that no longer exist, or whose product has been deactivated, are
+ * simply absent from the response, which is how the caller detects a
+ * discontinued item.
  *
  * No authorisation: this returns catalogue prices, which are already public on
  * every product page.
@@ -42,7 +43,8 @@ export const POST: RequestHandler = async ({ request }) => {
 	const rows = await db
 		.select({ id: prices.id, price: prices.price, amount: prices.amount })
 		.from(prices)
-		.where(inArray(prices.id, priceIds));
+		.innerJoin(products, eq(prices.productId, products.id))
+		.where(and(inArray(prices.id, priceIds), eq(products.isActive, true)));
 
 	return json(rows);
 };

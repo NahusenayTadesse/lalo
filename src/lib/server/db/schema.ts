@@ -6,7 +6,9 @@ import {
 	mysqlEnum,
 	decimal,
 	text,
-	timestamp
+	timestamp,
+	datetime,
+	index
 } from 'drizzle-orm/mysql-core';
 import { secureFields, user } from './auth.schema';
 
@@ -83,26 +85,30 @@ export const productCategories = mysqlTable('product_categories', {
 	...secureFields
 });
 
-export const transactions = mysqlTable('transactions', {
-	id: int('id').primaryKey().autoincrement(),
-	amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
-	paymentStatus: mysqlEnum('payment_status', [
-		'pending',
-		'pending',
-		'paid',
-		'unpaid',
-		'refunded',
-		'partially_paid',
-		'partially_refunded',
-		'overpaid',
-		'disputed'
-	]).default('pending'),
-	paymentMethodId: int('payment_method_id').references(() => paymentMethods.id, {
-		onDelete: 'set null'
-	}),
-	recieptLink: varchar('reciept_link', { length: 255 }),
-	...secureFields
-});
+export const transactions = mysqlTable(
+	'transactions',
+	{
+		id: int('id').primaryKey().autoincrement(),
+		amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
+		paymentStatus: mysqlEnum('payment_status', [
+			'pending',
+			'paid',
+			'unpaid',
+			'refunded',
+			'partially_paid',
+			'partially_refunded',
+			'overpaid',
+			'disputed'
+		]).default('pending'),
+		paymentMethodId: int('payment_method_id').references(() => paymentMethods.id, {
+			onDelete: 'set null'
+		}),
+		recieptLink: varchar('reciept_link', { length: 255 }),
+		...secureFields
+	},
+	// `/files/[name]` looks receipts up by file name on every file request.
+	(table) => [index('transactions_reciept_link_idx').on(table.recieptLink)]
+);
 export const productAdjustments = mysqlTable('product_adjustments', {
 	id: int('id').autoincrement().primaryKey(),
 	productsId: int('product_id')
@@ -123,6 +129,9 @@ export const orders = mysqlTable('orders', {
 	address: varchar('address', { length: 255 }),
 	deliveryAddress: varchar('delivery_address', { length: 255 }),
 	fee: decimal('fee', { precision: 10, scale: 2 }),
+	// When the order last became delivered — `createdAt` is when it was placed, and
+	// "today's deliveries" can't be read off that. NULL for every other status.
+	deliveredAt: datetime('delivered_at'),
 	...secureFields
 });
 

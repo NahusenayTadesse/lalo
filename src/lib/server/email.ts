@@ -1,6 +1,29 @@
 import nodemailer from 'nodemailer';
 
-import { SMTP_HOST, SMTP_USER,  SMTP_PASSWORD, SMTP_PORT } from '$env/static/private';
+import { SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_PORT } from '$env/static/private';
+import { env } from '$env/dynamic/private';
+
+/**
+ * Where staff notifications (new order, contact message, delivery) are sent.
+ *
+ * This used to be `USER` from `$env/static/private` — never defined in `.env`, so
+ * it silently resolved to the OS login name of whoever ran the build and every
+ * admin email bounced. Falls back to the shop's own SMTP mailbox when unset.
+ */
+export const ADMIN_EMAIL = env.ADMIN_EMAIL || SMTP_USER;
+
+/**
+ * Escapes text for interpolation into an email's HTML. Every value that can come
+ * from a visitor (names, subjects, messages, variant labels) must go through this,
+ * or the contact form becomes a way to send arbitrary HTML in the shop's name.
+ */
+export const escapeHtml = (value: unknown) =>
+	String(value ?? '')
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
 
 const transporter = nodemailer.createTransport({
 	host: SMTP_HOST,
@@ -42,7 +65,7 @@ const generateOrderTable = (items) => {
 			return `
                  <tr style="border-bottom: 1px solid #eee;">
                      <td style="padding: 10px; text-align: left;">
-                         Product #${item.product} ${variation ? `(${variation})` : ''}
+                         ${escapeHtml(item.name ?? `Product #${item.product}`)} ${variation ? `(${escapeHtml(variation)})` : ''}
                      </td>
                      <td style="padding: 10px; text-align: center;">
                          ${item.quantity}
@@ -126,7 +149,7 @@ export const customerWelcomeTemplate = (name: string) => ({
 
             <!-- Body -->
             <div style="padding: 20px; color: #333;">
-                <p>Hi <strong>${name}</strong>,</p>
+                <p>Hi <strong>${escapeHtml(name)}</strong>,</p>
 
                 <p>
                     We’re excited to have you join <strong>Lalo Bakery Solutions</strong> 🎂.
@@ -246,20 +269,20 @@ export const adminContactTemplate = (data: {
 
             <!-- Body -->
             <div style="padding: 20px;">
-                <p><strong>Name:</strong> ${data.name}</p>
-                <p><strong>Email:</strong> ${data.email}</p>
-                <p><strong>Phone:</strong> ${data.phoneNumber}</p>
-                <p><strong>Subject:</strong> ${data.subject}</p>
+                <p><strong>Name:</strong> ${escapeHtml(data.name)}</p>
+                <p><strong>Email:</strong> ${escapeHtml(data.email)}</p>
+                <p><strong>Phone:</strong> ${escapeHtml(data.phoneNumber)}</p>
+                <p><strong>Subject:</strong> ${escapeHtml(data.subject)}</p>
 
                 <div style="margin-top: 15px;">
                     <strong>Message:</strong>
                     <div style="background: #f9f9f9; padding: 15px; margin-top: 5px; border-radius: 5px;">
-                        ${data.contactMessage || '<i>No message provided</i>'}
+                        ${data.contactMessage ? escapeHtml(data.contactMessage).replace(/\n/g, '<br/>') : '<i>No message provided</i>'}
                     </div>
                 </div>
 
                 <div style="margin-top: 20px;">
-                    <a href="mailto:${data.email}"
+                    <a href="mailto:${encodeURIComponent(data.email)}"
                        style="background: #bc3d00; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                         Reply to Customer
                     </a>
@@ -274,7 +297,10 @@ export const adminContactTemplate = (data: {
     `
 });
 
-export const customerContactTemplate = (name: string, subject: string) => ({
+// Deliberately doesn't echo the visitor's subject or message: this goes to whatever
+// address was typed into a public form, so anything quoted back is content a
+// stranger can get delivered from the shop's mailbox.
+export const customerContactTemplate = (name: string) => ({
 	subject: `We received your message - Lalo Bakery Solutions`,
 	html: `
         <div style="max-width: 600px; margin: auto; font-family: sans-serif; border: 1px solid #eee;">
@@ -292,15 +318,11 @@ export const customerContactTemplate = (name: string, subject: string) => ({
 
             <!-- Body -->
             <div style="padding: 20px; color: #333;">
-                <p>Hi <strong>${name}</strong>,</p>
+                <p>Hi <strong>${escapeHtml(name)}</strong>,</p>
 
                 <p>
                     Thank you for reaching out to <strong>Lalo Bakery Solutions</strong>.
-                    We’ve received your message regarding:
-                </p>
-
-                <p style="font-weight: bold; margin: 10px 0;">
-                    "${subject}"
+                    We’ve received your message.
                 </p>
 
                 <p>

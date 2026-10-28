@@ -41,7 +41,7 @@ export const load: PageServerLoad = async () => {
 	};
 };
 
-import { saveUploadedFile } from '$lib/server/upload.js';
+import { deleteUploadedFile, saveUploadedFile } from '$lib/server/upload.js';
 
 export const actions: Actions = {
 	addProduct: async ({ request, cookies, locals }) => {
@@ -65,64 +65,59 @@ export const actions: Actions = {
 			gallery
 		} = form.data;
 
-		const result = await db.transaction(async (tx) => {
-			// 1. Upload images first (usually done before the DB transaction starts
-			// to avoid keeping a DB connection open during slow network I/O)
+		// Files are written before the transaction, so a slow upload doesn't hold a
+		// connection open — and deleted again if the insert fails, so a failed save
+		// doesn't leave orphaned files behind.
+		const uploaded: string[] = [];
+		let productId: number;
+
+		try {
 			const featuredImage = await saveUploadedFile(image);
+			uploaded.push(featuredImage);
 			const galleryImages = await uploadGallery(gallery);
+			uploaded.push(...galleryImages);
 
-			// 2. Insert the main product
-			const [product] = await tx
-				.insert(inventory)
-				.values({
-					name: productName,
-					categoryId: category,
-					description,
-					quantity,
+			productId = await db.transaction(async (tx) => {
+				const [product] = await tx
+					.insert(inventory)
+					.values({
+						name: productName,
+						categoryId: category,
+						description,
+						quantity,
+						supplierId: supplier || null,
+						reorderLevel,
+						featuredImage,
+						// Commission is hidden from the add-product form for now; default to 0
+						// rather than leaving this NOT NULL decimal column unset.
+						commissionAmount: '0',
+						createdBy: locals?.user?.id
+					})
+					.$returningId();
 
-					supplierId: supplier,
-					reorderLevel,
-					featuredImage,
-					// Commission is hidden from the add-product form for now; default to 0
-					// rather than leaving this NOT NULL decimal column unset.
-					commissionAmount: '0',
-					createdBy: locals?.user?.id
-				})
-				.$returningId();
+				if (galleryImages.length > 0) {
+					await tx
+						.insert(productImages)
+						.values(galleryImages.map((url) => ({ productId: product.id, imageUrl: url })));
+				}
 
-			const newProductId = product.id;
-
-			// 3. Prepare and insert the gallery images
-			if (galleryImages.length > 0) {
-				const imageRecords = galleryImages.map((url) => ({
-					productId: newProductId,
-					imageUrl: url
-				}));
-
-				await tx.insert(productImages).values(imageRecords);
-			}
-
-			// Return the ID or the full object if needed
-			return newProductId;
-		});
-
-		if (!result) {
+				return product.id;
+			});
+		} catch (err) {
+			console.error('Add product failed:', err);
+			await Promise.all(uploaded.map((name) => deleteUploadedFile(name)));
 			return message(
 				form,
-				{
-					type: 'error',
-					text: 'An error occurred while adding the product.'
-				},
+				{ type: 'error', text: 'An error occurred while adding the product.' },
 				{ status: 500 }
 			);
-		} else {
-			message(form, { type: 'success', text: 'New Product Successfully Added' });
-			redirect(
-				`/dashboard/products/single/${result}`,
-				{ type: 'success', message: 'New Product Successfully Added' },
-				cookies
-			);
 		}
+
+		redirect(
+			`/dashboard/products/single/${productId}`,
+			{ type: 'success', message: 'New Product Successfully Added' },
+			cookies
+		);
 	}
 };
 

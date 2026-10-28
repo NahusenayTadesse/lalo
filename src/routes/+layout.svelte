@@ -1,4 +1,8 @@
 <script lang="ts">
+	import DemoLinks from './demo/DemoLinks.svelte';
+	import type { Pathname } from '$app/types';
+	import { resolve } from '$app/paths';
+	import { locales, localizeHref } from '$lib/paraglide/runtime.js';
 	import './layout.css';
 	import { getFlash } from 'sveltekit-flash-message';
 	import { page, updated } from '$app/state';
@@ -80,7 +84,18 @@
 	{@render children()}
 	<Footer />
 	<Whatsappchat />
-	<Cart freeDeliveryThreshold={data?.freeData?.threshold} suggestionThreshold={data?.freeData?.suggestionThreshold} />
+	<Cart
+		freeDeliveryThreshold={data?.freeData?.threshold}
+		suggestionThreshold={data?.freeData?.suggestionThreshold}
+	/>
 {:else}
 	{@render children()}
 {/if}
+
+<div style="display:none">
+	{#each locales as locale (locale)}
+		<a href={resolve(localizeHref(page.url.pathname, { locale }) as Pathname)}>{locale}</a>
+	{/each}
+</div>
+
+<DemoLinks />

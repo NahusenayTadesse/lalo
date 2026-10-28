@@ -40,7 +40,10 @@ export async function resolveDeliveryFee(
 		.limit(1)
 		.then((rows) => rows[0]);
 
-	if (threshold && subtotal >= Number(threshold.value)) return '0.00';
+	// A threshold of 0 means free delivery is switched off. Treating it literally made
+	// every order free, which is what saving the settings form blank used to do.
+	if (threshold && Number(threshold.value) > 0 && subtotal >= Number(threshold.value))
+		return '0.00';
 
 	return place.fee;
 }

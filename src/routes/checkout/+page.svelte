@@ -45,11 +45,24 @@
 			}
 		},
 
-		onResult: ({ result }) => {
-			// 2. Only clear cart if the server actually says 'success'
-			if (result.type === 'success') {
+		onResult: ({ result, cancel }) => {
+			// Clear the cart only when an order was actually placed. A result of type
+			// 'success' isn't proof of that: some rejections ("we do not deliver to that
+			// area") used to come back as 'success' too, and emptied the cart of a
+			// customer who had just been told their order failed.
+			const orderId = result.type === 'success' ? result.data?.form?.message?.orderId : undefined;
+
+			if (orderId) {
 				cart.clearCart();
-				
+			} else if (result.type === 'failure' && result.status === 409) {
+				// An item went out of the catalogue after the page loaded. Re-run the price
+				// check so it is removed (and the customer told), instead of every retry
+				// failing on the same line.
+				reconcileCart();
+			} else if (result.type === 'success') {
+				// Not an order: keep what the customer typed rather than resetting the form.
+				cancel();
+				toast.error(result.data?.form?.message?.text ?? 'Could not place your order');
 			}
 		}
 	});
@@ -64,7 +77,10 @@
 	 */
 	const pickup = $derived(Boolean($form.pickup));
 
-	let freeDelivery = $derived(cart.totalPrice >= Number(data?.freeData?.threshold));
+	// A threshold of 0 means free delivery is off — same rule as `resolveDeliveryFee`.
+	let freeDelivery = $derived(
+		Number(data?.freeData?.threshold) > 0 && cart.totalPrice >= Number(data?.freeData?.threshold)
+	);
 	const fee = $derived(
 		pickup || freeDelivery ? 0 : data?.placeList?.find((item) => item.name === $form.address)?.fee
 	);
@@ -105,7 +121,6 @@
 		}
 	});
 
-
 	/**
 	 * Tells the schema whether to demand contact details.
 	 *
@@ -136,9 +151,6 @@
 		reconcileCart();
 	});
 
-
-
-
 	$effect(() => {
 		$form.selectedProducts = formattedData;
 	});
@@ -152,8 +164,11 @@
 	 * confirmation email — record another, with nothing said to the customer.
 	 */
 	let reconciled = $state(false);
-	let repricedItems = $state<{ name: string; from: number; to: number }[]>([]);
-	let removedItems = $state<string[]>([]);
+	// Keyed by `priceId` in the template: the cart holds one line per *variant*, so two
+	// lines can share a product name, and keying by name threw a fatal
+	// `each_key_duplicate` when both packages of one product were removed.
+	let repricedItems = $state<{ priceId: number; name: string; from: number; to: number }[]>([]);
+	let removedItems = $state<{ priceId: number; name: string }[]>([]);
 
 	async function reconcileCart() {
 		repricedItems = [];
@@ -186,14 +201,19 @@
 			const row = current.find((c) => c.id === item.priceId);
 
 			if (!row) {
-				removedItems.push(item.productName);
+				removedItems.push({ priceId: item.priceId, name: `${item.productName} (${item.amount})` });
 				cart.removeItem(item.priceId);
 				continue;
 			}
 
 			const price = Number(row.price);
 			if (price !== item.price) {
-				repricedItems.push({ name: item.productName, from: item.price, to: price });
+				repricedItems.push({
+					priceId: item.priceId,
+					name: `${item.productName} (${item.amount})`,
+					from: item.price,
+					to: price
+				});
 			}
 			cart.syncVariant(item.priceId, price, row.amount);
 		}
@@ -255,7 +275,11 @@
 						</p>
 						<div class="mt-3 flex flex-wrap gap-2">
 							<DialogComp title="Sign Up" variant="default" IconComp={UserRoundPlus}>
-								<Signup data={data?.signupForm} action="/signup?/signup" placeList={data?.placeList} />
+								<Signup
+									data={data?.signupForm}
+									action="/signup?/signup"
+									placeList={data?.placeList}
+								/>
 							</DialogComp>
 
 							<DialogComp title="Log In" variant="outline" IconComp={User}>
@@ -417,17 +441,17 @@
 								placeholder="Enter delivery fee"
 							/>
 						{/if}
-                         {#if saveInfo && !pickup}
+						{#if saveInfo && !pickup}
 							<InputComp
-							label="Save Information"
-							name="saveInfo"
-							type="checkboxSingle"
-							{form}
-							disabled
-							{errors}
-							placeholder="Save this information for future orders."
+								label="Save Information"
+								name="saveInfo"
+								type="checkboxSingle"
+								{form}
+								disabled
+								{errors}
+								placeholder="Save this information for future orders."
 							/>
-                        {/if}
+						{/if}
 
 						<InputComp
 							label=""
@@ -490,9 +514,7 @@
 						     the viewport grew with the cart and a long list ran straight out of the
 						     summary card instead of scrolling. `max-h-[inherit]` hands the viewport
 						     the root's own 25rem, and a short cart still shrinks to fit. -->
-						<ScrollArea
-							class="max-h-100 pr-4 [&>[data-slot=scroll-area-viewport]]:max-h-[inherit]"
-						>
+						<ScrollArea class="max-h-100 pr-4 [&>[data-slot=scroll-area-viewport]]:max-h-[inherit]">
 							<div class="divide-y divide-border">
 								<!-- Keyed on the variant, not the product: the cart holds one line per
 								     variant, so keying on `productId` alone produced duplicate keys and
@@ -539,13 +561,13 @@
 							>
 								<p class="font-medium">Your cart was updated</p>
 								<ul class="mt-1 space-y-0.5 text-muted-foreground">
-									{#each repricedItems as change (change.name + change.to)}
+									{#each repricedItems as change (change.priceId)}
 										<li>
 											{change.name} is now {formatPrice(change.to)} (was {formatPrice(change.from)})
 										</li>
 									{/each}
-									{#each removedItems as name (name)}
-										<li>{name} is no longer available and was removed</li>
+									{#each removedItems as removed (removed.priceId)}
+										<li>{removed.name} is no longer available and was removed</li>
 									{/each}
 								</ul>
 								<p class="mt-2 text-xs text-muted-foreground">

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
-	import { ShareIcon, PlusIcon, CheckIcon, Plus, Minus } from '@lucide/svelte';
+	import { ShareIcon, PlusIcon, CheckIcon, Plus, Minus, ShoppingCartIcon } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 
 	type Props = {
@@ -17,8 +17,6 @@
 
 	const { productId, productName, price, description, image, category, images, priceList }: Props =
 		$props();
-
-	
 
 	import { useCart } from '$lib/hooks/cart.svelte.js';
 	import Input from './ui/input/input.svelte';
@@ -88,8 +86,22 @@
 		}, 1500);
 	}
 
-	const handleShare = () => {
-		toast.success('Link copied to clipboard');
+	// Used to announce "Link copied" without copying anything. Uses the native share
+	// sheet where there is one (phones), and the clipboard otherwise.
+	const handleShare = async () => {
+		const url = window.location.href;
+		try {
+			if (navigator.share) {
+				await navigator.share({ title: productName, url });
+				return;
+			}
+			await navigator.clipboard.writeText(url);
+			toast.success('Link copied to clipboard');
+		} catch (err) {
+			// The customer closing the share sheet is not an error worth reporting.
+			if ((err as DOMException)?.name === 'AbortError') return;
+			toast.error('Could not copy the link');
+		}
 	};
 
 	// These choose *how many to add*; they must not touch the cart. Writing to it
@@ -105,14 +117,18 @@
 		quantity = Math.max(1, safeQuantity - 1);
 	};
 
-
-
 	let displayImage = $derived(image);
+
+	/**
+	 * The featured image first, then the gallery. The thumbnail row used to hold only
+	 * the gallery, so once a thumbnail was clicked there was no way back to the main
+	 * image short of reloading.
+	 */
+	const thumbnails = $derived([...(image ? [image] : []), ...(images ?? [])]);
 
 	function changePrice(product: { id: number }) {
 		currentPriceId = product.id;
 	}
-
 </script>
 
 <div class="min-h-dvh bg-background">
@@ -121,11 +137,20 @@
 			<!-- Product Image Section -->
 			<div class="flex flex-col gap-4">
 				<div class="shadow-lg-lg relative overflow-hidden rounded-2xl bg-muted/50">
-					<img
-						src="/files/{displayImage}"
-						alt={productName}
-						class="aspect-square w-full object-cover transition-transform duration-300 hover:scale-105"
-					/>
+					{#if displayImage}
+						<img
+							src="/files/{displayImage}"
+							alt={productName}
+							class="aspect-square w-full object-cover transition-transform duration-300 hover:scale-105"
+						/>
+					{:else}
+						<!-- No image: this used to request `/files/null`. -->
+						<div
+							class="flex aspect-square w-full items-center justify-center text-muted-foreground/40"
+						>
+							<ShoppingCartIcon class="size-16" />
+						</div>
+					{/if}
 					{#if category}
 						<Badge class="absolute top-4 left-4 bg-primary/90 backdrop-blur-sm">
 							{category}
@@ -134,14 +159,17 @@
 				</div>
 				<!-- Thumbnail placeholder -->
 				<div class="flex gap-2">
-					{#each images as image, i (i)}
+					{#each thumbnails as thumb, i (i)}
 						<button
-							class="aspect-square w-20 overflow-hidden rounded-lg border-2 border-transparent bg-muted/50 transition-all duration-200 hover:border-primary"
+							class="aspect-square w-20 overflow-hidden rounded-lg border-2 bg-muted/50 transition-all duration-200 hover:border-primary {thumb ===
+							displayImage
+								? 'border-primary'
+								: 'border-transparent'}"
 							aria-label="View image {i + 1}"
-							onclick={() => (displayImage = image)}
+							onclick={() => (displayImage = thumb)}
 						>
 							<img
-								src="/files/{image}"
+								src="/files/{thumb}"
 								alt="Product thumbnail {i + 1}"
 								class="h-full w-full object-cover"
 							/>
@@ -230,10 +258,8 @@
 					<div class="flex items-center gap-4">
 						<span class="text-sm font-medium text-muted-foreground">Quantity</span>
 						<div class="flex items-center gap-2 rounded-lg border border-input bg-background p-1">
-							<Button
-								onclick={decrementQuantity}
-								size="icon"
-								aria-label="Decrease quantity"><Minus class="size-4" /></Button
+							<Button onclick={decrementQuantity} size="icon" aria-label="Decrease quantity"
+								><Minus class="size-4" /></Button
 							>
 							<!-- <span class="w-8 text-center font-semibold">{quantity}</span> -->
 							<!-- Snapped on blur so the box can't keep showing a value that isn't
@@ -246,10 +272,8 @@
 								min="1"
 								aria-label="Quantity"
 							/>
-							<Button
-								onclick={incrementQuantity}
-								size="icon"
-								aria-label="Increase quantity"><Plus  class="size-4" /></Button
+							<Button onclick={incrementQuantity} size="icon" aria-label="Increase quantity"
+								><Plus class="size-4" /></Button
 							>
 						</div>
 					</div>

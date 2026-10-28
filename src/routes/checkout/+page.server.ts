@@ -1,8 +1,12 @@
 import { superValidate, message, setError } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { eq, and, inArray } from 'drizzle-orm';
-import { sendEmail, customerCheckoutTemplate, adminCheckoutTemplate } from '$lib/server/email';
-import { USER } from '$env/static/private';
+import {
+	sendEmail,
+	customerCheckoutTemplate,
+	adminCheckoutTemplate,
+	ADMIN_EMAIL
+} from '$lib/server/email';
 
 // The signup dialog on this page posts to `/signup?/signup`, so it must be
 // seeded with the same schema that action validates against — see `addUser`.
@@ -11,7 +15,7 @@ import { addGuest } from './schema';
 import { PICKUP_LABEL } from '$lib/delivery';
 import { INVALID_PHONE_MESSAGE, normalizeEthiopianPhone } from '$lib/validators/phone';
 import { db } from '$lib/server/db';
-import { orders, orderItems, customers, placeNames, prices } from '$lib/server/db/schema';
+import { orders, orderItems, customers, placeNames, prices, products } from '$lib/server/db/schema';
 import { resolveDeliveryFee } from '$lib/server/delivery';
 import type { PageServerLoad, Actions } from './$types';
 
@@ -79,8 +83,11 @@ export const actions: Actions = {
 		const address = pickup ? PICKUP_LABEL : (form.data.address ?? '');
 		const deliveryAddress = pickup ? PICKUP_LABEL : (form.data.deliveryAddress ?? '');
 
+		// Every rejection below carries an error status. superforms' `message()` without
+		// one returns a *success* result for a valid form, and the checkout page used to
+		// read that as "order placed" and empty the customer's cart.
 		if (!selectedProducts.length) {
-			return message(form, { type: 'error', text: 'Your cart is empty' });
+			return message(form, { type: 'error', text: 'Your cart is empty' }, { status: 400 });
 		}
 
 		// A guest's contact details are validated here but the `customers` row is
@@ -111,12 +118,14 @@ export const actions: Actions = {
 			lineItems = await resolveLineItems(selectedProducts);
 		} catch (err) {
 			console.error('Checkout: could not price the cart:', err);
-			return message(form, {
-				type: 'error',
-				text: 'One of the items in your cart is no longer available'
-			});
+			return message(
+				form,
+				{ type: 'error', text: 'One of the items in your cart is no longer available' },
+				{ status: 409 }
+			);
 		}
 
+		const productNames = new Map(lineItems.map((item) => [item.productId, item.productName]));
 		const subtotal = sumLineItems(lineItems);
 		// A pickup order passes `PICKUP_LABEL` as the area and comes back at 0.00 —
 		// zeroed server-side, for the same reason the fee is always resolved here:
@@ -124,7 +133,12 @@ export const actions: Actions = {
 		const fee = await resolveDeliveryFee(address, subtotal);
 
 		if (fee === undefined) {
-			return message(form, { type: 'error', text: 'We do not deliver to that area' });
+			setError(form, 'address', 'We do not deliver to that area');
+			return message(
+				form,
+				{ type: 'error', text: 'We do not deliver to that area' },
+				{ status: 400 }
+			);
 		}
 
 		let customer: { value: number; email: string | null } | undefined;
@@ -137,6 +151,13 @@ export const actions: Actions = {
 					deliveryAddress
 				});
 			} catch (err) {
+				if (err instanceof RegisteredEmailError) {
+					return setError(
+						form,
+						'guestEmail',
+						'An account already uses this email. Please sign in to place your order.'
+					);
+				}
 				console.error('Checkout: could not create a guest customer:', err);
 				return message(
 					form,
@@ -188,7 +209,7 @@ export const actions: Actions = {
 				newOrderId = orderId.id;
 
 				await tx.insert(orderItems).values(
-					lineItems.map((item) => ({
+					lineItems.map(({ productName: _name, ...item }) => ({
 						orderId: orderId.id,
 						...item,
 						createdBy: locals.user?.id
@@ -204,6 +225,7 @@ export const actions: Actions = {
 		// figure that differs from what was written to the order.
 		const emailItems = lineItems.map((item) => ({
 			product: item.productId,
+			name: productNames.get(item.productId),
 			quantity: item.quantity,
 			amount: item.amount,
 			price: Number(item.price)
@@ -221,14 +243,22 @@ export const actions: Actions = {
 
 		// Send to Admin
 		sendEmail(
-			USER,
+			ADMIN_EMAIL,
 			adminCheckoutTemplate(newOrderId, emailItems, total).subject,
 			adminCheckoutTemplate(newOrderId, emailItems, total).html
 		).catch((err) => console.error('Email Error (Admin):', err));
 
-		return message(form, { type: 'success', text: 'Order Successfully Added' });
+		return message(form, {
+			type: 'success',
+			text: 'Order Successfully Added',
+			// The client clears the cart only when this is present — see `+page.svelte`.
+			orderId: newOrderId
+		});
 	}
 };
+
+/** The guest typed an email that belongs to a registered account. */
+class RegisteredEmailError extends Error {}
 
 /**
  * Resolves the `customers` row an account-less order should hang off.
@@ -238,12 +268,14 @@ export const actions: Actions = {
  * created or linked. (This needs `customers.user_id` and `customers.email` to
  * be nullable in the database; see `drizzle/0019_*.sql`.)
  *
- * `customers.email` is UNIQUE, so a returning guest — or someone who already
- * has an account — would collide on insert. Their existing row is reused
- * instead, and deliberately left untouched: the address and phone they typed
- * are recorded on the order itself, and silently rewriting the stored profile
- * of a registered customer from an unauthenticated form would be a way to
- * tamper with someone else's account.
+ * `customers.email` is UNIQUE, so a returning guest would collide on insert.
+ * Their existing *account-less* row is reused instead, and left untouched: the
+ * address and phone they typed are recorded on the order itself.
+ *
+ * An email that belongs to a registered account is refused rather than reused.
+ * Reusing it let anyone who knew a customer's email place orders, unsigned-in,
+ * that showed up in that customer's account and in the dashboard under their
+ * name — the guest has to sign in instead.
  */
 async function findOrCreateGuestCustomer(details: {
 	name: string;
@@ -253,13 +285,14 @@ async function findOrCreateGuestCustomer(details: {
 	deliveryAddress: string;
 }) {
 	const existing = await db
-		.select({ value: customers.id, email: customers.email })
+		.select({ value: customers.id, email: customers.email, userId: customers.userId })
 		.from(customers)
 		.where(eq(customers.email, details.email))
 		.limit(1)
 		.then((rows) => rows[0]);
 
-	if (existing) return existing;
+	if (existing?.userId) throw new RegisteredEmailError();
+	if (existing) return { value: existing.value, email: existing.email };
 
 	const [inserted] = await db
 		.insert(customers)
@@ -287,7 +320,8 @@ async function findOrCreateGuestCustomer(details: {
  * `amount` — so `find` returned whichever row came back first and a customer who
  * picked the cheaper package was billed for the dearer one.
  *
- * Throws if a variant doesn't exist, which rolls the caller's transaction back.
+ * Throws if a variant doesn't exist or its product has been deactivated — a
+ * deactivated product can still be sitting in a customer's saved cart.
  */
 async function resolveLineItems(
 	selectedProducts: Array<{ priceId: number; product: number; quantity: number }>
@@ -298,11 +332,13 @@ async function resolveLineItems(
 		.select({
 			id: prices.id,
 			productId: prices.productId,
+			productName: products.name,
 			amount: prices.amount,
 			price: prices.price
 		})
 		.from(prices)
-		.where(inArray(prices.id, priceIds));
+		.innerJoin(products, eq(prices.productId, products.id))
+		.where(and(inArray(prices.id, priceIds), eq(products.isActive, true)));
 
 	return selectedProducts.map((item) => {
 		const variant = variants.find((v) => v.id === Number(item.priceId));
@@ -314,7 +350,8 @@ async function resolveLineItems(
 		// The product is taken from the variant row too, so a payload pairing one
 		// product's id with another product's variant cannot mislabel the order.
 		return {
-			productId: variant.productId,
+			productId: variant.productId as number,
+			productName: variant.productName,
 			quantity: Number(item.quantity),
 			amount: variant.amount,
 			// `price` is a decimal column — mysql2 wants a string, and a JS number

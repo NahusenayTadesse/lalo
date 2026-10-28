@@ -1,33 +1,15 @@
-import { db } from '$lib/server/db';
-import { user } from '$lib/server/db/schema';
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
-
-import { orders, contactMessages } from '$lib/server/db/schema';
-import { eq, count, gte } from 'drizzle-orm';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	if (!locals.user) {
 		return redirect(302, '/login');
 	}
 
-	const name = locals?.user?.name;
-
-	const ordersNumber = await db
-		.select({ count: count(orders.id) })
-		.from(orders)
-		.where(eq(orders.status, 'pending'))
-		.then((rows) => rows[0]?.count ?? 0);
-
-	const messageNumber = await db
-		.select({ count: count() })
-		.from(contactMessages)
-		.where(eq(contactMessages.seen, false))
-		.then((rows) => rows[0]?.count ?? 0);
-
+	// This layout used to also return the shop-wide pending-order and unread-message
+	// counts (copied from the dashboard layout), which sent business figures to every
+	// signed-in customer. Nothing under /account displayed them.
 	return {
-		name,
-		ordersNumber,
-		messageNumber
+		name: locals.user.name
 	};
 };

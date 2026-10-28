@@ -82,14 +82,15 @@ export const actions: Actions = {
 		const { id, name, position, testimonial, avatar } = form.data;
 
 		try {
-			const avatarFile = await saveUploadedFile(avatar);
 			await db
 				.update(paymentMethods)
 				.set({
 					name,
 					position,
 					message: testimonial,
-					avatar: avatarFile,
+					...(avatar instanceof File && avatar.size > 0
+						? { avatar: await saveUploadedFile(avatar) }
+						: {}),
 					updatedBy: locals?.user?.id
 				})
 				.where(eq(paymentMethods.id, id));

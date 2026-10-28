@@ -6,7 +6,6 @@
 	import type { Snapshot } from '@sveltejs/kit';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
-	import { goto } from '$app/navigation';
 
 	import { Eye, Plus, EyeClosed } from '@lucide/svelte';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
@@ -20,10 +19,12 @@
 	const { form, errors, enhance, delayed, capture, restore, allErrors, message } = superForm(
 		data.form,
 		{
-			onResult({ result }) {
-				if (result.type === 'success') {
-					goto('/login');
-				}
+			// Stays on the page. It used to `goto('/login')` on success, but the current
+			// session survives a password change (only *other* sessions are revoked), and
+			// `/login` sends a signed-in user to the home page — so the customer landed
+			// there with no explanation. The success toast below is the confirmation.
+			resetForm: true,
+			onResult() {
 				updateFlash(page);
 			},
 			onError() {
