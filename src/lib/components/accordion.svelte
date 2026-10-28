@@ -78,12 +78,12 @@
 </script>
 
 <div
-	class="min-h-dvh bg-linear-to-br from-primary/5 via-background to-accent/5 px-4 py-12 sm:px-6 lg:px-8"
+	class="aurora relative isolate overflow-hidden bg-linear-to-br from-primary/5 via-background to-accent/5 px-4 py-20 sm:px-6 lg:px-8"
 >
 	<div class="mx-auto w-full">
 		<!-- Header -->
-		<div class="mb-12 text-center">
-			<h1 class="mb-4 text-4xl font-bold text-foreground sm:text-5xl">{m.why_title()}</h1>
+		<div data-reveal class="mb-12 text-center">
+			<h1 class="mb-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">{m.why_title()}</h1>
 			<p class="text-lg text-muted-foreground">
 				{m.why_subtitle()}
 			</p>
@@ -93,24 +93,28 @@
 		<Accordion
 			type="single"
 			collapsible
-			class="grid w-9/10 grid-cols-1 items-center gap-3 space-y-3 justify-self-center lg:grid-cols-2"
+			class="grid w-9/10 max-w-6xl grid-cols-1 items-start gap-4 justify-self-center lg:grid-cols-2"
 		>
 			{#each features as feature (feature.id)}
 				<AccordionItem
+					data-reveal
+					style="--reveal-delay: {(features.indexOf(feature) % 2) * 90}ms"
 					value={feature.id}
-					class="hover:shadow-lg-md transition-shadow-lg overflow-hidden rounded-lg border border-border shadow-lg duration-200"
+					class="glass group/item overflow-hidden rounded-2xl transition-all duration-500 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10 data-[state=open]:ring-1 data-[state=open]:ring-primary/30"
 				>
 					<AccordionTrigger
 						class="px-6 py-4 transition-colors duration-200 hover:bg-accent/5 [&[data-state=open]]:bg-primary/5"
 					>
 						<div class="flex items-center gap-4 text-left">
-							<div class="shrink-0 rounded-lg bg-primary/10 p-2">
+							<div
+								class="shrink-0 rounded-xl bg-primary/10 p-2.5 transition-all duration-500 group-hover/item:rotate-6 group-data-[state=open]/item:bg-primary group-data-[state=open]/item:[&_svg]:text-primary-foreground"
+							>
 								<svelte:component this={feature.icon} class="size-5 text-primary" />
 							</div>
 							<h3 class="text-lg font-semibold text-foreground">{feature.title}</h3>
 						</div>
 					</AccordionTrigger>
-					<AccordionContent class="border-t border-border bg-card/50 px-6 py-4">
+					<AccordionContent class="border-t border-border/50 px-6 py-4">
 						<p class="leading-relaxed text-muted-foreground">{feature.description}</p>
 					</AccordionContent>
 				</AccordionItem>
@@ -118,9 +122,14 @@
 		</Accordion>
 
 		<!-- Footer CTA -->
-		<div class="mt-12 text-center">
+		<div data-reveal class="mt-14 text-center">
 			<p class="mb-4 text-muted-foreground">{m.why_cta_text()}</p>
-			<Button href="/contact-us">{m.why_cta_button()}</Button>
+			<Button
+				href="/contact-us"
+				size="lg"
+				class="sheen relative overflow-hidden rounded-full px-8 shadow-lg shadow-primary/30 transition-all hover:-translate-y-0.5"
+				>{m.why_cta_button()}</Button
+			>
 		</div>
 	</div>
 </div>

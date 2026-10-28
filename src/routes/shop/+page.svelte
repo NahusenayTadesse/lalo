@@ -178,12 +178,12 @@
 </section>
 
 <div class="min-h-dvh bg-background pb-8 text-foreground transition-colors duration-300">
-	<!-- Sticky Header + Search -->
-	<header class="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-sm">
-		<div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-			<div class="mb-6 flex items-center justify-between">
+	<!-- Header + Search. Not sticky: the site header already holds the top of the screen. -->
+	<header class="aurora relative isolate overflow-hidden">
+		<div class="mx-auto max-w-7xl px-4 pt-10 pb-6 sm:px-6 lg:px-8">
+			<div data-reveal class="mb-6 flex items-center justify-between">
 				<div>
-					<h2 class="text-3xl font-bold">{m.shop_title()}</h2>
+					<h2 class="text-4xl font-bold tracking-tight sm:text-5xl">{m.shop_title()}</h2>
 					<p class="mt-1 text-muted-foreground">{m.shop_subtitle()}</p>
 				</div>
 				{#if hasActiveFilters}
@@ -192,25 +192,27 @@
 					</Button>
 				{/if}
 			</div>
-			<div class="relative">
-				<SearchIcon class="absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground" />
+			<div data-reveal style="--reveal-delay: 120ms" class="group relative">
+				<SearchIcon
+					class="absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary"
+				/>
 				<Input
 					type="text"
 					placeholder={m.shop_search_placeholder()}
 					bind:value={searchQuery}
 					oninput={handleSearch}
-					class="h-11 rounded-lg pl-10"
+					class="glass h-13 rounded-2xl pl-12 text-base transition-shadow focus-visible:shadow-lg focus-visible:shadow-primary/15"
 				/>
 			</div>
 		</div>
 	</header>
 
 	<!-- Main Content -->
-	<main class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+	<main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 		<div class="grid grid-cols-1 gap-8 lg:grid-cols-4">
 			<!-- Filters Sidebar -->
-			<aside class="lg:col-span-1">
-				<div class="sticky top-36 space-y-6">
+			<aside data-reveal="left" class="lg:col-span-1">
+				<div class="glass sticky top-28 space-y-6 rounded-3xl p-5">
 					<div class="flex items-center justify-between">
 						<h3 class="text-lg font-semibold">{m.shop_filters()}</h3>
 					</div>
@@ -303,7 +305,7 @@
 						<Button variant="outline" class="mt-4" onclick={resetFilters}>{m.shop_clear_filters()}</Button>
 					</div>
 				{:else}
-					<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+					<div data-reveal-stagger class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
 						{#each data.productList as product (product.productId)}
 							<ProductCard {...product} />
 						{/each}

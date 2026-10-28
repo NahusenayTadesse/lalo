@@ -71,12 +71,10 @@
 	onmouseleave={() => (isPaused = false)}
 >
 	<!-- Main Card -->
-	<Card
-		class="shadow-lg-xl relative overflow-hidden border-primary/10 bg-gradient-to-br from-card via-card to-primary/5 pt-0"
-	>
+	<Card class="glass relative overflow-hidden rounded-3xl pt-0">
 		<!-- Decorative Quote Icon -->
-		<div class="absolute top-6 right-6 text-primary/10">
-			<QuoteIcon class="size-16" />
+		<div class="absolute top-6 right-6 animate-float-slow text-primary/15">
+			<QuoteIcon class="size-20" />
 		</div>
 
 		<!-- Content Container -->

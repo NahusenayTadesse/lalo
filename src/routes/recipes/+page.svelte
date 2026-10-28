@@ -67,12 +67,15 @@
 
 <div class="min-h-dvh bg-background text-foreground transition-colors duration-300">
 	<section
-		class="relative flex h-96 flex-col items-center justify-center overflow-hidden border-b bg-contain bg-center px-6 py-20 lg:px-8"
-		style="background-image: url('/bakery (13).webp')"
+		class="relative isolate flex h-96 flex-col items-center justify-center overflow-hidden bg-zinc-950 px-6 py-20 lg:px-8"
 	>
-		<div class="backdrop-blur-xm absolute inset-0 bg-black/40"></div>
+		<div
+			class="absolute inset-0 -z-10 animate-ken-burns bg-cover bg-center"
+			style="background-image: url('/bakery (13).webp'); animation-duration: 12s"
+		></div>
+		<div class="absolute inset-0 -z-10 bg-linear-to-t from-black/75 via-black/40 to-black/30"></div>
 
-		<div class="relative mx-auto max-w-4xl text-center">
+		<div data-reveal="scale" class="glass-dark relative mx-auto max-w-4xl rounded-3xl px-8 py-10 text-center">
 			<h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-white lg:text-5xl">
 				{m.nav_recipes()}
 
@@ -89,14 +92,19 @@
 		<!-- Search Section -->
 		<div class="mb-8 flex flex-col gap-4">
 			<div class="relative">
-				<SearchIcon class="absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground" />
-				<Input type="text" placeholder={m.recipes_search_placeholder()} bind:value={searchQuery} class="pl-10" />
+				<SearchIcon class="absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-muted-foreground" />
+				<Input
+					type="text"
+					placeholder={m.recipes_search_placeholder()}
+					bind:value={searchQuery}
+					class="glass h-12 rounded-2xl pl-12"
+				/>
 			</div>
 		</div>
 
 		<!-- Recipes Grid -->
 		{#if filteredRecipes.length > 0}
-			<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+			<div data-reveal-stagger class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
 				{#each filteredRecipes as recipe (recipe.id)}
 					<RecipeCard {recipe} onclick={() => openRecipe(recipe)} />
 				{/each}

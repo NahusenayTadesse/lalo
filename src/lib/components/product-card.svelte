@@ -3,7 +3,7 @@
 	import { useCart, type ProductPrice } from '$lib/hooks/cart.svelte.js';
 	import { Card, CardContent } from '@nahu/admin-kit/components/ui/card/index.js';
 	import { Badge } from '@nahu/admin-kit/components/ui/badge/index.js';
-	import { ShoppingCartIcon } from '@lucide/svelte';
+	import { ShoppingCartIcon, ArrowUpRightIcon } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 
 	/**
@@ -73,9 +73,12 @@
 </script>
 
 <Card
-	class="group overflow-hidden border-sidebar-border transition-all duration-300 hover:ring-2 hover:ring-primary/20"
+	class="glass lift group gap-0 overflow-hidden rounded-3xl p-0 hover:border-primary/30"
 >
-	<a href="/shop/single/{productId}" class="relative aspect-square overflow-hidden bg-muted">
+	<a
+		href="/shop/single/{productId}"
+		class="sheen relative m-2 block aspect-square overflow-hidden rounded-2xl bg-muted"
+	>
 		{#if image}
 			<!-- `h-full` was mistyped as `h-fu ll`, so the image had no height rule and
 			     the card collapsed to a strip. -->
@@ -83,17 +86,26 @@
 				src="/files/{image}"
 				alt={productName}
 				loading="lazy"
-				class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+				class="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-110"
 			/>
+			<div
+				class="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+			></div>
 		{:else}
 			<div class="flex h-full w-full items-center justify-center text-muted-foreground/40">
 				<ShoppingCartIcon class="size-12" />
 			</div>
 		{/if}
 
+		<span
+			class="absolute right-3 bottom-3 flex size-10 translate-y-3 items-center justify-center rounded-full bg-primary text-primary-foreground opacity-0 shadow-lg shadow-primary/40 transition-all duration-500 ease-out-expo group-hover:translate-y-0 group-hover:opacity-100"
+		>
+			<ArrowUpRightIcon class="size-5" />
+		</span>
+
 		<div class="absolute inset-x-2 top-2 flex justify-between gap-2">
 			{#if category}
-				<Badge variant="secondary" class="bg-white/80 backdrop-blur-md dark:bg-black/80">
+				<Badge variant="secondary" class="glass rounded-full">
 					{category}
 				</Badge>
 			{/if}
@@ -108,8 +120,11 @@
 
 	<!-- Name only. Price, variant selector and add-to-cart were removed at the
 	     client's instruction — see the note at the top of this file. -->
-	<CardContent class="grid gap-1 p-4">
-		<a href="/shop/single/{productId}" class="flex flex-col hover:underline">
+	<CardContent class="grid gap-1 px-4 pt-2 pb-4">
+		<a
+			href="/shop/single/{productId}"
+			class="flex flex-col transition-colors group-hover:text-primary"
+		>
 			<h3 class="line-clamp-1 text-lg leading-tight font-bold" title={productName}>
 				{productName}
 			</h3>

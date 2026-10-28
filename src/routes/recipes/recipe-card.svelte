@@ -14,21 +14,23 @@
 </script>
 
 <Card
-	class="group hover:shadow-lg-xl cursor-pointer overflow-hidden transition-all duration-300 hover:scale-[1.02]"
+	class="glass lift group cursor-pointer gap-0 overflow-hidden rounded-3xl p-0"
 	{onclick}
 >
-	<div class="relative h-48 overflow-hidden bg-muted">
+	<div class="sheen relative m-2 h-48 overflow-hidden rounded-2xl bg-muted">
 		<img
 			src="/files/{recipe.image}"
 			alt={recipe.title}
 			loading="lazy"
-			class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+			class="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-110"
 		/>
 	</div>
 
 	<CardContent class="flex flex-col gap-3 p-4">
 		<div class="flex flex-col gap-1">
-			<h3 class="line-clamp-2 text-lg font-semibold text-card-foreground">{recipe.title}</h3>
+			<h3
+				class="line-clamp-2 text-lg font-semibold text-card-foreground transition-colors group-hover:text-primary"
+			>{recipe.title}</h3>
 			<p class="line-clamp-2 text-sm text-muted-foreground">{recipe.description}</p>
 		</div>
 

@@ -22,6 +22,7 @@
 	} from '@lucide/svelte';
 	import Slider from '$lib/components/slider.svelte';
 	import Catalog from '$lib/components/catalog.svelte';
+	import FeaturedProducts from '$lib/components/featured-products.svelte';
 
 	let partners = [
 		{
@@ -104,45 +105,55 @@
 <Hero />
 <About />
 
+{#if data.featuredProducts.length > 0}
+	<FeaturedProducts products={data.featuredProducts} />
+{/if}
+
 <section
-	class="relative z-0 mx-auto max-w-full border-t border-border/50 bg-background bg-cover bg-center px-6 py-24 md:py-32"
+	class="relative isolate z-0 mx-auto max-w-full overflow-hidden bg-zinc-950 bg-cover bg-center px-6 py-24 lg:bg-fixed md:py-32"
 	style="background-image: url('/bakery (6).webp');"
 >
-	<div class="absolute inset-0 -z-1 bg-black/60"></div>
+	<div class="absolute inset-0 -z-10 bg-linear-to-b from-black/80 via-black/60 to-black/85"></div>
+	<div
+		class="absolute top-1/3 -right-40 -z-10 size-[36rem] animate-blob rounded-full bg-primary/25 blur-[120px]"
+	></div>
 	<div class="mx-auto max-w-7xl">
-		<div class="mb-16 md:mb-20">
+		<div data-reveal class="mb-16 md:mb-20">
 			<h3
 				class="mt-4 max-w-4xl text-4xl font-semibold tracking-tighter text-white sm:text-5xl lg:text-6xl"
 			>
 				{m.home_partners_title_lead()}
-				<span class="text-primary">{m.home_partners_title_accent()}</span>
+				<span class="text-gradient">{m.home_partners_title_accent()}</span>
 			</h3>
 		</div>
 
-		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:gap-8">
+		<div
+			data-reveal-stagger
+			class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:gap-8"
+		>
 			{#each partners as p (p)}
 				<div
-					class="group relative flex flex-col gap-5 overflow-hidden rounded-2xl border border-border bg-card p-8 transition-all hover:border-primary/30 hover:shadow-xl"
+					class="glass-dark sheen group relative flex flex-col gap-5 overflow-hidden rounded-3xl p-8 transition-all duration-500 hover:-translate-y-1.5 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/20"
 				>
 					<div
-						class="absolute inset-x-0 top-0 h-1 bg-primary opacity-0 transition group-hover:opacity-100"
+						class="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary to-transparent opacity-0 transition duration-500 group-hover:opacity-100"
 					></div>
 
 					<div class="flex items-center justify-between">
 						<div
-							class="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary"
+							class="flex size-14 items-center justify-center rounded-2xl bg-primary/20 text-primary ring-1 ring-primary/30 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 group-hover:bg-primary group-hover:text-primary-foreground"
 						>
 							<p.icon class="size-7" />
 						</div>
-						<span class="text-xs font-bold tracking-widest text-muted-foreground/80 uppercase"
+						<span class="text-xs font-bold tracking-widest text-white/50 uppercase"
 							>{p.short}</span
 						>
 					</div>
 
 					<div class="grow space-y-2">
-						<p class="text-2xl font-semibold tracking-tight text-foreground">{p.name}</p>
+						<p class="text-2xl font-semibold tracking-tight text-white">{p.name}</p>
 						<p
-							class="line-clamp-2 text-sm leading-relaxed text-muted-foreground group-hover:line-clamp-none"
+							class="line-clamp-2 text-sm leading-relaxed text-white/65 group-hover:line-clamp-none"
 						>
 							{p.description}
 						</p>
@@ -158,9 +169,11 @@
 {/if}
 
 {#if data?.allPaymentMethods.length > 0}
-	<main class="flex flex-col items-center justify-center px-4 py-12 md:py-20">
+	<main
+		class="aurora relative isolate flex flex-col items-center justify-center overflow-hidden px-4 py-16 md:py-24"
+	>
 		<!-- Section Header -->
-		<div class="mb-12 max-w-2xl text-center">
+		<div data-reveal class="mb-12 max-w-2xl text-center">
 			<h2 class="mb-4 text-3xl font-bold text-foreground md:text-4xl">{m.home_testimonials_title()}</h2>
 			<p class="text-lg text-muted-foreground">
 				{m.home_testimonials_subtitle()}
@@ -168,7 +181,9 @@
 		</div>
 
 		<!-- Testimonial Carousel -->
-		<Testimonial testimonials={data?.allPaymentMethods} />
+		<div data-reveal="scale" class="w-full">
+			<Testimonial testimonials={data?.allPaymentMethods} />
+		</div>
 	</main>
 {/if}
 

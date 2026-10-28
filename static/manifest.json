@@ -1,25 +1,63 @@
-    {
-    "name": "Lalo Bakery Solutions",
-    "short_name": "Lalo Bakery",
-    "start_url": "/dash/",
-    "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#bc3d00",
-    "orientation": "portrait-primary",
-    "icons": [
-        {
-        "src": "/logo192.png",
-        "sizes": "192x192",
-        "type": "image/png",
-        "purpose": "any maskable"
-
-        },
-        {
-        "src": "/logo512.png",
-        "sizes": "512x512",
-        "type": "image/png",
-        "purpose": "any maskable"
-
-        }
-    ]
-    }
+{
+	"id": "/",
+	"name": "Lalo Bakery Solutions",
+	"short_name": "Lalo Bakery",
+	"description": "Premium bakery ingredients, equipment and supplies — order, track deliveries and find recipes from Lalo Bakery Solutions.",
+	"start_url": "/?source=pwa",
+	"scope": "/",
+	"display": "standalone",
+	"display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+	"orientation": "any",
+	"background_color": "#fffaf5",
+	"theme_color": "#bc3d00",
+	"lang": "en",
+	"dir": "ltr",
+	"categories": ["food", "shopping", "business"],
+	"prefer_related_applications": false,
+	"icons": [
+		{ "src": "/logo192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+		{ "src": "/logo512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+		{ "src": "/maskable192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+		{ "src": "/maskable512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+	],
+	"screenshots": [
+		{
+			"src": "/screenshot-wide.webp",
+			"sizes": "1280x720",
+			"type": "image/webp",
+			"form_factor": "wide",
+			"label": "Lalo Bakery Solutions"
+		},
+		{
+			"src": "/screenshot-narrow.webp",
+			"sizes": "720x1280",
+			"type": "image/webp",
+			"form_factor": "narrow",
+			"label": "Lalo Bakery Solutions"
+		}
+	],
+	"shortcuts": [
+		{
+			"name": "Shop products",
+			"short_name": "Shop",
+			"url": "/shop?source=pwa",
+			"icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+		},
+		{
+			"name": "My orders",
+			"short_name": "Orders",
+			"url": "/orders?source=pwa",
+			"icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+		},
+		{
+			"name": "Recipes",
+			"url": "/recipes?source=pwa",
+			"icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+		},
+		{
+			"name": "Dashboard",
+			"url": "/dashboard?source=pwa",
+			"icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+		}
+	]
+}

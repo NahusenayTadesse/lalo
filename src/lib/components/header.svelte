@@ -3,12 +3,14 @@
 	import DarkMode from '@nahu/admin-kit/components/shell/DarkMode.svelte';
 	import AvatarSettings from './AvatarSettings.svelte';
 	import LanguageSwitcher from './LanguageSwitcher.svelte';
+	import InstallApp from './InstallApp.svelte';
 	import { m } from '$lib/paraglide/messages.js';
 
 	import { Sheet, SheetContent, SheetTrigger } from '@nahu/admin-kit/components/ui/sheet/index.js';
 	import { Button } from '@nahu/admin-kit/components/ui/button/index.js';
 
 	let isOpen = $state(false);
+	let scrolled = $state(false);
 
 	const handleMenuClick = () => {
 		isOpen = false;
@@ -29,37 +31,51 @@
 	];
 </script>
 
+<svelte:window onscroll={() => (scrolled = window.scrollY > 12)} />
+
 <header
-	class="sticky top-0 z-50 w-full bg-accent px-2 py-2 backdrop-blur supports-backdrop-filter:bg-accent lg:px-16"
+	class={[
+		'site-header sticky top-0 z-50 w-full px-2 transition-[padding] duration-500 ease-out-expo lg:px-8',
+		scrolled ? 'py-2' : 'py-3'
+	]}
 >
-	<div class="flex h-14 items-center justify-between px-4 md:px-6">
+	<div
+		class={[
+			'mx-auto flex max-w-7xl items-center justify-between rounded-2xl px-3 transition-all duration-500 ease-out-expo md:px-5',
+			scrolled ? 'glass-strong h-16' : 'glass h-18'
+		]}
+	>
 		<!-- Logo/Title -->
 		<div class="flex shrink-0 items-center gap-2">
-			<a href="/" class="inline-block">
+			<a href="/" class="inline-block transition-transform duration-300 hover:scale-105">
 				<img
 					src="/logo.webp"
 					width="128"
 					height="96"
-					class="h-16 w-auto object-contain"
+					class={['w-auto object-contain transition-all duration-500', scrolled ? 'h-11' : 'h-13']}
 					alt={m.header_logo_alt()}
 					fetchpriority="high"
 				/>
 			</a>
-
-			<!-- <span class="text-xl font-bold text-foreground">Lalo Bakery Solution</span> -->
 		</div>
 
 		<!-- Desktop Menu -->
-		<nav class="hidden items-center gap-1 md:flex">
+		<nav class="hidden items-center gap-1 rounded-full p-1 md:flex">
 			{#each menuItems as item (item.href)}
-				<Button
-					variant={page.url.pathname === item.href ? 'default' : 'ghost'}
-					size="sm"
+				{@const active = page.url.pathname === item.href}
+				<a
 					href={item.href}
 					onclick={handleMenuClick}
+					aria-current={active ? 'page' : undefined}
+					class={[
+						'group relative rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-300',
+						active
+							? 'bg-primary text-primary-foreground shadow-md shadow-primary/30'
+							: 'text-foreground/75 hover:bg-primary/10 hover:text-foreground'
+					]}
 				>
 					{item.label}
-				</Button>
+				</a>
 			{/each}
 		</nav>
 		<div class="flex flex-row gap-4">
@@ -69,13 +85,16 @@
 						<!-- Search and Auth -->
 						<div class="item-end hidden gap-4 md:flex">
 							<Button href="/login" variant="ghost" size="sm">{m.auth_sign_in()}</Button>
-							<Button href="/signup" size="sm">{m.auth_sign_up()}</Button>
+							<Button href="/signup" size="sm" class="rounded-full px-4 shadow-md shadow-primary/25"
+								>{m.auth_sign_up()}</Button
+							>
 						</div>
 					{:else}
 						<AvatarSettings {data} />
 					{/if}
 				</div>
 				<div class="flex gap-2">
+					<InstallApp variant="icon" />
 					<LanguageSwitcher />
 					<DarkMode />
 				</div>
@@ -95,8 +114,8 @@
 							</Button>
 						{/snippet}
 					</SheetTrigger>
-					<SheetContent side="right" class="flex w-80 flex-col p-0">
-						<div class="border-b bg-muted/20 p-6">
+					<SheetContent side="right" class="glass-strong flex w-80 flex-col p-0">
+						<div class="border-b border-border/50 bg-primary/5 p-6">
 							{#if data === ''}
 								<div class="space-y-1">
 									<h2 class="text-lg font-bold tracking-tight">{m.header_welcome()}</h2>
@@ -119,12 +138,12 @@
 							{/if}
 						</div>
 
-						<nav class="flex flex-1 flex-col gap-1 p-4">
+						<nav class="flex flex-1 flex-col gap-1 p-4" data-reveal-stagger>
 							{#each menuItems as item (item.href)}
 								<Button
-									variant="ghost"
+									variant={page.url.pathname === item.href ? 'default' : 'ghost'}
 									href={item.href}
-									class="w-full justify-start gap-3 px-3 py-6 text-base font-medium transition-all active:scale-[0.98]"
+									class="w-full justify-start gap-3 rounded-xl px-3 py-6 text-base font-medium transition-all active:scale-[0.98]"
 									onclick={handleMenuClick}
 								>
 									{#if item.icon}
@@ -135,7 +154,8 @@
 							{/each}
 						</nav>
 
-						<div class="space-y-4 border-t bg-muted/10 p-4">
+						<div class="space-y-4 border-t border-border/50 bg-muted/10 p-4">
+							<InstallApp variant="button" class="h-11 w-full rounded-xl" />
 							<div class="flex items-center justify-between px-2">
 								<span class="text-sm font-medium text-muted-foreground">{m.header_interface()}</span>
 								<div class="flex gap-2">

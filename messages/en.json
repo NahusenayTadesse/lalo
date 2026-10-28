@@ -1,6 +1,5 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"hello_world": "Hello, {name} from en!",
 	"about_hl_halal": "Halal Certified",
 	"about_hl_halal_desc": "All products meet Halal standards",
 	"about_hl_quality": "Quality Assured",
@@ -375,6 +374,10 @@
 	"home_partner_lau": "Commercial-scale linen and textile services for major hospitality and industrial clients.",
 	"home_partners_title_accent": "Subsidiaries and Sister Companies",
 	"home_partners_title_lead": "Our",
+	"home_products_subtitle": "Flours, yeasts, improvers, mixes and equipment for professional bakeries.",
+	"home_products_title_accent": "Products",
+	"home_products_title_lead": "Our",
+	"home_products_view_all": "View all products",
 	"home_testimonials_subtitle": "Don't just take our word for it. Here's what people are saying about their experience.",
 	"home_testimonials_title": "What Our Customers Say",
 	"home_twitter_description": "Reliable supply chains and technical expertise for the modern bakery. Explore our journey from MasterChef to Lalo.",
@@ -616,5 +619,15 @@
 	"track_received_done": "Thank you! Your order is marked as received.",
 	"track_confirmed_by_you": "You confirmed receipt",
 	"track_failed_attempt": "Delivery attempt didn't reach you — we'll try again soon.",
-	"track_recent": "Recently delivered"
+	"track_recent": "Recently delivered",
+	"install_app": "Install app",
+	"install_success": "Lalo Bakery is installed — find it on your home screen.",
+	"install_card_title": "Get the Lalo Bakery app",
+	"install_card_desc": "Order faster, track deliveries and browse offline — straight from your home screen.",
+	"install_ios_title": "Add to your Home Screen",
+	"install_ios_step_share": "Tap the Share button in Safari's toolbar.",
+	"install_ios_step_add": "Scroll down and choose “Add to Home Screen”.",
+	"install_ios_step_confirm": "Tap “Add” — the app appears on your home screen.",
+	"install_got_it": "Got it",
+	"hero_scroll": "Scroll"
 }

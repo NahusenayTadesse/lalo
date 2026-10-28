@@ -100,12 +100,12 @@
 	<meta property="twitter:image" content="/logo.webp" />
 </svelte:head>
 
-<div class="min-h-dvh w-full bg-background text-foreground transition-colors">
+<div class="aurora relative isolate min-h-dvh w-full overflow-hidden bg-background text-foreground transition-colors">
 	<!-- Main Content -->
 	<main class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
 		<!-- Hero Section -->
-		<div class="mb-12 text-center">
-			<h2 class="mb-4 text-4xl font-bold sm:text-5xl">{m.contact_title()}</h2>
+		<div data-reveal class="mb-12 text-center">
+			<h2 class="mb-4 text-4xl font-bold tracking-tight sm:text-5xl">{m.contact_title()}</h2>
 			<p class="mx-auto max-w-2xl text-lg text-muted-foreground">
 				{m.contact_intro()}
 			</p>
@@ -113,8 +113,8 @@
 
 		<div class="grid gap-8 lg:grid-cols-3">
 			<!-- Contact Form -->
-			<div class="lg:col-span-2">
-				<Card class="border-2">
+			<div data-reveal="left" class="lg:col-span-2">
+				<Card class="glass rounded-3xl">
 					<CardHeader>
 						<CardTitle>{m.contact_form_title()}</CardTitle>
 						<CardDescription
@@ -198,9 +198,9 @@
 			</div>
 
 			<!-- Contact Info & Social -->
-			<div class="space-y-6">
+			<div data-reveal-stagger class="space-y-6">
 				<!-- Direct Contact -->
-				<Card class="border-2">
+				<Card class="glass rounded-3xl">
 					<CardHeader>
 						<CardTitle class="text-lg">{m.contact_info()}</CardTitle>
 					</CardHeader>
@@ -208,9 +208,11 @@
 						{#each contactInfo as info (info.href)}
 							<a
 								href={info.href}
-								class="flex items-start gap-3 rounded-lg p-3 transition-colors hover:bg-accent/10"
+								class="group flex items-start gap-3 rounded-2xl p-3 transition-all duration-300 hover:translate-x-1 hover:bg-primary/5"
 							>
-								<div class="mt-1 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+								<div
+									class="mt-1 flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 transition-colors duration-300 group-hover:bg-primary group-hover:[&_svg]:text-primary-foreground"
+								>
 									<info.icon class="h-4 w-4 text-primary" />
 								</div>
 								<div class="flex-1">
@@ -223,7 +225,7 @@
 				</Card>
 
 				<!-- Social Media -->
-				<Card class="border-2">
+				<Card class="glass rounded-3xl">
 					<CardHeader>
 						<CardTitle class="text-lg">{m.contact_follow()}</CardTitle>
 					</CardHeader>
@@ -235,7 +237,7 @@
 									target="_blank"
 									rel="noopener noreferrer"
 									class={[
-										'flex flex-col items-center gap-2 rounded-lg border p-4 transition-all hover:border-primary hover:shadow-lg',
+										'flex flex-col items-center gap-2 rounded-2xl border border-border/60 bg-background/40 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-primary hover:shadow-lg',
 										social.color
 									]}
 									title={social.name}
@@ -249,7 +251,7 @@
 				</Card>
 
 				<!-- Hours -->
-				<Card class="border-2 bg-linear-to-br from-primary/5 to-accent/5">
+				<Card class="glass rounded-3xl bg-linear-to-br from-primary/10 to-transparent">
 					<CardHeader>
 						<CardTitle class="text-lg">{m.contact_hours()}</CardTitle>
 					</CardHeader>

@@ -1,6 +1,5 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"hello_world": "Hello, {name} from am!",
 	"about_hl_halal": "የሐላል ማረጋገጫ ያለው",
 	"about_hl_halal_desc": "ሁሉም ምርቶች የሐላል ደረጃን ያሟላሉ",
 	"about_hl_quality": "ጥራቱ የተረጋገጠ",
@@ -375,6 +374,10 @@
 	"home_partner_lau": "ለትላልቅ የእንግዳ መቀበያ እና የኢንዱስትሪ ደንበኞች የንግድ ደረጃ የአልጋ ልብስ እና የጨርቃጨርቅ አገልግሎቶች።",
 	"home_partners_title_accent": "ቅርንጫፎች እና እህት ኩባንያዎች",
 	"home_partners_title_lead": "የእኛ",
+	"home_products_subtitle": "ለሙያዊ ዳቦ ቤቶች ዱቄት፣ እርሾ፣ ማሻሻያዎች፣ ድብልቆች እና መሣሪያዎች።",
+	"home_products_title_accent": "ምርቶች",
+	"home_products_title_lead": "የእኛ",
+	"home_products_view_all": "ሁሉንም ምርቶች ይመልከቱ",
 	"home_testimonials_subtitle": "የእኛን ቃል ብቻ አይመኑ። ሰዎች ስለ ተሞክሯቸው የሚሉትን ይመልከቱ።",
 	"home_testimonials_title": "ደንበኞቻችን ምን ይላሉ",
 	"home_twitter_description": "ለዘመናዊ ዳቦ ቤት አስተማማኝ የአቅርቦት ሰንሰለት እና የቴክኒክ እውቀት። ከማስተርሼፍ ወደ ላሎ ያደረግነውን ጉዞ ይመልከቱ።",
@@ -616,5 +619,15 @@
 	"track_received_done": "እናመሰግናለን! ትዕዛዝዎ እንደደረሰ ተመዝግቧል።",
 	"track_confirmed_by_you": "መቀበልዎን አረጋግጠዋል",
 	"track_failed_attempt": "የማድረስ ሙከራው አልተሳካም — በቅርቡ እንደገና እንሞክራለን።",
-	"track_recent": "በቅርቡ የደረሱ"
+	"track_recent": "በቅርቡ የደረሱ",
+	"install_app": "መተግበሪያውን ይጫኑ",
+	"install_success": "ላሎ ቤከሪ ተጭኗል — በመነሻ ገጽዎ ላይ ያገኙታል።",
+	"install_card_title": "የላሎ ቤከሪ መተግበሪያን ያግኙ",
+	"install_card_desc": "በፍጥነት ይዘዙ፣ ማድረሻዎችን ይከታተሉ እና ያለ ኢንተርኔት ያስሱ — በቀጥታ ከመነሻ ገጽዎ።",
+	"install_ios_title": "ወደ መነሻ ገጽዎ ያክሉ",
+	"install_ios_step_share": "በSafari የመሳሪያ አሞሌ ላይ የማጋሪያ (Share) ቁልፉን ይንኩ።",
+	"install_ios_step_add": "ወደ ታች ይሸብልሉ እና “Add to Home Screen” ን ይምረጡ።",
+	"install_ios_step_confirm": "“Add” ን ይንኩ — መተግበሪያው በመነሻ ገጽዎ ላይ ይታያል።",
+	"install_got_it": "ገባኝ",
+	"hero_scroll": "ይሸብልሉ"
 }

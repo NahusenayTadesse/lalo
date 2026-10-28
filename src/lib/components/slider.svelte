@@ -11,9 +11,9 @@
 	class="relative z-0 mx-auto max-w-full border-t border-border/50 bg-background bg-cover bg-center py-24 md:py-32 lg:px-6"
 >
 	<div class="mx-auto lg:max-w-7xl">
-		<div class="mb-16 max-w-3xl justify-self-center md:mb-20">
+		<div data-reveal class="mb-16 max-w-3xl justify-self-center md:mb-20">
 			<h3 class="text-center text-4xl font-semibold tracking-tighter sm:text-5xl lg:text-6xl">
-				{m.partners_title_lead()} <span class="text-primary">{m.partners_title_accent()}</span>
+				{m.partners_title_lead()} <span class="text-gradient">{m.partners_title_accent()}</span>
 			</h3>
 			<p class="mt-6 text-lg leading-relaxed text-muted-foreground md:text-xl">
 				{m.partners_subtitle()}
@@ -21,6 +21,7 @@
 		</div>
 
 		<Carousel.Root
+			data-reveal="scale"
 			class="w-[70%] justify-self-center lg:w-full"
 			opts={{
 				align: 'center',
@@ -33,12 +34,14 @@
 			<Carousel.Content>
 				{#each imagesList as src (src)}
 					<Carousel.Item class="basis-1/2 px-0 md:basis-1/3 lg:basis-1/5 lg:px-4">
-						<div class="flex w-full items-center justify-center">
+						<div
+							class="glass flex w-full items-center justify-center rounded-4xl p-3 grayscale-[40%] transition-all duration-500 hover:-translate-y-1 hover:grayscale-0"
+						>
 							<img
 								src="/files/{src}"
 								alt={m.partners_logo_alt()}
 								loading="lazy"
-								class="hover: rounded-4xl object-cover transition-all duration-300 ease-in-out hover:scale-110"
+								class="rounded-3xl object-cover transition-transform duration-500 ease-out-expo hover:scale-105"
 							/>
 						</div>
 					</Carousel.Item>

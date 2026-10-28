@@ -11,6 +11,7 @@
 		email = '';
 	};
 
+	import InstallApp from './InstallApp.svelte';
 	import { IconBrandFacebook, IconBrandInstagram, IconBrandTiktok } from '@tabler/icons-svelte';
 
 	const socialLinks = [
@@ -41,12 +42,15 @@
 	];
 </script>
 
-<footer class="border-t bg-card text-card-foreground">
+<footer
+	class="aurora relative isolate overflow-hidden border-t border-border/50 bg-card/60 text-card-foreground"
+>
 	<div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-		<!-- Newsletter Section -->
+		<InstallApp variant="card" class="mb-12" />
 
 		<!-- Footer Links Grid -->
 		<div
+			data-reveal-stagger
 			class="align-center mb-8 grid grid-cols-1 items-center justify-center gap-8 md:grid-cols-3"
 		>
 			<!-- Company Info -->
@@ -59,7 +63,7 @@
 						href="https://maps.app.goo.gl/KMrgwGNNbsE2SAeV7"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="flex items-center gap-2 text-foreground/70"
+						class="flex items-center gap-2 text-foreground/70 transition-colors hover:text-primary"
 					>
 						<MapPinIcon class="size-4 shrink-0" />
 						<span>{m.footer_address()}</span>
@@ -68,7 +72,7 @@
 						href="tel:+251908454545"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="flex items-center gap-2 text-foreground/70"
+						class="flex items-center gap-2 text-foreground/70 transition-colors hover:text-primary"
 					>
 						<PhoneIcon class="size-4 shrink-0" />
 						<span>+251908454545</span>
@@ -77,7 +81,7 @@
 						href="tel:+251902645724"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="flex items-center gap-2 text-foreground/70"
+						class="flex items-center gap-2 text-foreground/70 transition-colors hover:text-primary"
 					>
 						<PhoneIcon class="size-4 shrink-0" />
 						<span>+251902645724</span>
@@ -86,7 +90,7 @@
 						href="mailto:info@mohammedlaloie.com"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="flex items-center gap-2 text-foreground/70"
+						class="flex items-center gap-2 text-foreground/70 transition-colors hover:text-primary"
 					>
 						<MailIcon class="size-4 shrink-0" />
 						<span>info@mohammedlaloie.com</span>
@@ -99,25 +103,25 @@
 				<h4 class="mb-4 font-semibold">{m.footer_quick_links()}</h4>
 				<ul class="flex flex-col gap-2 text-sm">
 					<li>
-						<a href="/" class="text-foreground/70 transition-colors hover:text-foreground">{m.nav_home()}</a>
+						<a href="/" class="inline-block text-foreground/70 transition-all duration-300 hover:translate-x-1 hover:text-primary">{m.nav_home()}</a>
 					</li>
 					<li>
-						<a href="/shop" class="text-foreground/70 transition-colors hover:text-foreground"
+						<a href="/shop" class="inline-block text-foreground/70 transition-all duration-300 hover:translate-x-1 hover:text-primary"
 							>{m.nav_products()}</a
 						>
 					</li>
 					<li>
-						<a href="/orders" class="text-foreground/70 transition-colors hover:text-foreground"
+						<a href="/orders" class="inline-block text-foreground/70 transition-all duration-300 hover:translate-x-1 hover:text-primary"
 							>{m.nav_orders()}</a
 						>
 					</li>
 					<li>
-						<a href="/about-us" class="text-foreground/70 transition-colors hover:text-foreground"
+						<a href="/about-us" class="inline-block text-foreground/70 transition-all duration-300 hover:translate-x-1 hover:text-primary"
 							>{m.nav_about_us()}</a
 						>
 					</li>
 					<li>
-						<a href="#" class="text-foreground/70 transition-colors hover:text-foreground"
+						<a href="#" class="inline-block text-foreground/70 transition-all duration-300 hover:translate-x-1 hover:text-primary"
 							>{m.nav_contact_us()}</a
 						>
 					</li>
@@ -131,7 +135,7 @@
 					<iframe
 						src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3940.6989163918774!2d38.74450221007991!3d8.999827389408697!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b8513494db273%3A0x88235dbe171c4224!2sDiplomat%20Building!5e0!3m2!1sen!2set!4v1772532021053!5m2!1sen!2set"
 						style="border:0;"
-						class="w-full rounded-3xl"
+						class="w-full rounded-3xl shadow-lg ring-1 ring-border"
 						loading="lazy"
 						referrerpolicy="no-referrer-when-downgrade"
 						title={m.footer_map()}
@@ -144,22 +148,22 @@
 				<h4 class="mb-4 font-semibold">Legal</h4>
 				<ul class="flex flex-col gap-2 text-sm">
 					<li>
-						<a href="#" class="text-foreground/70 transition-colors hover:text-foreground"
+						<a href="#" class="inline-block text-foreground/70 transition-all duration-300 hover:translate-x-1 hover:text-primary"
 							>Privacy Policy</a
 						>
 					</li>
 					<li>
-						<a href="#" class="text-foreground/70 transition-colors hover:text-foreground"
+						<a href="#" class="inline-block text-foreground/70 transition-all duration-300 hover:translate-x-1 hover:text-primary"
 							>Terms of Service</a
 						>
 					</li>
 					<li>
-						<a href="#" class="text-foreground/70 transition-colors hover:text-foreground"
+						<a href="#" class="inline-block text-foreground/70 transition-all duration-300 hover:translate-x-1 hover:text-primary"
 							>Cookie Policy</a
 						>
 					</li>
 					<li>
-						<a href="#" class="text-foreground/70 transition-colors hover:text-foreground"
+						<a href="#" class="inline-block text-foreground/70 transition-all duration-300 hover:translate-x-1 hover:text-primary"
 							>Accessibility</a
 						>
 					</li>
@@ -177,7 +181,7 @@
 							target="_blank"
 							rel="noopener noreferrer"
 							class={[
-								'flex flex-col items-center gap-2 rounded-lg border p-4 transition-all hover:border-primary hover:shadow-lg',
+								'glass flex flex-col items-center gap-2 rounded-2xl p-4 transition-all duration-300 hover:-translate-y-1 hover:border-primary hover:shadow-lg hover:shadow-primary/20',
 								social.color
 							]}
 							title={social.name}

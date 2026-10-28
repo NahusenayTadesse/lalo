@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
-	import DemoLinks from './demo/DemoLinks.svelte';
 	import type { Pathname } from '$app/types';
 	import { resolve } from '$app/paths';
 	import { locales, localizeHref } from '$lib/paraglide/runtime.js';
@@ -9,7 +8,9 @@
 	import { page, updated } from '$app/state';
 	import { Toaster } from '@nahu/admin-kit/components/ui/sonner/index.js';
 	import { ProgressBar } from '@prgm/sveltekit-progress-bar';
-	import { toastmsg } from '$lib/global.svelte';
+	import { onNavigate } from '$app/navigation';
+	import { startReveals } from '$lib/motion';
+	import { pwa } from '$lib/pwa.svelte';
 
 	const flash = getFlash(page, { clearAfterMs: 5000 });
 
@@ -22,11 +23,11 @@
 		if (!('Notification' in window)) return; // Safari iOS etc.
 
 		if (Notification.permission === 'granted') {
-			new Notification(title, { body, icon: '/logo.png' });
+			new Notification(title, { body, icon: '/logo192.png' });
 		} else if (Notification.permission !== 'denied') {
 			const perm = await Notification.requestPermission();
 
-			if (perm === 'granted') new Notification(title, { body, icon: '/logo.png' });
+			if (perm === 'granted') new Notification(title, { body, icon: '/logo192.png' });
 		}
 	}
 
@@ -40,6 +41,27 @@
 	setCart();
 
 	let { data, children } = $props();
+
+	$effect(() => {
+		document.documentElement.classList.add('motion-ready');
+		pwa.start();
+		return startReveals();
+	});
+
+	// Cross-fade between pages where the browser supports view transitions. The
+	// dashboard keeps instant navigation: it's a working tool, not a showroom.
+	onNavigate((navigation) => {
+		if (!document.startViewTransition) return;
+		if (navigation.to?.url.pathname.startsWith('/dashboard')) return;
+		if (navigation.from?.url.pathname === navigation.to?.url.pathname) return;
+
+		return new Promise((resolve) => {
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
 
 	// async function requestNotificationPermission() {
 	// 	if (!('Notification' in window)) return;
@@ -72,11 +94,16 @@
 <ProgressBar color="#bc3d00" zIndex={1000} />
 
 {#if updated.current}
-	<div class={toastmsg} transition:fly={{ x: 20, duration: 300 }}>
-		<p>
-			{m.app_update_available()}
-			<Button onclick={() => location.reload()}>{m.app_reload()}</Button>
-		</p>
+	<div
+		class="glass-strong fixed right-4 bottom-24 z-[60] flex max-w-sm items-center gap-3 rounded-2xl px-5 py-3 text-sm font-medium lg:bottom-6"
+		transition:fly={{ y: 20, duration: 400 }}
+	>
+		<span class="relative flex size-2.5 shrink-0">
+			<span class="absolute inline-flex size-full animate-ping rounded-full bg-primary/70"></span>
+			<span class="relative inline-flex size-2.5 rounded-full bg-primary"></span>
+		</span>
+		<p class="flex-1">{m.app_update_available()}</p>
+		<Button size="sm" class="rounded-full" onclick={() => location.reload()}>{m.app_reload()}</Button>
 	</div>
 {/if}
 
@@ -102,4 +129,3 @@
 	{/each}
 </div>
 
-<DemoLinks />
