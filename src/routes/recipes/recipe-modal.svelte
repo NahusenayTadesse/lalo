@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import {
 		Dialog,
 		DialogContent,
@@ -44,15 +45,15 @@
 					<div class="flex items-center gap-2">
 						<Clock class="size-5 text-primary" />
 						<div class="flex flex-col">
-							<span class="text-sm font-medium text-muted-foreground">Prep Time</span>
-							<span class="text-lg font-semibold">{recipe.prepTime} minutes</span>
+							<span class="text-sm font-medium text-muted-foreground">{m.recipes_prep_time()}</span>
+							<span class="text-lg font-semibold">{m.recipes_minutes({ minutes: recipe.prepTime })}</span>
 						</div>
 					</div>
 					<div class="flex items-center gap-2">
 						<ChefHat class="size-5 text-primary" />
 						<div class="flex flex-col">
-							<span class="text-sm font-medium text-muted-foreground">Cook Time</span>
-							<span class="text-lg font-semibold">{recipe.cookTime} minutes</span>
+							<span class="text-sm font-medium text-muted-foreground">{m.recipes_cook_time()}</span>
+							<span class="text-lg font-semibold">{m.recipes_minutes({ minutes: recipe.cookTime })}</span>
 						</div>
 					</div>
 				</div>
@@ -61,7 +62,7 @@
 
 				<!-- Ingredients -->
 				<div class="flex flex-col gap-3">
-					<h3 class="text-lg font-semibold">Ingredients</h3>
+					<h3 class="text-lg font-semibold">{m.recipes_ingredients()}</h3>
 					<ul class="flex flex-col gap-2">
 						{#each ingredients as ingredient (ingredient.id)}
 							<li class="flex items-center justify-between rounded-lg bg-muted/50 p-3">
@@ -76,7 +77,7 @@
 
 				<!-- Instructions -->
 				<div class="flex flex-col gap-3">
-					<h3 class="text-lg font-semibold">Instructions</h3>
+					<h3 class="text-lg font-semibold">{m.recipes_instructions()}</h3>
 					<div
 						class="flex flex-col gap-2 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground"
 					>

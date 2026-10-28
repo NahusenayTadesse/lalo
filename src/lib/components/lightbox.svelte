@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { fade, scale } from 'svelte/transition';
 	import { Button } from '$lib/components/ui/button';
 	import { XIcon, ChevronLeftIcon, ChevronRightIcon } from '@lucide/svelte';
@@ -8,7 +9,7 @@
 		images,
 		currentIndex = $bindable(0),
 		isOpen = $bindable(false),
-		title = 'Gallery'
+		title = m.gallery_title()
 	}: {
 		images: string[];
 		currentIndex?: number;
@@ -73,7 +74,7 @@
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
 		role="dialog"
 		aria-modal="true"
-		aria-label="Image lightbox"
+		aria-label={m.lightbox_label()}
 		transition:fade={{ duration: 200 }}
 		onclick={handleBackdropClick}
 		tabindex="-1"
@@ -86,14 +87,14 @@
 			onclick={close}
 		>
 			<XIcon class="size-6" />
-			<span class="sr-only">Close lightbox</span>
+			<span class="sr-only">{m.lightbox_close()}</span>
 		</Button>
 
 		<!-- Image counter -->
 		<div
 			class="absolute top-4 left-4 z-10 rounded-full bg-black/50 px-3 py-1.5 text-sm font-medium text-white"
 		>
-			{currentIndex + 1} of {images.length}
+			{m.lightbox_counter({ current: currentIndex + 1, total: images.length })}
 		</div>
 
 		<!-- Previous button -->
@@ -105,7 +106,7 @@
 				onclick={prev}
 			>
 				<ChevronLeftIcon class="size-8" />
-				<span class="sr-only">Previous image</span>
+				<span class="sr-only">{m.lightbox_previous()}</span>
 			</Button>
 		{/if}
 
@@ -118,7 +119,7 @@
 				onclick={next}
 			>
 				<ChevronRightIcon class="size-8" />
-				<span class="sr-only">Next image</span>
+				<span class="sr-only">{m.lightbox_next()}</span>
 			</Button>
 		{/if}
 
@@ -127,7 +128,7 @@
 			{#key currentIndex}
 				<img
 					src="/files/{currentImage}"
-					alt="{title} - Image {currentIndex + 1}"
+					alt={m.lightbox_image_alt({ title, number: currentIndex + 1 })}
 					class="shadow-lg-2xl max-h-[85vh] max-w-[90vw] rounded-lg object-contain"
 					transition:scale={{ duration: 200, start: 0.95 }}
 				/>
@@ -149,7 +150,7 @@
 						]}
 						onclick={() => (currentIndex = index)}
 					>
-						<img src="/files/{image}" alt="Thumbnail {index + 1}" class="size-full object-cover" />
+						<img src="/files/{image}" alt={m.lightbox_thumbnail({ number: index + 1 })} class="size-full object-cover" />
 					</button>
 				{/each}
 			</div>

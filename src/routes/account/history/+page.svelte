@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { ShoppingCart } from '@lucide/svelte';
 	import type { PageData } from './$types';
+	import { orderStatusLabel } from '$lib/status-labels';
 
 	// Svelte 5 Rune for props
 	let { data }: { data: PageData } = $props();
@@ -47,7 +49,7 @@
 </script>
 
 <svelte:head>
-	<title>Order History - Lalo Bakery Solutions</title>
+	<title>{m.acc_history_meta_title()}</title>
 </svelte:head>
 
 <div class="mx-auto min-h-screen max-w-7xl space-y-8 bg-background p-6 text-foreground">
@@ -56,19 +58,19 @@
 	>
 		<div>
 			<h1 class="text-3xl font-bold tracking-tight">
-				Welcome back, {customer?.customerName ?? 'Customer'}
+				{m.acc_welcome_back({ name: customer?.customerName ?? m.acc_customer() })}
 			</h1>
 			<p class="mt-1 text-muted-foreground">
-				Manage your orders, items, and billing configurations.
+				{m.acc_history_hint()}
 			</p>
 		</div>
 		<div class="flex gap-2">
-			<Button href="/shop"><ShoppingCart /> New Order</Button>
+			<Button href="/shop"><ShoppingCart /> {m.acc_new_order()}</Button>
 		</div>
 	</header>
 
 	<section aria-labelledby="metrics-title">
-		<h2 id="metrics-title" class="sr-only">Order Metrics</h2>
+		<h2 id="metrics-title" class="sr-only">{m.acc_order_metrics()}</h2>
 		<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 			{#each orderCounts as metric}
 				{@const styles = getStatusStyles(metric.status)}
@@ -77,7 +79,7 @@
 				>
 					<div class="space-y-1">
 						<p class="text-sm font-medium tracking-tight text-muted-foreground capitalize">
-							{metric.status} Orders
+							{m.acc_status_orders({ status: orderStatusLabel(metric.status) })}
 						</p>
 						<div class="text-2xl font-bold">{metric.count}</div>
 					</div>
@@ -93,25 +95,25 @@
 	<div class="grid gap-6">
 		<div class="rounded-xl border border-border bg-card text-card-foreground shadow-sm">
 			<div class="p-6">
-				<h3 class="text-lg leading-none font-semibold tracking-tight">Recent Orders</h3>
+				<h3 class="text-lg leading-none font-semibold tracking-tight">{m.acc_recent_orders()}</h3>
 				<p class="mt-1 text-sm text-muted-foreground">
-					A historical view of your generated invoices.
+					{m.acc_recent_orders_hint()}
 				</p>
 			</div>
 			<div class="overflow-x-auto border-t border-border">
 				<table class="w-full text-left text-sm">
 					<thead class="border-b border-border bg-muted/50 font-medium text-muted-foreground">
 						<tr>
-							<th class="p-4">Order ID</th>
-							<th class="p-4">Customer</th>
-							<th class="p-4">Date</th>
-							<th class="p-4 text-right">Status</th>
+							<th class="p-4">{m.acc_col_order_id()}</th>
+							<th class="p-4">{m.acc_col_customer()}</th>
+							<th class="p-4">{m.acc_col_date()}</th>
+							<th class="p-4 text-right">{m.acc_col_status()}</th>
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-border">
 						{#if allData.length === 0}
 							<tr>
-								<td colspan="4" class="p-8 text-center text-muted-foreground">No orders found.</td>
+								<td colspan="4" class="p-8 text-center text-muted-foreground">{m.acc_no_orders()}</td>
 							</tr>
 						{:else}
 							{#each allData as order}
@@ -124,7 +126,7 @@
 										<span
 											class={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${styles.bg} ${styles.text} ${styles.border} capitalize`}
 										>
-											{order.status}
+											{orderStatusLabel(order.status)}
 										</span>
 									</td>
 								</tr>
@@ -138,26 +140,26 @@
 
 	<div class="rounded-xl border border-border bg-card text-card-foreground shadow-sm">
 		<div class="p-6">
-			<h3 class="text-lg leading-none font-semibold tracking-tight">Pending Order Breakdown</h3>
+			<h3 class="text-lg leading-none font-semibold tracking-tight">{m.acc_pending_breakdown()}</h3>
 			<p class="mt-1 text-sm text-muted-foreground">
-				Items linked exclusively to your open queries.
+				{m.acc_pending_breakdown_hint()}
 			</p>
 		</div>
 		<div class="overflow-x-auto border-t border-border">
 			<table class="w-full text-left text-sm">
 				<thead class="border-b border-border bg-muted/50 font-medium text-muted-foreground">
 					<tr>
-						<th class="p-4">Product Name</th>
-						<th class="p-4 text-center">Quantity</th>
-						<th class="p-4 text-right">Unit Price</th>
-						<th class="p-4 text-right">Total</th>
+						<th class="p-4">{m.acc_col_product()}</th>
+						<th class="p-4 text-center">{m.shop_quantity()}</th>
+						<th class="p-4 text-right">{m.acc_col_unit_price()}</th>
+						<th class="p-4 text-right">{m.acc_col_total()}</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-border">
 					{#if allItems.filter((i) => i.orderId !== null).length === 0}
 						<tr>
 							<td colspan="4" class="p-8 text-center text-muted-foreground"
-								>No active pending items found.</td
+								>{m.acc_no_pending_items()}</td
 							>
 						</tr>
 					{:else}
@@ -168,8 +170,8 @@
 										{item.product}
 									</td>
 									<td class="p-4 text-center font-mono">{item.quantity}</td>
-									<td class="p-4 text-right font-mono">ETB {item.price.toFixed(2)}</td>
-									<td class="p-4 text-right font-mono font-semibold">ETB {item.total.toFixed(2)}</td
+									<td class="p-4 text-right font-mono">{m.price_etb({ amount: item.price.toFixed(2) })}</td>
+									<td class="p-4 text-right font-mono font-semibold">{m.price_etb({ amount: item.total.toFixed(2) })}</td
 									>
 								</tr>
 							{/if}

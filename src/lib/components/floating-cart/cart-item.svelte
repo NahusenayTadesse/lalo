@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { useCart } from '$lib/hooks/cart.svelte.js';
 	import { Button } from '$lib/components/ui/button';
 	import { MinusIcon, PlusIcon, TrashIcon } from '@lucide/svelte';
@@ -48,13 +49,14 @@
 			variant="ghost"
 			class="size-7 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
 			onclick={removeItem}
+			aria-label={m.cart_remove_item()}
 		>
 			<TrashIcon class="size-4" />
 		</Button>
 	</div>
 	<div class="flex items-center justify-between gap-2">
 		<div class="flex flex-col">
-			<span class="text-xs text-muted-foreground">Price per unit</span>
+			<span class="text-xs text-muted-foreground">{m.cart_unit_price()}</span>
 			<span class="text-sm font-semibold text-primary">{formatPrice(item.price)}</span>
 		</div>
 		<div class="flex items-center gap-1">
@@ -68,7 +70,7 @@
 		</div>
 	</div>
 	<div class="flex items-center justify-between border-t border-border/50 pt-1">
-		<span class="text-xs text-muted-foreground">Subtotal</span>
+		<span class="text-xs text-muted-foreground">{m.cart_subtotal()}</span>
 		<span class="text-sm font-semibold">{formatPrice(item.price * item.quantity)}</span>
 	</div>
 </div>

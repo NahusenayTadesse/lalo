@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { Popover, PopoverContent, PopoverTrigger } from '$lib/components/ui/popover';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
@@ -29,7 +30,7 @@
 </script>
 
 {#if items.length === 0}
-	<span class="text-sm text-muted-foreground">No items</span>
+	<span class="text-sm text-muted-foreground">{m.orders_no_items()}</span>
 {:else if items.length === 1}
 	<!-- Single item: display inline -->
 	<div class="flex items-center gap-2">
@@ -49,9 +50,9 @@
 					<div class="flex items-center gap-2">
 						<PackageIcon class="size-4 text-muted-foreground" />
 						<div class="flex flex-col items-start">
-							<span class="text-sm font-medium">{items.length} products</span>
+							<span class="text-sm font-medium">{m.orders_products_count({ count: items.length })}</span>
 							<span class="text-xs text-muted-foreground"
-								>{totalItems} items · {formatPrice(grandTotal)}</span
+								>{m.orders_items_total({ count: totalItems, total: formatPrice(grandTotal) })}</span
 							>
 						</div>
 						<ChevronDownIcon class="size-4 text-muted-foreground" />
@@ -61,9 +62,9 @@
 		</PopoverTrigger>
 		<PopoverContent class="w-80 p-0" align="start">
 			<div class="p-3">
-				<h4 class="text-sm font-semibold">Order Items</h4>
+				<h4 class="text-sm font-semibold">{m.orders_order_items()}</h4>
 				<p class="text-xs text-muted-foreground">
-					{items.length} products · {totalItems} total items
+					{m.orders_products_summary({ products: items.length, items: totalItems })}
 				</p>
 			</div>
 			<Separator />
@@ -89,7 +90,7 @@
 			</div>
 			<Separator />
 			<div class="flex items-center justify-between bg-muted/50 p-3">
-				<span class="text-sm font-medium">Total</span>
+				<span class="text-sm font-medium">{m.acc_col_total()}</span>
 				<span class="text-sm font-bold">{formatPrice(grandTotal)}</span>
 			</div>
 		</PopoverContent>

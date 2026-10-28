@@ -71,6 +71,14 @@
 			placeholder="Enter Product Name"
 			required
 		/>
+			<InputComp
+				{form}
+				{errors}
+				type="text"
+				name="productNameAm"
+				label="Product Name (Amharic)"
+				placeholder="Optional — shown to visitors browsing in Amharic"
+			/>
 		<InputComp
 			{form}
 			{errors}
@@ -91,6 +99,14 @@
 			placeholder="Enter Product Description"
 			required
 		/>
+			<InputComp
+				{form}
+				{errors}
+				type="textarea"
+				name="descriptionAm"
+				label="Product Description (Amharic)"
+				placeholder="Optional — shown to visitors browsing in Amharic"
+			/>
 
 		<InputComp
 			{form}

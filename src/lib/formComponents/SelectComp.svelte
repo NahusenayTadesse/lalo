@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { selectItem, type Item } from '$lib/global.svelte';
 
-	let { value = $bindable(), items, name } = $props();
+	let { value = $bindable(), items, name, placeholder = '' } = $props();
 	function getItemNameById(items: any, value: any) {
 		const item = items.find((i) => i.value === value);
 		return item ? item.name : null; // returns null if not found
@@ -16,7 +17,7 @@
 	const triggerContent = $derived(
 		// Use String coercion to ensure "1" matches 1
 		items.find((f: Item) => String(f.value) === String(value))?.name ??
-			'Select ' + name.replace(/([a-z])([A-Z])/g, '$1 $2')
+			(placeholder || m.select_placeholder({ name: name.replace(/([a-z])([A-Z])/g, '$1 $2') }))
 	);
 </script>
 

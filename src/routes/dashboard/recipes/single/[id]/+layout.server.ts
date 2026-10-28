@@ -17,6 +17,9 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 			title: recipes.title,
 			description: recipes.description,
 			instructions: recipes.instructions,
+			titleAm: recipes.titleAm,
+			descriptionAm: recipes.descriptionAm,
+			instructionsAm: recipes.instructionsAm,
 			prepTime: recipes.prepTime,
 			cookTime: recipes.cookTime,
 			image: recipes.featuredImage,
@@ -29,10 +32,20 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 	const ingList = await db
 		.select({
 			ingredient: recipeIngredients.name,
-			amount: recipeIngredients.amount
+			amount: recipeIngredients.amount,
+			ingredientAm: recipeIngredients.nameAm,
+			amountAm: recipeIngredients.amountAm
 		})
 		.from(recipeIngredients)
-		.where(eq(recipeIngredients.recipeId, Number(id)));
+		.where(eq(recipeIngredients.recipeId, Number(id)))
+		// The list seeds the edit form, whose optional fields take '' rather than NULL.
+		.then((rows) =>
+			rows.map((row) => ({
+				...row,
+				ingredientAm: row.ingredientAm ?? '',
+				amountAm: row.amountAm ?? ''
+			}))
+		);
 
 	return {
 		form,

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import LoadingBtn from '$lib/formComponents/LoadingBtn.svelte';
 	import { SquarePen, Plus, X } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -113,7 +114,7 @@
 			<Dialog.Root bind:open>
 				<Dialog.Trigger class="flex w-auto flex-row items-center justify-center gap-2 border-0">
 					{#if icon}
-						<SquarePen /> Edit
+						<SquarePen /> {m.orders_edit()}
 					{:else}
 						{customerName}
 					{/if}
@@ -122,7 +123,7 @@
 				<Dialog.Content class="bg-background">
 					<ScrollArea class="h-64 w-full px-2 pr-4" orientation="both">
 						<Dialog.Header>
-							<Dialog.Title class="text-center text-4xl">Edit {customerName}</Dialog.Title>
+							<Dialog.Title class="text-center text-4xl">{m.orders_edit_name({ name: customerName })}</Dialog.Title>
 						</Dialog.Header>
 						<form
 							action="?/edit"
@@ -137,7 +138,7 @@
 							<div class="mb-4 flex justify-end">
 								<Button type="button" size="sm" class="gap-2" onclick={() => addProduct()}>
 									<Plus class="h-4 w-4" />
-									<span>Add Product</span>
+									<span>{m.orders_add_product()}</span>
 								</Button>
 							</div>
 							{#each $form.selectedProducts as product, i (product)}
@@ -149,7 +150,7 @@
 										class="mb-4 flex items-center justify-between border-b border-slate-100 pb-2 dark:border-white/5"
 									>
 										<span class="text-xs font-bold tracking-widest text-muted-foreground uppercase">
-											Product Entry #{i + 1}
+											{m.orders_entry({ number: i + 1 })}
 										</span>
 
 										<Button
@@ -163,13 +164,13 @@
 											}}
 										>
 											<X class="h-4 w-4" />
-											<span class="sr-only">Remove item</span>
+											<span class="sr-only">{m.cart_remove_item()}</span>
 										</Button>
 									</div>
 
 									<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
 										<div class="space-y-1.5">
-											<Label class="text-xs font-medium text-slate-500">Selling Product</Label>
+											<Label class="text-xs font-medium text-slate-500">{m.orders_selling_product()}</Label>
 											<ComboboxComp
 												items={productList}
 												name="selectedProducts"
@@ -184,14 +185,14 @@
 										</div>
 
 										<div class="space-y-1.5">
-											<Label class="text-xs font-medium text-slate-500">Price Amount</Label>
+											<Label class="text-xs font-medium text-slate-500">{m.orders_price_amount()}</Label>
 											<ComboboxComp
 												items={$form.selectedProducts?.[i]?.product
 													? priceList.filter(
 															(p) =>
 																Number(p.productId) === Number($form.selectedProducts[i].product)
 														)
-													: [{ value: '', name: 'Select a product first' }]}
+													: [{ value: '', name: m.orders_select_product_first() }]}
 												name="selectedProducts"
 												required={true}
 												bind:value={$form.selectedProducts[i].amount}
@@ -204,11 +205,11 @@
 										</div>
 
 										<div class="space-y-1.5 lg:col-span-2">
-											<Label class="text-xs font-medium text-slate-500">Quantity</Label>
+											<Label class="text-xs font-medium text-slate-500">{m.shop_quantity()}</Label>
 											<Input
 												type="number"
 												min="1"
-												placeholder="Enter quantity..."
+												placeholder={m.orders_quantity_placeholder()}
 												bind:value={$form.selectedProducts[i].quantity}
 											/>
 											{#if $errors.selectedProducts?.[i]?.quantity}
@@ -223,11 +224,12 @@
 
 							<Button type="submit" class="mt-4" form="edit">
 								{#if $delayed}
-									<LoadingBtn name="Saving Changes" />
+									<LoadingBtn name={m.settings_saving()} />
 								{:else}
 									<Plus class="h-4 w-4" />
 
-									Save Changes
+																		{m.settings_save()}
+
 								{/if}
 							</Button>
 						</form>
@@ -236,7 +238,7 @@
 			</Dialog.Root>
 		</Tooltip.Trigger>
 		<Tooltip.Content>
-			<p>Edit {customerName}</p>
+			<p>{m.orders_edit_name({ name: customerName })}</p>
 		</Tooltip.Content>
 	</Tooltip.Root>
 </Tooltip.Provider>

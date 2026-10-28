@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { Download } from '@lucide/svelte';
 	import Button from './ui/button/button.svelte';
 
@@ -19,28 +20,27 @@
 		<div class="max-w-3xl space-y-6">
 			<div class="space-y-2">
 				<h1 class="text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl">
-					Resources & Documentation
+					{m.catalog_title()}
 				</h1>
 				<p class="text-xl text-muted-foreground">
-					Access our latest product specifications and comprehensive technical guides. Everything
-					you need to get started with our ecosystem.
+					{m.catalog_subtitle()}
 				</p>
 			</div>
 
 			<div class="flex flex-col items-center justify-center gap-4 pt-6 sm:flex-row">
 				{#if files.catalog}
 					<Button
-						download="{new Date().getFullYear()} Catalog"
+						download={m.catalog_file_name({ year: new Date().getFullYear() })}
 						href="/files/{files.catalog}"
 						size="lg"
 					>
 						<Download />
-						Download {new Date().getFullYear()} Catalog
+						{m.catalog_download({ year: new Date().getFullYear() })}
 					</Button>
 				{/if}
 				{#if files.manual}
-					<Button size="lg" download="Manual" href="/files/{files.manual}" variant="outline"
-						><Download />Technical Manual (PDF)</Button
+					<Button size="lg" download={m.catalog_manual_file_name()} href="/files/{files.manual}" variant="outline"
+						><Download />{m.catalog_manual()}</Button
 					>
 				{/if}
 			</div>

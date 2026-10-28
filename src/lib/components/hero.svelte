@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { onMount } from 'svelte';
 	import { Button } from '$lib/components/ui/button';
 	import {
@@ -14,9 +15,9 @@
 	import { fly, fade } from 'svelte/transition';
 
 	const stats = [
-		{ label: 'Years Experience', value: '8+', icon: WheatIcon },
-		{ label: 'Happy Bakeries', value: '150+', icon: ChefHatIcon },
-		{ label: 'Quality Products', value: '100+', icon: ShoppingBasketIcon }
+		{ label: m.hero_stat_years(), value: '8+', icon: WheatIcon },
+		{ label: m.hero_stat_bakeries(), value: '150+', icon: ChefHatIcon },
+		{ label: m.hero_stat_products(), value: '100+', icon: ShoppingBasketIcon }
 	];
 
 	// Slideshow Images
@@ -67,17 +68,17 @@
 				>
 					<SparklesIcon class="size-4 text-primary" />
 					<span class="text-xs font-bold tracking-widest text-white uppercase"
-						>Premium Bakery Solutions</span
+						>{m.hero_badge()}</span
 					>
 				</div>
 
 				<div transition:fly={{ x: -30, duration: 800, delay: 200 }} class="space-y-4">
-					<img src="/logo.webp" alt="Logo" class="h-16 w-auto opacity-90 brightness-0 invert" />
+					<img src="/logo.webp" alt={m.footer_logo_alt()} class="h-16 w-auto opacity-90 brightness-0 invert" />
 					<h1 class="text-6xl font-black tracking-tight text-white sm:text-7xl">
-						Lalo Bakery
-						<span class="block text-primary">Solutions</span>
+						{m.hero_title_lead()}
+						<span class="block text-primary">{m.hero_title_accent()}</span>
 					</h1>
-					<p class="text-xl font-medium text-zinc-300">Ingredients That Deliver</p>
+					<p class="text-xl font-medium text-zinc-300">{m.hero_tagline()}</p>
 					<!-- <p class="max-w-lg text-lg leading-relaxed text-zinc-400">
 						Premium bakery solutions for bakeries of all sizes. From artisan breads to delicate
 						pastries.
@@ -86,11 +87,11 @@
 
 				<div transition:fly={{ x: -30, duration: 800, delay: 400 }} class="flex flex-wrap gap-4">
 					<Button size="lg" href="/shop" class="group px-8">
-						Get Started
+						{m.hero_get_started()}
 						<ArrowRightIcon class="ml-2 size-5 transition-transform group-hover:translate-x-1" />
 					</Button>
 					<!-- <Button size="lg" href="https://docs.google.com/forms/d/e/1FAIpQLSeGRl7RpY9NlirsfKyRA8a7WFQFjxkMsyi6NDjKyNnkjkoCVA/viewform" target="_blank" variant="outline">Register for an Event <ExternalLink /></Button> -->
-					<Button size="lg" href="/about-us" variant="outline">Learn More</Button>
+					<Button size="lg" href="/about-us" variant="outline">{m.hero_learn_more()}</Button>
 				</div>
 			</div>
 

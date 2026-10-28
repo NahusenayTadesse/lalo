@@ -1,4 +1,5 @@
 <script>
+	import { m } from '$lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import { Button, buttonVariants } from '$lib/components/ui/button/index.js';
 	import { LogOut } from '@lucide/svelte';
@@ -17,14 +18,14 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Trigger class={buttonVariants({ variant: 'destructive' })}
-		><LogOut /> LogOut
+		><LogOut /> {m.logout_button()}
 	</Dialog.Trigger>
 	<Dialog.Content class="w-full">
 		<Dialog.Header>
-			<Dialog.Title>Logout</Dialog.Title>
+			<Dialog.Title>{m.logout_button()}</Dialog.Title>
 		</Dialog.Header>
 		<ScrollArea class="h-auto rounded-md border p-2">
-			<h5 class="text-center">Are you sure you want to Logout?</h5>
+			<h5 class="text-center">{m.logout_confirm()}</h5>
 			<div class="flex flex-row items-center justify-center gap-4 pt-4">
 				<form
 					method="post"
@@ -41,21 +42,21 @@
 							// The action always redirects; the success toast comes from the
 							// flash message. Only surface a toast when it *didn't* redirect.
 							if (result.type === 'error' || result.type === 'failure') {
-								toast.error('Failed to log out');
+								toast.error(m.logout_failed());
 							}
 						};
 					}}
 				>
 					<Button type="submit" disabled={deleting} variant="destructive" size="lg">
 						{#if deleting}
-							<LoadingBtn name="Logging Out" />
+							<LoadingBtn name={m.logout_logging_out()} />
 						{:else}
-							<LogOut /> Logout
+							<LogOut /> {m.logout_button()}
 						{/if}
 					</Button>
 				</form>
 
-				<Button onclick={() => (open = false)} size="lg">Cancel</Button>
+				<Button onclick={() => (open = false)} size="lg">{m.common_cancel()}</Button>
 			</div>
 		</ScrollArea>
 	</Dialog.Content>

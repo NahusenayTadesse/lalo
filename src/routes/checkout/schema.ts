@@ -1,3 +1,4 @@
+import { m } from '$lib/paraglide/messages.js';
 import { z } from 'zod/v4';
 import { INVALID_PHONE_MESSAGE, isEthiopianPhone } from '$lib/validators/phone';
 
@@ -6,12 +7,20 @@ export const add = z.object({
 		.object({
 			// `prices.id`. This is what identifies the variant — `amount` is not
 			// unique within a product, so it cannot be used to look one up.
-			priceId: z.number({ message: 'Variation is required' }).int().positive(),
+			priceId: z.number({ error: () => m.checkout_variation_required() }).int().positive(),
 			// Display only. The server re-reads both from `prices` and ignores these.
-			amount: z.string({ message: 'Variation is required' }),
-			price: z.number({ message: 'Price is required' }).positive('Price is required'),
-			product: z.number({ message: 'Product is required' }).int().positive('Product is required'),
-			quantity: z.number().int().positive('Number of products must be at least 1')
+			amount: z.string({ error: () => m.checkout_variation_required() }),
+			price: z
+				.number({ error: () => m.checkout_price_required() })
+				.positive({ error: () => m.checkout_price_required() }),
+			product: z
+				.number({ error: () => m.orders_product_required() })
+				.int()
+				.positive({ error: () => m.orders_product_required() }),
+			quantity: z
+				.number()
+				.int()
+				.positive({ error: () => m.orders_quantity_min() })
 		})
 		.array(),
 	// The name of a delivery area, chosen from a `<select>` of `place_names`, not
@@ -68,13 +77,13 @@ export const add = z.object({
 export const addGuest = add.superRefine((data, ctx) => {
 	if (!data.pickup) {
 		if (!data.address || data.address.trim().length < 1) {
-			ctx.addIssue({ code: 'custom', path: ['address'], message: 'Please choose a delivery area' });
+			ctx.addIssue({ code: 'custom', path: ['address'], message: m.checkout_area_required() });
 		}
 		if (!data.deliveryAddress || data.deliveryAddress.trim().length < 5) {
 			ctx.addIssue({
 				code: 'custom',
 				path: ['deliveryAddress'],
-				message: 'Delivery Address is required'
+				message: m.form_delivery_address_required()
 			});
 		}
 	}
@@ -82,16 +91,16 @@ export const addGuest = add.superRefine((data, ctx) => {
 	if (!data.guest) return;
 
 	if (!data.guestName || data.guestName.trim().length < 2) {
-		ctx.addIssue({ code: 'custom', path: ['guestName'], message: 'Your name is required' });
+		ctx.addIssue({ code: 'custom', path: ['guestName'], message: m.form_name_required() });
 	}
 	if (!data.guestEmail || !z.email().safeParse(data.guestEmail).success) {
-		ctx.addIssue({ code: 'custom', path: ['guestEmail'], message: 'A valid email is required' });
+		ctx.addIssue({ code: 'custom', path: ['guestEmail'], message: m.form_email_required() });
 	}
 	// A length check let "1234567890" through, and an unreachable phone number on
 	// a delivery order is as good as no phone number at all. The area code is
 	// optional in what the customer types — `isEthiopianPhone` accepts every
 	// local/national form and the action normalises before storing.
 	if (!isEthiopianPhone(data.guestPhone)) {
-		ctx.addIssue({ code: 'custom', path: ['guestPhone'], message: INVALID_PHONE_MESSAGE });
+		ctx.addIssue({ code: 'custom', path: ['guestPhone'], message: INVALID_PHONE_MESSAGE() });
 	}
 });

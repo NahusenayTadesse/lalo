@@ -1,3 +1,4 @@
+import { m } from '$lib/paraglide/messages.js';
 import { json, error } from '@sveltejs/kit';
 import { and, eq, inArray } from 'drizzle-orm';
 
@@ -29,7 +30,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		body = await request.json();
 	} catch {
-		error(400, 'Expected a JSON body');
+		error(400, m.checkout_expected_json());
 	}
 
 	const requested = (body as { priceIds?: unknown } | null)?.priceIds;

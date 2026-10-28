@@ -3,6 +3,7 @@ import { zod4 } from 'sveltekit-superforms/adapters';
 import { eq } from 'drizzle-orm';
 
 import { add, edit } from './schema';
+import { translation } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import { productCategories as department } from '$lib/server/db/schema';
 import { duplicateField } from '$lib/server/crud';
@@ -18,6 +19,8 @@ export const load: PageServerLoad = async () => {
 			id: department.id,
 			name: department.name,
 			description: department.description,
+			nameAm: department.nameAm,
+			descriptionAm: department.descriptionAm,
 			status: department.isActive
 		})
 		.from(department);
@@ -37,13 +40,15 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: 'Please check the form for Errors' });
 		}
 
-		const { name, description, status } = form.data;
+		const { name, description, nameAm, descriptionAm, status } = form.data;
 
 		try {
 			await db.insert(department).values({
 				name,
 
 				description,
+				nameAm: translation(nameAm),
+				descriptionAm: translation(descriptionAm),
 				isActive: status,
 				createdBy: locals?.user?.id
 			});
@@ -68,12 +73,19 @@ export const actions: Actions = {
 			return fail(400, { form });
 		}
 
-		const { id, name, description, status } = form.data;
+		const { id, name, description, nameAm, descriptionAm, status } = form.data;
 
 		try {
 			await db
 				.update(department)
-				.set({ name, description, isActive: status, updatedBy: locals?.user?.id })
+				.set({
+					name,
+					description,
+					nameAm: translation(nameAm),
+					descriptionAm: translation(descriptionAm),
+					isActive: status,
+					updatedBy: locals?.user?.id
+				})
 				.where(eq(department.id, Number(id)));
 			return message(form, { type: 'success', text: 'Category Successfully Updated' });
 		} catch (err) {

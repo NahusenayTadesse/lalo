@@ -1,4 +1,5 @@
 <script lang='ts'>
+	import { m } from '$lib/paraglide/messages.js';
   import { Copy, CopyCheck } from '@lucide/svelte'
 
     let message = $state('');
@@ -33,6 +34,6 @@
     let { data } = $props();
 </script> 
 
-  <button onclick = {()=> copyPhoneNumber(data)} title= 'Copy {data}' onmouseenter={() => visible=true} onmouseleave={() => visible = false}> {data} <span class="relative p-4">
+  <button onclick = {()=> copyPhoneNumber(data)} title={m.copy_title({ value: data })} onmouseenter={() => visible=true} onmouseleave={() => visible = false}> {data} <span class="relative p-4">
     {#if visible}
     <Copyicon class ="w-4 h-4 absolute right-0 top-2  text-black dark:text-white" /> {/if} </span> </button>

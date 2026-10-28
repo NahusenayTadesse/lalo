@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import {
 		Accordion,
 		AccordionItem,
@@ -19,58 +20,50 @@
 	const features = [
 		{
 			id: 'product-range',
-			title: 'Our Product Range',
-			description:
-				'A wide selection of bakery and pastry essentials, including premium butter, yeast, chocolate, flavorings, and professional cake decorations.',
+			title: m.faq_product_range_title(),
+			description: m.faq_product_range_desc(),
 			icon: WheatIcon
 		},
 		{
 			id: 'bulk-retail',
-			title: 'Wholesale & Retail',
-			description:
-				'Flexible purchasing options to suit everyone. We provide both bulk wholesale supplies for businesses and small quantities for home bakers.',
+			title: m.faq_bulk_retail_title(),
+			description: m.faq_bulk_retail_desc(),
 			icon: PackageIcon
 		},
 		{
 			id: 'professional-grade',
-			title: 'Professional Quality',
-			description:
-				'Our ingredients are carefully curated to meet the high standards of professional pastry chefs while remaining accessible for home use.',
+			title: m.faq_professional_grade_title(),
+			description: m.faq_professional_grade_desc(),
 			icon: AwardIcon
 		},
 		{
 			id: 'expert-advice',
-			title: 'Baking Consultation',
-			description:
-				'Not sure what you need? Our expert team provides personalized guidance to help you select the perfect ingredients for your specific recipes.',
+			title: m.faq_expert_advice_title(),
+			description: m.faq_expert_advice_desc(),
 			icon: MessageCircleQuestionMark
 		},
 		{
 			id: 'delivery-services',
-			title: 'Delivery Options',
-			description:
-				'Convenient delivery is available based on your location and order size. Contact us to find the best shipping method for your needs.',
+			title: m.faq_delivery_services_title(),
+			description: m.faq_delivery_services_desc(),
 			icon: TruckIcon
 		},
 		{
 			id: 'advance-orders',
-			title: 'Advance Ordering',
-			description:
-				'Plan ahead for your big projects. We accept advance orders, which is especially recommended for large bulk purchases.',
+			title: m.faq_advance_orders_title(),
+			description: m.faq_advance_orders_desc(),
 			icon: CalendarCheckIcon
 		},
 		{
 			id: 'payment-methods',
-			title: 'Secure Payments',
-			description:
-				'We offer flexible payment solutions including cash, mobile banking, and direct bank transfers for your convenience.',
+			title: m.faq_payment_methods_title(),
+			description: m.faq_payment_methods_desc(),
 			icon: WalletIcon
 		},
 		{
 			id: 'contact-us',
-			title: 'Get In Touch',
-			description:
-				'Reach out via phone, social media, or visit our shop directly to explore our inventory and place your order.',
+			title: m.faq_contact_us_title(),
+			description: m.faq_contact_us_desc(),
 			icon: StoreIcon
 		}
 	];
@@ -82,9 +75,9 @@
 	<div class="mx-auto w-full">
 		<!-- Header -->
 		<div class="mb-12 text-center">
-			<h1 class="mb-4 text-4xl font-bold text-foreground sm:text-5xl">FAQ</h1>
+			<h1 class="mb-4 text-4xl font-bold text-foreground sm:text-5xl">{m.faq_title()}</h1>
 			<p class="text-lg text-muted-foreground">
-				Frequently asked questions about our products and services.
+				{m.faq_subtitle()}
 			</p>
 		</div>
 

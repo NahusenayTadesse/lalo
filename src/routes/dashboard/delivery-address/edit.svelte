@@ -13,6 +13,7 @@
 		action = '?/edit',
 		id,
 		name,
+		nameAm = '',
 		fee,
 		icon = false,
 		status = true
@@ -21,6 +22,7 @@
 		action: string;
 		id: number;
 		name: string;
+		nameAm?: string | null;
 		icon: boolean;
 		fee?: string | number;
 		status: boolean;
@@ -34,6 +36,7 @@
 
 	$form.id = id;
 	$form.name = name;
+	$form.nameAm = nameAm ?? '';
 
 	$form.fee = fee;
 	$form.status = status;
@@ -58,6 +61,14 @@
 		<Errors allErrors={$allErrors} />
 		<input type="hidden" name="id" value={$form.id} />
 		<InputComp {form} {errors} label="name" type="text" name="name" required={true} />
+		<InputComp
+			{form}
+			{errors}
+			label="Name (Amharic)"
+			type="text"
+			name="nameAm"
+			placeholder="Optional — shown to visitors browsing in Amharic"
+		/>
 
 		<InputComp
 			{form}

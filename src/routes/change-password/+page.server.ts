@@ -1,3 +1,4 @@
+import { m } from '$lib/paraglide/messages.js';
 import { fail, redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
@@ -32,12 +33,12 @@ export const actions: Actions = {
 				headers: request.headers
 			});
 
-			return message(form, { type: 'success', text: 'Password changed successfully' });
+			return message(form, { type: 'success', text: m.cp_success() });
 		} catch (error) {
 			console.error(error);
 			return message(
 				form,
-				{ type: 'error', text: 'Error Changing Password ' + error.message },
+				{ type: 'error', text: m.cp_error({ reason: error.message }) },
 				{ status: 400 }
 			);
 		}

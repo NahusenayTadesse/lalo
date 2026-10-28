@@ -1,5 +1,7 @@
+import { m } from '$lib/paraglide/messages.js';
 import { error, isHttpError, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { localized, localizedOrNull } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import {
 	customers,
@@ -25,7 +27,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			.where(eq(customers.userId, locals.user.id))
 			.then((rows) => rows[0]);
 
-		if (!customer) throw error(404, 'Customer profile not found.');
+		if (!customer) throw error(404, m.acc_profile_not_found());
 
 		// 2. Money, per order.
 		// These figures used to come from `transactions` alone, but a transaction only
@@ -94,7 +96,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 						amount: transactions.amount,
 						paymentStatus: transactions.paymentStatus,
 						receiptLink: transactions.recieptLink,
-						productName: products.name,
+						productName: localized(products.name, products.nameAm),
 						quantity: orderItems.quantity,
 						price: orderItems.price
 					})
@@ -141,10 +143,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 		const activeDiscounts = await db
 			.select({
 				id: discounts.id,
-				name: discounts.name,
-				description: discounts.description,
+				name: localized(discounts.name, discounts.nameAm),
+				description: localizedOrNull(discounts.description, discounts.descriptionAm),
 				amount: discounts.amount,
-				productName: products.name
+				productName: localizedOrNull(products.name, products.nameAm)
 			})
 			.from(discounts)
 			.leftJoin(products, eq(discounts.productId, products.id))
@@ -170,7 +172,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			metrics: { totalSpent: 0, totalOutstanding: 0, counts: [] },
 			recentActivity: [],
 			activeDiscounts: [],
-			error: 'Failed to balance metrics summary snapshot.'
+			error: m.acc_load_failed()
 		};
 	}
 };

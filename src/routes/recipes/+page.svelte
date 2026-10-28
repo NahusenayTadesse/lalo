@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import RecipeCard from './recipe-card.svelte';
 	import RecipeModal from './recipe-modal.svelte';
 	import { Input } from '$lib/components/ui/input';
@@ -41,10 +42,10 @@
 </script>
 
 <svelte:head>
-	<title>Recipes & Applications | Lalo Bakery Solutions</title>
+	<title>{m.recipes_meta_title()}</title>
 	<meta
 		name="description"
-		content="Expert-crafted recipes and technical guides using Lalo ingredients. Support your creation of products that meet market demands and stand out for excellence."
+		content={m.recipes_meta_description()}
 	/>
 	<meta
 		name="keywords"
@@ -52,15 +53,15 @@
 	/>
 
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="Lalo Bakery Solutions | Technical Support & Recipes" />
+	<meta property="og:title" content={m.recipes_og_title()} />
 	<meta
 		property="og:description"
-		content="Master your production with our industry-tested formulas and specialty product applications."
+		content={m.recipes_og_description()}
 	/>
 	<meta property="og:image" content="/bakery (13).webp" />
 
 	<meta property="twitter:card" content="summary_large_image" />
-	<meta property="twitter:title" content="Professional Baking Formulas | Lalo Bakery Solutions" />
+	<meta property="twitter:title" content={m.recipes_twitter_title()} />
 	<meta property="twitter:image" content="/bakery (13).webp" />
 </svelte:head>
 
@@ -73,10 +74,11 @@
 
 		<div class="relative mx-auto max-w-4xl text-center">
 			<h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-white lg:text-5xl">
-				Recipes
+				{m.nav_recipes()}
+
 			</h1>
 			<p class="mt-6 text-2xl leading-8 font-bold text-gray-100 text-shadow-sm">
-				Browse our collection of delicious recipes
+				{m.recipes_subtitle()}
 			</p>
 		</div>
 	</section>
@@ -88,7 +90,7 @@
 		<div class="mb-8 flex flex-col gap-4">
 			<div class="relative">
 				<SearchIcon class="absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground" />
-				<Input type="text" placeholder="Search recipes..." bind:value={searchQuery} class="pl-10" />
+				<Input type="text" placeholder={m.recipes_search_placeholder()} bind:value={searchQuery} class="pl-10" />
 			</div>
 		</div>
 
@@ -105,8 +107,8 @@
 			>
 				<ChefHat class="size-12 text-muted-foreground" />
 				<div class="flex flex-col items-center gap-2 text-center">
-					<h3 class="text-lg font-semibold">No recipes found</h3>
-					<p class="text-sm text-muted-foreground">Try adjusting your search query</p>
+					<h3 class="text-lg font-semibold">{m.recipes_none()}</h3>
+					<p class="text-sm text-muted-foreground">{m.recipes_none_hint()}</p>
 				</div>
 			</div>
 		{/if}

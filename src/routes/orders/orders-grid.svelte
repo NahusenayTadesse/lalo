@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Select, SelectContent, SelectItem, SelectTrigger } from '$lib/components/ui/select';
@@ -9,6 +10,7 @@
 	import type { Item } from '$lib/global.svelte';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 	import type { Edit as EditOrder } from './schema';
+	import { orderStatusLabel } from '$lib/status-labels';
 
 	interface Props {
 		orders: any[];
@@ -57,9 +59,9 @@
 	<!-- Header -->
 	<div class="flex flex-col gap-4">
 		<div>
-			<h1 class="text-3xl font-bold">Orders</h1>
+			<h1 class="text-3xl font-bold">{m.nav_orders()}</h1>
 			<p class="mt-1 text-muted-foreground">
-				{filteredOrders.length} of {orders.length} orders
+				{m.orders_count({ shown: filteredOrders.length, total: orders.length })}
 			</p>
 		</div>
 
@@ -69,21 +71,19 @@
 				<SearchIcon class="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
 				<Input
 					type="text"
-					placeholder="Search by order name or ID..."
+					placeholder={m.orders_search_placeholder()}
 					bind:value={searchQuery}
 					class="pl-10"
 				/>
 			</div>
 			<Select type="single" bind:value={statusFilter}>
 				<SelectTrigger class="w-full sm:w-48">
-					{statusFilter === 'all'
-						? 'All Statuses'
-						: statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+					{statusFilter === 'all' ? m.orders_all_statuses() : orderStatusLabel(statusFilter)}
 				</SelectTrigger>
 				<SelectContent>
 					{#each uniqueStatuses as status}
 						<SelectItem value={status}>
-							{status === 'all' ? 'All Statuses' : status.charAt(0).toUpperCase() + status.slice(1)}
+							{status === 'all' ? m.orders_all_statuses() : orderStatusLabel(status)}
 						</SelectItem>
 					{/each}
 				</SelectContent>
@@ -114,9 +114,9 @@
 		</div>
 	{:else}
 		<div class="flex flex-col items-center justify-center py-12 text-center">
-			<p class="text-lg font-semibold text-foreground">No orders found</p>
+			<p class="text-lg font-semibold text-foreground">{m.acc_no_orders()}</p>
 			<p class="mt-1 text-muted-foreground">
-				{searchQuery ? 'Try adjusting your search' : 'No orders to display'}
+				{searchQuery ? m.orders_adjust_search() : m.orders_none_to_display()}
 			</p>
 		</div>
 	{/if}

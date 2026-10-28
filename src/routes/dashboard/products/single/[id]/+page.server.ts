@@ -3,6 +3,7 @@ import { zod4 } from 'sveltekit-superforms/adapters';
 
 import { edit, adjust, damaged, editGallery, editPrice, addPrice, deletePrice } from './schema';
 
+import { translation } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import {
 	products,
@@ -30,14 +31,25 @@ export const actions: Actions = {
 			return fail(400, { form });
 		}
 
-		const { productName, category, description, supplier, reorderLevel, image } = form.data;
+		const {
+			productName,
+			productNameAm,
+			category,
+			description,
+			descriptionAm,
+			supplier,
+			reorderLevel,
+			image
+		} = form.data;
 
 		try {
 			await db
 				.update(products)
 				.set({
 					name: productName,
+					nameAm: translation(productNameAm),
 					description,
+					descriptionAm: translation(descriptionAm),
 					categoryId: category,
 					// An empty supplier used to be stored as supplier #1.
 					supplierId: supplier || null,

@@ -2,6 +2,7 @@ import { superValidate, message } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 
 import { add } from './schema';
+import { translation } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import {
 	products as inventory,
@@ -55,8 +56,10 @@ export const actions: Actions = {
 
 		const {
 			productName,
+			productNameAm,
 			category,
 			description,
+			descriptionAm,
 			quantity,
 
 			supplier,
@@ -82,8 +85,10 @@ export const actions: Actions = {
 					.insert(inventory)
 					.values({
 						name: productName,
+						nameAm: translation(productNameAm),
 						categoryId: category,
 						description,
+						descriptionAm: translation(descriptionAm),
 						quantity,
 						supplierId: supplier || null,
 						reorderLevel,

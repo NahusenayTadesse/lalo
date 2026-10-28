@@ -1,3 +1,4 @@
+import { m } from '$lib/paraglide/messages.js';
 import { z } from 'zod/v4';
 import { ethiopianPhone } from '$lib/validators/phone';
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 5MB limit
@@ -21,22 +22,32 @@ const ACCEPTED_FILE_TYPES = [
  * "check the form" toast.
  */
 export const addUser = z.object({
-	name: z.string('Name is Required').min(2).max(100),
+	name: z
+		.string({ error: () => m.form_name_required() })
+		.min(2, { error: () => m.form_name_min() })
+		.max(100),
 	// Ethiopian phone number, mobile or landline, accepted in any of the usual
 	// forms; the signup actions normalise it to `+251XXXXXXXXX` before writing
 	// `customers.phone`.
 	phone: ethiopianPhone(),
-	email: z.email('Email is Required'),
+	email: z.email({ error: () => m.form_email_required() }),
 	// better-auth rejects anything shorter with an opaque APIError; catching it
 	// here puts the message on the field instead.
-	password: z.string('Password is required!').min(8, 'Password must be at least 8 characters'),
-	address: z.string('General Address is required!').min(1, 'Please choose your area'),
-	deliveryAddress: z.string('Specific Address is required!').min(5).max(200)
+	password: z
+		.string({ error: () => m.form_password_required() })
+		.min(8, { error: () => m.form_password_min() }),
+	address: z
+		.string({ error: () => m.form_area_required() })
+		.min(1, { error: () => m.form_area_required() }),
+	deliveryAddress: z
+		.string({ error: () => m.form_delivery_address_required() })
+		.min(5, { error: () => m.form_delivery_address_min() })
+		.max(200)
 });
 export type SignupSchema = typeof addUser;
 export const loginSchema = z.object({
-	email: z.email({ error: 'Invalid email address' }),
-	password: z.string().min(8, { error: 'Password must be at least 8 characters' })
+	email: z.email({ error: () => m.form_email_required() }),
+	password: z.string().min(8, { error: () => m.form_password_min() })
 });
 export type LoginSchema = typeof loginSchema;
 

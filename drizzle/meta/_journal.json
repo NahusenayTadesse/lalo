@@ -148,6 +148,13 @@
       "when": 1789414010584,
       "tag": "0020_parallel_shaman",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "5",
+      "when": 1793176656400,
+      "tag": "0021_localized_content",
+      "breakpoints": true
     }
   ]
 }

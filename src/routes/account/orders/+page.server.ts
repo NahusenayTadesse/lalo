@@ -1,5 +1,7 @@
+import { m } from '$lib/paraglide/messages.js';
 import { error, isHttpError, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { localized } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import { orders, customers, orderItems, products } from '$lib/server/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
@@ -17,7 +19,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			.then((rows) => rows[0]);
 
 		if (!customer) {
-			throw error(404, 'Customer profile not found.');
+			throw error(404, m.acc_profile_not_found());
 		}
 
 		// 3. Fetch ONLY pending orders along with an aggregated array of items
@@ -31,7 +33,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				fee: orders.fee,
 				// Example tracking steps field if you have it, otherwise mock calculated on frontend
 				itemId: orderItems.id,
-				productName: products.name,
+				productName: localized(products.name, products.nameAm),
 				quantity: orderItems.quantity,
 				price: orderItems.price,
 				total: sql<number>`${orderItems.quantity} * ${orderItems.price}`.mapWith(Number)
@@ -82,7 +84,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		console.error('Error loading order tracking snapshot:', err);
 		return {
 			pendingOrders: [],
-			error: 'Could not populate active tracking parameters.'
+			error: m.acc_tracking_failed()
 		};
 	}
 };

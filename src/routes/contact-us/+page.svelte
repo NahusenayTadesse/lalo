@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { z } from 'zod';
 	import {
 		Card,
@@ -53,14 +54,14 @@
 	const contactInfo = [
 		{
 			icon: MailIcon,
-			label: 'Email',
+			label: m.contact_email_label(),
 			value: 'info@mohammedlaloie.com',
 			href: 'mailto:info@mohammedlaloie.com'
 		},
 		{
 			icon: PhoneIcon,
 			label: 'WhatsApp',
-			value: 'Contact us on WhatsApp',
+			value: m.contact_whatsapp_value(),
 			href: 'https://wa.me/'
 		}
 	];
@@ -76,10 +77,10 @@
 </script>
 
 <svelte:head>
-	<title>Partner With Us | Contact Lalo Bakery Solutions</title>
+	<title>{m.contact_meta_title()}</title>
 	<meta
 		name="description"
-		content="Connect with Lalo Bakery Solutions for reliable supply, technical support, and tailored bakery business solutions. Let’s grow your bakery together."
+		content={m.contact_meta_description()}
 	/>
 	<meta
 		name="keywords"
@@ -87,15 +88,15 @@
 	/>
 
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="Contact Lalo Bakery Solutions | Expert Support" />
+	<meta property="og:title" content={m.contact_og_title()} />
 	<meta
 		property="og:description"
-		content="Reach out to our team for industry knowledge, product inquiries, and dedicated customer satisfaction."
+		content={m.contact_og_description()}
 	/>
 	<meta property="og:image" content="/logo.webp" />
 
 	<meta property="twitter:card" content="summary_large_image" />
-	<meta property="twitter:title" content="Lalo Bakery Solutions | Get in Touch" />
+	<meta property="twitter:title" content={m.contact_twitter_title()} />
 	<meta property="twitter:image" content="/logo.webp" />
 </svelte:head>
 
@@ -104,10 +105,9 @@
 	<main class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
 		<!-- Hero Section -->
 		<div class="mb-12 text-center">
-			<h2 class="mb-4 text-4xl font-bold sm:text-5xl">Get in Touch</h2>
+			<h2 class="mb-4 text-4xl font-bold sm:text-5xl">{m.contact_title()}</h2>
 			<p class="mx-auto max-w-2xl text-lg text-muted-foreground">
-				Have questions about our delicious baked goods? We'd love to hear from you! Reach out
-				through any of our channels.
+				{m.contact_intro()}
 			</p>
 		</div>
 
@@ -116,9 +116,9 @@
 			<div class="lg:col-span-2">
 				<Card class="border-2">
 					<CardHeader>
-						<CardTitle>Send us a Message</CardTitle>
+						<CardTitle>{m.contact_form_title()}</CardTitle>
 						<CardDescription
-							>Fill out the form below and we'll get back to you as soon as possible.</CardDescription
+							>{m.contact_form_desc()}</CardDescription
 						>
 					</CardHeader>
 					<CardContent>
@@ -129,8 +129,8 @@
 								{errors}
 								type="text"
 								name="name"
-								label="Name"
-								placeholder="Enter Your Name"
+								label={m.form_name()}
+								placeholder={m.form_name_placeholder()}
 							/>
 
 							<InputComp
@@ -138,7 +138,7 @@
 								{form}
 								{errors}
 								name="email"
-								label="Email Address"
+								label={m.form_email()}
 								placeholder="your@email.com"
 							/>
 							<InputComp
@@ -146,7 +146,7 @@
 								{form}
 								{errors}
 								name="phoneNumber"
-								label="Phone Number"
+								label={m.form_phone()}
 								placeholder="+251 901020304"
 							/>
 
@@ -155,21 +155,21 @@
 								{errors}
 								type="select"
 								name="subject"
-								label="Subject"
+								label={m.contact_subject()}
 								items={[
-									 { value: 'Wholesale Inquiry', name: 'Wholesale Inquiry' },
-									 { value: 'Technical Support', name: 'Technical Support' },
-									 { value: 'General Inquiry', name: 'General Inquiry' }
+									{ value: 'Wholesale Inquiry', name: m.contact_subject_wholesale() },
+									{ value: 'Technical Support', name: m.contact_subject_support() },
+									{ value: 'General Inquiry', name: m.contact_subject_general() }
 								]}
-								placeholder="What is this about?"
+								placeholder={m.contact_subject_placeholder()}
 							/>
 							<InputComp
 								{form}
 								{errors}
 								type="text"
 								name="address"
-								label="Address"
-								placeholder="Enter your address"
+								label={m.form_address()}
+								placeholder={m.form_address_placeholder()}
 							/>
 
 							<InputComp
@@ -177,8 +177,8 @@
 								{errors}
 								type="textarea"
 								name="contactMessage"
-								label="Message"
-								placeholder="Tell us more about your inquiry..."
+								label={m.contact_message()}
+								placeholder={m.contact_message_placeholder()}
 							/>
 
 							<!-- Message -->
@@ -186,10 +186,10 @@
 							<!-- Submit Button -->
 							<Button type="submit" class="w-full gap-2">
 								{#if $delayed}
-									<LoadingBtn name="Sending" />
+									<LoadingBtn name={m.common_sending()} />
 								{:else}
 									<SendIcon class="h-4 w-4" />
-									Send Message
+									{m.contact_send()}
 								{/if}
 							</Button>
 						</form>
@@ -202,7 +202,7 @@
 				<!-- Direct Contact -->
 				<Card class="border-2">
 					<CardHeader>
-						<CardTitle class="text-lg">Contact Info</CardTitle>
+						<CardTitle class="text-lg">{m.contact_info()}</CardTitle>
 					</CardHeader>
 					<CardContent class="space-y-4">
 						{#each contactInfo as info (info.href)}
@@ -225,7 +225,7 @@
 				<!-- Social Media -->
 				<Card class="border-2">
 					<CardHeader>
-						<CardTitle class="text-lg">Follow Us</CardTitle>
+						<CardTitle class="text-lg">{m.contact_follow()}</CardTitle>
 					</CardHeader>
 					<CardContent>
 						<div class="grid grid-cols-2 gap-3">
@@ -251,15 +251,15 @@
 				<!-- Hours -->
 				<Card class="border-2 bg-linear-to-br from-primary/5 to-accent/5">
 					<CardHeader>
-						<CardTitle class="text-lg">Business Hours</CardTitle>
+						<CardTitle class="text-lg">{m.contact_hours()}</CardTitle>
 					</CardHeader>
 					<CardContent class="space-y-2 text-sm">
 						<div class="flex justify-between">
-							<span class="text-muted-foreground">Monday - Friday</span>
+							<span class="text-muted-foreground">{m.contact_mon_fri()}</span>
 							<span class="font-semibold">8:30 AM - 5:30 PM </span>
 						</div>
 						<div class="flex justify-between">
-							<span class="text-muted-foreground">Saturday</span>
+							<span class="text-muted-foreground">{m.contact_saturday()}</span>
 							<span class="font-semibold">8:30 AM - 4:00 PM</span>
 						</div>
 					</CardContent>

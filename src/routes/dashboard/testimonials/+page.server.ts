@@ -7,6 +7,7 @@ import {
 	editPaymentMethod as editSchema,
 	deleteTestimonial
 } from './schema.js';
+import { translation } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import { testimonials as paymentMethods, user } from '$lib/server/db/schema';
 import type { Actions } from './$types.js';
@@ -23,6 +24,8 @@ export const load: PageServerLoad = async () => {
 			name: paymentMethods.name,
 			position: paymentMethods.position,
 			testimonial: paymentMethods.message,
+			positionAm: paymentMethods.positionAm,
+			testimonialAm: paymentMethods.messageAm,
 			avatar: paymentMethods.avatar,
 			createdBy: user.name,
 			createdById: paymentMethods.createdBy
@@ -48,7 +51,7 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: 'Please check the form for Errors' });
 		}
 
-		const { name, position, testimonial, avatar } = form.data;
+		const { name, position, testimonial, positionAm, testimonialAm, avatar } = form.data;
 
 		try {
 			const avatarFile = await saveUploadedFile(avatar);
@@ -56,6 +59,8 @@ export const actions: Actions = {
 				name,
 				position,
 				message: testimonial,
+				positionAm: translation(positionAm),
+				messageAm: translation(testimonialAm),
 				avatar: avatarFile,
 				createdBy: locals.user?.id
 			});
@@ -79,7 +84,8 @@ export const actions: Actions = {
 			return fail(400, { form });
 		}
 
-		const { id, name, position, testimonial, avatar } = form.data;
+		const { id, name, position, testimonial, positionAm, testimonialAm, avatar } =
+			form.data;
 
 		try {
 			await db
@@ -88,6 +94,8 @@ export const actions: Actions = {
 					name,
 					position,
 					message: testimonial,
+					positionAm: translation(positionAm),
+					messageAm: translation(testimonialAm),
 					...(avatar instanceof File && avatar.size > 0
 						? { avatar: await saveUploadedFile(avatar) }
 						: {}),

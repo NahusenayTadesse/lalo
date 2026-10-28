@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import CheckIcon from '@lucide/svelte/icons/check';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
 	import { tick } from 'svelte';
@@ -45,7 +46,7 @@
 	// );
 	//
 	const fallbackLabel = $derived(
-		placeholder || 'Select ' + name.replace(/([a-z])([A-Z])/g, '$1 $2')
+		placeholder || m.select_placeholder({ name: name.replace(/([a-z])([A-Z])/g, '$1 $2') })
 	);
 
 	const triggerContent = $derived(
@@ -87,9 +88,9 @@
 
 	<Popover.Content class="w-full min-w-64 p-0">
 		<Command.Root>
-			<Command.Input placeholder="Search..." aria-label={fallbackLabel} />
+			<Command.Input placeholder={m.common_search_placeholder()} aria-label={fallbackLabel} />
 			<Command.List>
-				<Command.Empty>Nothing found.</Command.Empty>
+				<Command.Empty>{m.common_nothing_found()}</Command.Empty>
 				<Command.Group>
 					{#each items as item}
 						<Command.Item

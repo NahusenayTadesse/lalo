@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { useCart, cartKey } from '$lib/hooks/cart.svelte.js';
 	import { Button } from '$lib/components/ui/button';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
@@ -62,7 +63,7 @@
 			} else if (result.type === 'success') {
 				// Not an order: keep what the customer typed rather than resetting the form.
 				cancel();
-				toast.error(result.data?.form?.message?.text ?? 'Could not place your order');
+				toast.error(result.data?.form?.message?.text ?? m.checkout_place_failed());
 			}
 		}
 	});
@@ -82,7 +83,7 @@
 		Number(data?.freeData?.threshold) > 0 && cart.totalPrice >= Number(data?.freeData?.threshold)
 	);
 	const fee = $derived(
-		pickup || freeDelivery ? 0 : data?.placeList?.find((item) => item.name === $form.address)?.fee
+		pickup || freeDelivery ? 0 : data?.placeList?.find((item) => item.value === $form.address)?.fee
 	);
 
 	/**
@@ -96,7 +97,7 @@
 
 	/** Whether we can quote a fee yet, as opposed to defaulting it to zero. */
 	const feeKnown = $derived(
-		pickup || freeDelivery || Boolean(data?.placeList?.some((item) => item.name === $form.address))
+		pickup || freeDelivery || Boolean(data?.placeList?.some((item) => item.value === $form.address))
 	);
 
 	/** What the customer will actually be charged: goods plus delivery. */
@@ -223,7 +224,7 @@
 </script>
 
 <svelte:head>
-	<title>Checkout - Lalo Bakery</title>
+	<title>{m.checkout_meta_title()}</title>
 </svelte:head>
 
 <!-- Shared by the guest and the signed-in form: both offer the same choice, and
@@ -236,11 +237,11 @@
 			type="checkboxSingle"
 			{form}
 			{errors}
-			placeholder="Pick up at the shop — no delivery fee"
+			placeholder={m.checkout_pickup_label()}
 		/>
 		{#if pickup}
 			<p class="mt-2 text-sm text-muted-foreground">
-				We'll have your order ready for collection at the bakery. Nothing is charged for delivery.
+				{m.checkout_pickup_note()}
 			</p>
 		{/if}
 	</div>
@@ -252,8 +253,8 @@
 			<ShoppingCartIcon class="size-6" />
 		</div>
 		<div>
-			<h1 class="text-3xl font-bold tracking-tight">Checkout</h1>
-			<p class="text-muted-foreground">Review your items and provide shipping details.</p>
+			<h1 class="text-3xl font-bold tracking-tight">{m.checkout_title()}</h1>
+			<p class="text-muted-foreground">{m.checkout_subtitle()}</p>
 		</div>
 	</div>
 
@@ -262,7 +263,7 @@
 			<section class="rounded-xl border bg-card p-6 shadow-sm">
 				<div class="mb-6 flex items-center gap-2 border-b pb-4">
 					<CreditCard class="size-5 text-muted-foreground" />
-					<h2 class="text-xl font-semibold">Contact Information</h2>
+					<h2 class="text-xl font-semibold">{m.checkout_contact_info()}</h2>
 				</div>
 
 				{#if !data?.user}
@@ -270,11 +271,10 @@
 					     standalone `customers` row. Signing up is offered, not required. -->
 					<div class="mb-6 rounded-lg border border-dashed bg-muted/40 p-4">
 						<p class="text-sm text-muted-foreground">
-							You can check out as a guest — just fill in your details below. Already have an
-							account, or want to save your details for next time?
+							{m.checkout_guest_hint()}
 						</p>
 						<div class="mt-3 flex flex-wrap gap-2">
-							<DialogComp title="Sign Up" variant="default" IconComp={UserRoundPlus}>
+							<DialogComp title={m.signup_title()} variant="default" IconComp={UserRoundPlus}>
 								<Signup
 									data={data?.signupForm}
 									action="/signup?/signup"
@@ -282,7 +282,7 @@
 								/>
 							</DialogComp>
 
-							<DialogComp title="Log In" variant="outline" IconComp={User}>
+							<DialogComp title={m.auth_log_in()} variant="outline" IconComp={User}>
 								<Login data={data?.loginForm} action="/login?/login" />
 							</DialogComp>
 						</div>
@@ -299,17 +299,17 @@
 						<Errors allErrors={$allErrors} />
 
 						<InputComp
-							label="Full Name"
+							label={m.form_full_name()}
 							name="guestName"
 							type="text"
 							{form}
 							{errors}
 							required
-							placeholder="John Doe"
+							placeholder={m.form_full_name_placeholder()}
 						/>
 
 						<InputComp
-							label="Email Address"
+							label={m.form_email()}
 							name="guestEmail"
 							type="email"
 							{form}
@@ -319,7 +319,7 @@
 						/>
 
 						<InputComp
-							label="Phone Number"
+							label={m.form_phone()}
 							name="guestPhone"
 							type="tel"
 							{form}
@@ -332,33 +332,33 @@
 
 						{#if !pickup}
 							<InputComp
-								label="Delivery Area"
+								label={m.checkout_delivery_area()}
 								name="address"
 								type="select"
 								items={data?.placeList}
 								{form}
 								{errors}
-								placeholder="Select your area"
+								placeholder={m.form_area_placeholder()}
 							/>
 
 							<InputComp
-								label="Delivery Address"
+								label={m.settings_delivery_address()}
 								name="deliveryAddress"
 								type="text"
 								{form}
 								{errors}
 								required
-								placeholder="Enter your specific delivery address"
+								placeholder={m.checkout_specific_address_placeholder()}
 							/>
 
 							<InputComp
-								label="Delivery Fee"
+								label={m.checkout_delivery_fee()}
 								name="fee"
 								type="text"
 								{form}
 								disabled
 								{errors}
-								placeholder="Choose a delivery area"
+								placeholder={m.checkout_select_area()}
 							/>
 						{/if}
 
@@ -375,8 +375,8 @@
 							class="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
 						>
 							<div>
-								<p class="text-xs font-bold tracking-wider text-gray-500 uppercase">Your Cart</p>
-								<p class="text-sm text-gray-600">{cart.totalItems} items</p>
+								<p class="text-xs font-bold tracking-wider text-gray-500 uppercase">{m.cart_title()}</p>
+								<p class="text-sm text-gray-600">{m.checkout_items_count({ count: cart.totalItems })}</p>
 							</div>
 							<div class="text-right">
 								<p class="text-lg font-bold text-gray-900">{formatPrice(orderTotal)}</p>
@@ -391,11 +391,11 @@
 								disabled={cart.items.length === 0 || $delayed || !reconciled}
 							>
 								{#if $delayed}
-									<LoadingBtn name="Processing..." />
+									<LoadingBtn name={m.checkout_processing()} />
 								{:else if !reconciled}
-									<LoadingBtn name="Checking prices..." />
+									<LoadingBtn name={m.checkout_checking_prices()} />
 								{:else}
-									Complete Order — {formatPrice(orderTotal)}
+									{m.checkout_complete_order({ total: formatPrice(orderTotal) })}
 								{/if}
 							</Button>
 						</div>
@@ -413,43 +413,43 @@
 
 						{#if !pickup}
 							<InputComp
-								label="Address"
+								label={m.form_address()}
 								name="address"
 								type="select"
 								items={data?.placeList}
 								{form}
 								{errors}
-								placeholder="Enter your delivery address"
+								placeholder={m.form_area_placeholder()}
 							/>
 
 							<InputComp
-								label="Delivery Address"
+								label={m.settings_delivery_address()}
 								name="deliveryAddress"
 								type="text"
 								{form}
 								{errors}
-								placeholder="Enter your specific delivery address"
+								placeholder={m.checkout_specific_address_placeholder()}
 							/>
 
 							<InputComp
-								label="Delivery Fee"
+								label={m.checkout_delivery_fee()}
 								name="fee"
 								type="text"
 								{form}
 								disabled
 								{errors}
-								placeholder="Enter delivery fee"
+								placeholder={m.checkout_select_area()}
 							/>
 						{/if}
 						{#if saveInfo && !pickup}
 							<InputComp
-								label="Save Information"
+								label={m.checkout_save_info()}
 								name="saveInfo"
 								type="checkboxSingle"
 								{form}
 								disabled
 								{errors}
-								placeholder="Save this information for future orders."
+								placeholder={m.checkout_save_info_hint()}
 							/>
 						{/if}
 
@@ -465,8 +465,8 @@
 							class="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
 						>
 							<div>
-								<p class="text-xs font-bold tracking-wider text-gray-500 uppercase">Your Cart</p>
-								<p class="text-sm text-gray-600">{cart.totalItems} items</p>
+								<p class="text-xs font-bold tracking-wider text-gray-500 uppercase">{m.cart_title()}</p>
+								<p class="text-sm text-gray-600">{m.checkout_items_count({ count: cart.totalItems })}</p>
 							</div>
 							<div class="text-right">
 								<p class="text-lg font-bold text-gray-900">{formatPrice(orderTotal)}</p>
@@ -481,11 +481,11 @@
 								disabled={cart.items.length === 0 || $delayed || !reconciled}
 							>
 								{#if $delayed}
-									<LoadingBtn name="Processing..." />
+									<LoadingBtn name={m.checkout_processing()} />
 								{:else if !reconciled}
-									<LoadingBtn name="Checking prices..." />
+									<LoadingBtn name={m.checkout_checking_prices()} />
 								{:else}
-									Complete Order — {formatPrice(orderTotal)}
+									{m.checkout_complete_order({ total: formatPrice(orderTotal) })}
 								{/if}
 							</Button>
 						</div>
@@ -498,11 +498,11 @@
 			<div class="sticky top-8 space-y-6">
 				<div class="rounded-xl border bg-muted/30 p-6">
 					<div class="mb-4 flex items-center justify-between">
-						<h2 class="text-lg font-semibold">Order Summary</h2>
+						<h2 class="text-lg font-semibold">{m.checkout_order_summary()}</h2>
 						<span
 							class="rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground"
 						>
-							{cart.totalItems} Items
+							{m.checkout_items_badge({ count: cart.totalItems })}
 						</span>
 					</div>
 
@@ -530,26 +530,26 @@
 
 						<div class="mt-6 space-y-3 border-t pt-4">
 							<div class="flex justify-between text-sm">
-								<span class="text-muted-foreground">Subtotal</span>
+								<span class="text-muted-foreground">{m.cart_subtotal()}</span>
 								<span>{formatPrice(cart.totalPrice)}</span>
 							</div>
 							<div class="flex justify-between text-sm">
-								<span class="text-muted-foreground">{pickup ? 'Pickup' : 'Shipping'}</span>
+								<span class="text-muted-foreground">{pickup ? m.checkout_pickup() : m.checkout_shipping()}</span>
 								<!-- Guests choose a delivery area too, so the quote no longer
 								     depends on being signed in. -->
 								{#if feeKnown}
 									<span class="font-medium text-green-600">
-										{feeAmount !== 0 ? formatPrice(feeAmount) : 'Free'}
+										{feeAmount !== 0 ? formatPrice(feeAmount) : m.checkout_free()}
 									</span>
 								{:else}
-									<span class="text-muted-foreground">Select a delivery area</span>
+									<span class="text-muted-foreground">{m.checkout_select_area()}</span>
 								{/if}
 							</div>
 							<!-- Delivery is part of what gets charged, so it belongs in the total.
 							     This used to repeat the subtotal, quoting the customer a figure
 							     that was short by the whole delivery fee. -->
 							<div class="flex justify-between border-t pt-3 text-lg font-bold">
-								<span>Total</span>
+								<span>{m.acc_col_total()}</span>
 								<span class="text-primary">{formatPrice(orderTotal)}</span>
 							</div>
 						</div>
@@ -559,27 +559,31 @@
 								class="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm"
 								role="status"
 							>
-								<p class="font-medium">Your cart was updated</p>
+								<p class="font-medium">{m.checkout_cart_updated()}</p>
 								<ul class="mt-1 space-y-0.5 text-muted-foreground">
 									{#each repricedItems as change (change.priceId)}
 										<li>
-											{change.name} is now {formatPrice(change.to)} (was {formatPrice(change.from)})
+											{m.checkout_repriced({
+												name: change.name,
+												to: formatPrice(change.to),
+												from: formatPrice(change.from)
+											})}
 										</li>
 									{/each}
 									{#each removedItems as removed (removed.priceId)}
-										<li>{removed.name} is no longer available and was removed</li>
+										<li>{m.checkout_removed({ name: removed.name })}</li>
 									{/each}
 								</ul>
 								<p class="mt-2 text-xs text-muted-foreground">
-									The total above is what you will be charged.
+									{m.checkout_total_note()}
 								</p>
 							</div>
 						{/if}
 					{:else}
 						<div class="py-12 text-center">
 							<Package class="mx-auto mb-3 size-10 text-muted-foreground/40" />
-							<p class="text-sm font-medium">Your cart is empty</p>
-							<Button href="/shop" variant="outline"><ArrowLeft /> Browse Products</Button>
+							<p class="text-sm font-medium">{m.cart_empty()}</p>
+							<Button href="/shop" variant="outline"><ArrowLeft /> {m.checkout_browse()}</Button>
 						</div>
 					{/if}
 				</div>

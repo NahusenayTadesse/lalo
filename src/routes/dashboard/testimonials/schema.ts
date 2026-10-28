@@ -17,6 +17,9 @@ export const paymentMethod = z.object({
 	name: z.string('Name is required').min(2).max(50),
 	position: z.string().optional(),
 	testimonial: z.string(),
+	// Amharic, optional — left blank, the public site shows the English text.
+	positionAm: z.string().max(255).optional(),
+	testimonialAm: z.string().optional(),
 	avatar: avatarFile
 });
 
@@ -25,6 +28,9 @@ export const editPaymentMethod = z.object({
 	name: z.string('Name is required').min(2).max(50),
 	position: z.string().optional(),
 	testimonial: z.string(),
+	// Amharic, optional — left blank, the public site shows the English text.
+	positionAm: z.string().max(255).optional(),
+	testimonialAm: z.string().optional(),
 	// Optional: fixing a typo shouldn't mean uploading the photo again. An empty
 	// file input is skipped here and keeps the current avatar.
 	avatar: z

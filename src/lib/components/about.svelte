@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import {
 		Card,
 		CardContent,
@@ -10,23 +11,29 @@
 	import { fly } from 'svelte/transition';
 
 	const highlights = [
-		{ icon: AwardIcon, label: 'Halal Certified', description: 'All products meet Halal standards' },
+		{ icon: AwardIcon, label: m.about_hl_halal(), description: m.about_hl_halal_desc() },
 		{
 			icon: SparklesIcon,
-			label: 'Specialty Options',
-			description: 'Gluten-free, sugar-free & vegan'
+			label: m.about_hl_specialty(),
+			description: m.about_hl_specialty_desc()
 		},
-		{ icon: TrendingUpIcon, label: 'Since 2011', description: 'Over a decade of excellence' },
-		{ icon: CheckIcon, label: 'Quality Assured', description: 'Consistent standards guaranteed' }
+		{ icon: TrendingUpIcon, label: m.about_hl_since(), description: m.about_hl_since_desc() },
+		{ icon: CheckIcon, label: m.about_hl_quality(), description: m.about_hl_quality_desc() }
 	];
 
-	const products = ['Yeasts', 'Improvers', 'Mixes', 'Specialty Products', 'Equipment'];
+	const products = [
+		m.about_product_yeasts(),
+		m.about_product_improvers(),
+		m.about_product_mixes(),
+		m.about_product_specialty(),
+		m.about_product_equipment()
+	];
 
 	const partners = [
-		{ name: 'Fixtec', description: 'Mechanical tools & construction materials' },
+		{ name: 'Fixtec', description: m.about_partner_fixtec() },
 		{
 			name: 'Fahem General Trading',
-			description: 'Coffee export, agrochemicals & veterinary imports'
+			description: m.about_partner_fahem()
 		}
 	];
 </script>
@@ -37,10 +44,9 @@
 	<div class="mx-auto max-w-6xl">
 		<!-- Section Header -->
 		<div transition:fly={{ y: 20, duration: 600 }} class="mb-16 flex flex-col gap-4 text-center">
-			<h2 class="text-4xl font-bold text-foreground sm:text-5xl">About Lalo Bakery Solutions</h2>
+			<h2 class="text-4xl font-bold text-foreground sm:text-5xl">{m.about_title()}</h2>
 			<p class="mx-auto max-w-3xl text-lg text-foreground/70">
-				Established in 2011, we've grown from MasterChef into a comprehensive bakery ingredient and
-				equipment supplier serving both small bakeries and large-scale producers.
+				{m.about_intro()}
 			</p>
 		</div>
 
@@ -54,20 +60,15 @@
 				>
 					<div class="absolute inset-0 -z-1 bg-black/60"></div>
 					<CardHeader>
-						<CardTitle class="text-2xl">Our Journey</CardTitle>
-						<CardDescription class="text-white">From MasterChef to Industry Leader</CardDescription>
+						<CardTitle class="text-2xl">{m.about_journey()}</CardTitle>
+						<CardDescription class="text-white">{m.about_journey_subtitle()}</CardDescription>
 					</CardHeader>
 					<CardContent class="flex flex-col gap-4 text-white">
 						<p class="leading-relaxed">
-							Formerly known as MasterChef, we rebranded as Lalo Bakery Solutions to better reflect
-							our mission of delivering excellence in baking across every stage of production. Our
-							comprehensive portfolio includes flours, yeasts, improvers, mixes, specialty products,
-							and equipment—all backed by industry knowledge and technical support.
+							{m.about_journey_p1()}
 						</p>
 						<p class="leading-relaxed">
-							Guided by a commitment to reliability and customer satisfaction, we work with bakeries
-							to support the creation of products that meet market demands and stand out for their
-							excellence.
+							{m.about_journey_p2()}
 						</p>
 					</CardContent>
 				</Card>
@@ -99,8 +100,8 @@
 		<div transition:fly={{ y: 20, duration: 600, delay: 300 }} class="mb-16">
 			<Card class="shadow-lg-lg shadow-lg-primary/10 border-primary/20">
 				<CardHeader>
-					<CardTitle>Our Product Portfolio</CardTitle>
-					<CardDescription>Comprehensive solutions for every baking need</CardDescription>
+					<CardTitle>{m.about_portfolio()}</CardTitle>
+					<CardDescription>{m.about_portfolio_subtitle()}</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">

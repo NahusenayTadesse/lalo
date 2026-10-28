@@ -1,3 +1,4 @@
+import { m } from '$lib/paraglide/messages.js';
 // import { encodeBase32LowerCase } from '@oslojs/encoding';
 
 import type { Actions, PageServerLoad } from './$types';
@@ -29,7 +30,7 @@ export const actions: Actions = {
 				form,
 				{
 					type: 'error',
-					text: 'Please check the form for errors'
+					text: m.form_check_errors()
 				},
 				{
 					status: 400
@@ -49,13 +50,13 @@ export const actions: Actions = {
 			});
 
 			if (!result.user) {
-				setError(form, 'email', 'Invalid email or password');
-				setError(form, 'password', 'Invalid email or password');
+				setError(form, 'email', m.login_invalid());
+				setError(form, 'password', m.login_invalid());
 				return message(
 					form,
 					{
 						type: 'error',
-						text: 'An error occurred while logging in'
+						text: m.login_error()
 					},
 					{
 						status: 500
@@ -65,7 +66,7 @@ export const actions: Actions = {
 
 			return message(form, {
 				type: 'success',
-				text: 'Signed in successfully'
+				text: m.login_success()
 			});
 		} catch (error) {
 			if (error instanceof APIError) {
@@ -73,7 +74,9 @@ export const actions: Actions = {
 					form,
 					{
 						type: 'error',
-						text: error?.message
+						// better-auth's own messages are English only; the common one is mapped.
+						text:
+							error.body?.code === 'INVALID_EMAIL_OR_PASSWORD' ? m.login_invalid() : error?.message
 					},
 					{
 						// Wrong email/password is the caller's mistake, not a server error.
@@ -85,7 +88,7 @@ export const actions: Actions = {
 				form,
 				{
 					type: 'error',
-					text: 'Login failed. Please try again.'
+					text: m.login_failed()
 				},
 				{
 					status: 500

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { fade, fly } from 'svelte/transition';
 	import { Button } from '$lib/components/ui/button';
 	import { Card } from '$lib/components/ui/card';
@@ -65,7 +66,7 @@
 <div
 	class="relative mx-auto w-full max-w-3xl px-4"
 	role="region"
-	aria-label="Testimonials"
+	aria-label={m.testimonials_label()}
 	onmouseenter={() => (isPaused = true)}
 	onmouseleave={() => (isPaused = false)}
 >
@@ -130,7 +131,7 @@
 					size="icon"
 					class="shadow-lg-md size-10 rounded-full bg-background/80 backdrop-blur-sm transition-all duration-200 hover:scale-110 hover:bg-background"
 					onclick={goToPrevious}
-					aria-label="Previous testimonial"
+					aria-label={m.testimonials_previous()}
 				>
 					<ChevronLeftIcon class="size-5" />
 				</Button>
@@ -142,7 +143,7 @@
 					size="icon"
 					class="shadow-lg-md size-10 rounded-full bg-background/80 backdrop-blur-sm transition-all duration-200 hover:scale-110 hover:bg-background"
 					onclick={goToNext}
-					aria-label="Next testimonial"
+					aria-label={m.testimonials_next()}
 				>
 					<ChevronRightIcon class="size-5" />
 				</Button>
@@ -160,7 +161,7 @@
 						index === currentIndex ? 'w-8 bg-primary' : 'bg-primary/30 hover:bg-primary/50'
 					]}
 					onclick={() => goToSlide(index)}
-					aria-label={`Go to testimonial ${index + 1}`}
+					aria-label={m.testimonials_go_to({ number: index + 1 })}
 					aria-current={index === currentIndex ? 'true' : 'false'}
 				></button>
 			{/each}

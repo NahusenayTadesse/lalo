@@ -1,4 +1,5 @@
-import { type Handle, sequence } from '@sveltejs/kit/hooks';
+import { m } from '$lib/paraglide/messages.js';
+import { sequence } from '@sveltejs/kit/hooks';
 import { getTextDirection } from '$lib/paraglide/runtime.js';
 import { paraglideMiddleware } from '$lib/paraglide/server.js';
 import type { Handle } from '@sveltejs/kit';
@@ -27,7 +28,7 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 		// Cached on `locals` so the layout and any `requireAdmin()` call reuse it
 		// instead of issuing the same join again.
 		event.locals.roleName = await getRoleName(event.locals.user.id);
-		if (event.locals.roleName !== ADMIN_ROLE) throw error(404, 'Not Allowed');
+		if (event.locals.roleName !== ADMIN_ROLE) throw error(404, m.error_not_allowed());
 	}
 
 	return svelteKitHandler({ event, resolve, auth, building });
@@ -46,4 +47,7 @@ const handleParaglide: Handle = ({ event, resolve }) =>
 		);
 	});
 
-export const handle: Handle = sequence(handleBetterAuth, handleParaglide);
+// Paraglide first: it opens the per-request locale context, and anything that
+// runs outside it — the dashboard guard's error message, every load and action
+// — would otherwise be rendered in the base locale.
+export const handle: Handle = sequence(handleParaglide, handleBetterAuth);

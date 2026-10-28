@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { useCart, cartKey } from '$lib/hooks/cart.svelte.js';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
@@ -48,7 +49,7 @@
 		<div class="flex items-center justify-between border-b border-border bg-muted/30 p-4">
 			<div class="flex items-center gap-2">
 				<ShoppingCartIcon class="size-5 text-primary" />
-				<h3 class="font-semibold">Your Cart</h3>
+				<h3 class="font-semibold">{m.cart_title()}</h3>
 			</div>
 		</div>
 
@@ -69,15 +70,16 @@
 					{#if Number(freeDeliveryThreshold) > 0 && cart.totalPrice > Number(suggestionThreshold)}
 						{#if cart.totalPrice < Number(freeDeliveryThreshold)}
 							<p class="text-sm text-muted-foreground">
-								You are {formatPrice(Number(freeDeliveryThreshold) - cart.totalPrice)} away from free
-								delivery
+								{m.cart_free_delivery_away({
+									amount: formatPrice(Number(freeDeliveryThreshold) - cart.totalPrice)
+								})}
 							</p>
 						{/if}
 						{#if cart.totalPrice >= Number(freeDeliveryThreshold)}
 							<p class="flex flex-row items-center gap-2 text-sm text-muted-foreground">
 								<span class="flex items-center gap-1">
 									<PartyPopper class="size-5 animate-bounce text-amber-400" />
-									You have qualified for free delivery!
+									{m.cart_free_delivery_qualified()}
 									<span class="animate-pulse text-lg">✨</span>
 								</span>
 							</p>
@@ -85,22 +87,24 @@
 					{/if}
 				</div>
 				<div class="flex items-center justify-between">
-					<span class="text-sm text-muted-foreground">Total ({cart.totalItems} items)</span>
+					<span class="text-sm text-muted-foreground"
+						>{m.cart_total_items({ count: cart.totalItems })}</span
+					>
 					<span class="text-lg font-bold text-primary">{formatPrice(cart.totalPrice)}</span>
 				</div>
 				<div class="flex gap-2">
 					<Button variant="outline" size="sm" class="flex-1 gap-2" onclick={() => cart.clearCart()}>
 						<TrashIcon class="size-4" />
-						Clear
+						{m.cart_clear()}
 					</Button>
-					<Button size="sm" onclick={cart.close} class="flex-1" href="/checkout">Checkout</Button>
+					<Button size="sm" onclick={cart.close} class="flex-1" href="/checkout">{m.cart_checkout()}</Button>
 				</div>
 			</div>
 		{:else}
 			<div class=" p-8 text-center">
 				<ShoppingCartIcon class="mx-auto mb-3 size-12 text-muted-foreground/50" />
-				<p class="text-sm text-muted-foreground">Your cart is empty</p>
-				<p class="mt-1 text-xs text-muted-foreground/70">Add some products to get started</p>
+				<p class="text-sm text-muted-foreground">{m.cart_empty()}</p>
+				<p class="mt-1 text-xs text-muted-foreground/70">{m.cart_empty_hint()}</p>
 			</div>
 		{/if}
 	</Sheet.Content>

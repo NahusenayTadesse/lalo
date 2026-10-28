@@ -22,6 +22,8 @@
 		id,
 		name,
 		description,
+		nameAm = '',
+		descriptionAm = '',
 		icon = false,
 		status = true
 	}: {
@@ -31,6 +33,8 @@
 		name: string;
 		icon: boolean;
 		description: string;
+		nameAm?: string | null;
+		descriptionAm?: string | null;
 		status: boolean;
 	} = $props();
 
@@ -44,6 +48,8 @@
 	$form.name = name;
 
 	$form.description = description;
+	$form.nameAm = nameAm ?? '';
+	$form.descriptionAm = descriptionAm ?? '';
 	$form.status = status;
 
 	import { toast } from 'svelte-sonner';
@@ -84,6 +90,22 @@
 						placeholder="Enter Department Description"
 						required={true}
 						rows={10}
+					/>
+					<InputComp
+						{form}
+						{errors}
+						label="Name (Amharic)"
+						type="text"
+						name="nameAm"
+						placeholder="Optional — shown to visitors browsing in Amharic"
+					/>
+					<InputComp
+						{form}
+						{errors}
+						label="Description (Amharic)"
+						type="textarea"
+						name="descriptionAm"
+						placeholder="Optional — shown to visitors browsing in Amharic"
 					/>
 					<InputComp
 						label="Status"

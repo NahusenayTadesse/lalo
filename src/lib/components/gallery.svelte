@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import Lightbox from './lightbox.svelte';
 
 	/* 1.  each image has thumb + full -------------------------------------- */
@@ -28,7 +29,7 @@
 		>
 			<img
 				src="/files/{image}"
-				alt="{title} gallery image"
+				alt={m.gallery_image_alt({ title })}
 				loading="lazy"
 				class="h-64 w-full object-cover transition-transform duration-300 group-hover:scale-110"
 			/>

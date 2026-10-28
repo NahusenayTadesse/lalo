@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { Button } from '$lib/components/ui/button';
 	import { ArrowRightIcon } from '@lucide/svelte';
 	import { CheckCircleIcon, ShieldCheckIcon, HeartHandshakeIcon } from '@lucide/svelte';
@@ -53,51 +54,44 @@
 	let partners = [
 		{
 			name: 'Lalo Coffee Exports',
-			description:
-				'A premier global commodity partner specializing in vertical supply chain coordination. We manage complex international logistics and quality assurance protocols to deliver high-grade coffee from origin to global roasters.',
+			description: m.aboutus_partner_exp(),
 			icon: Coffee,
 			short: 'LAL_EXP'
 		},
 		{
 			name: 'Lalo Bakery',
-			description:
-				'A bakery experience centered on handcrafted pastries, expertly brewed coffee, and thoughtfully sourced, high-quality ingredients—bringing together rich flavors, warm aromas, and a simple moment to slow down and enjoy.',
+			description: m.aboutus_partner_bak(),
 			icon: Croissant,
 			short: 'LAL_BAK'
 		},
 
 		{
 			name: 'Lalo Laundry',
-			description:
-				'Providing industrial-strength textile care and linen management solutions. We utilize high-capacity automation and eco-friendly processes to meet the rigorous hygiene and volume requirements of the hospitality and healthcare sectors.',
+			description: m.aboutus_partner_lau(),
 			icon: WashingMachine,
 			short: 'LAL_LAU'
 		},
 		{
 			name: 'Lalo Bakery Solutions',
-			description:
-				'End-to-end support for the commercial baking industry, offering advanced machinery, premium ingredients, and optimized production workflows designed to scale output while maintaining artisanal quality.',
+			description: m.aboutus_partner_sol(),
 			icon: Microwave,
 			short: 'LAL_BAK'
 		},
 		{
 			name: 'Lalo Cafe',
-			description:
-				'Specializing in the integration of premium food and beverage concepts within corporate ecosystems. We design and operate high-end social hubs that enhance workplace culture and provide superior hospitality experiences.',
+			description: m.aboutus_partner_caf(),
 			icon: Utensils,
 			short: 'LAL_CAF'
 		},
 		{
 			name: 'Lalo Apartments',
-			description:
-				'A modern residential property management firm focused on asset optimization. We handle the full spectrum of operations, from strategic leasing and tenant retention to preventative maintenance and financial reporting.',
+			description: m.aboutus_partner_apt(),
 			icon: Building,
 			short: 'LAL_APT'
 		},
 		{
 			name: 'Fahem General Trading',
-			description:
-				'A diversified trade powerhouse managing cross-border operations for critical industrial materials and raw goods. We bridge international markets through strategic sourcing, risk management, and robust distribution networks.',
+			description: m.aboutus_partner_fah(),
 			icon: Globe,
 			short: 'FAH_GEN'
 		}
@@ -107,10 +101,10 @@
 </script>
 
 <svelte:head>
-	<title>About Us | Professional Bakery Supplies & Equipment</title>
+	<title>{m.aboutus_meta_title()}</title>
 	<meta
 		name="description"
-		content="From MasterChef to Industry Leader. Lalo Bakery Solutions delivers excellence with a comprehensive portfolio of flours, yeasts, mixes, and equipment for professional bakeries."
+		content={m.home_meta_description()}
 	/>
 	<meta
 		name="keywords"
@@ -118,21 +112,21 @@
 	/>
 
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="Lalo Bakery Solutions: From MasterChef to Industry Leader" />
+	<meta property="og:title" content={m.home_og_title()} />
 	<meta
 		property="og:description"
-		content="Delivering excellence across every stage of production with premium ingredients and technical support."
+		content={m.home_og_description()}
 	/>
 	<meta property="og:image" content="/logo.webp" />
 
 	<meta property="twitter:card" content="summary_large_image" />
 	<meta
 		property="twitter:title"
-		content="Lalo Bakery Solutions | Industry-Leading Bakery Supplies"
+		content={m.home_twitter_title()}
 	/>
 	<meta
 		property="twitter:description"
-		content="Reliable supply chains and technical expertise for the modern bakery. Explore our journey from MasterChef to Lalo."
+		content={m.home_twitter_description()}
 	/>
 	<meta property="twitter:image" content="/logo.webp" />
 </svelte:head>
@@ -153,28 +147,27 @@
 			<div
 				class="inline-block rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary"
 			>
-				Since 2011 • Trusted by Bakeries Worldwide
+				{m.aboutus_badge()}
 			</div>
 
 			<h1 class="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-				Ingredients that deliver.
+				{m.hero_tagline_sentence()}
 			</h1>
 
 			<p class="mx-auto max-w-2xl text-lg text-foreground/70 sm:text-xl">
-				Established in 2011, we've grown from MasterChef into a comprehensive bakery ingredient and
-				equipment supplier serving both small bakeries and large-scale producers.
+				{m.about_intro()}
 			</p>
 
 			<div class="flex flex-col justify-center gap-4 pt-4 sm:flex-row">
 				<Button size="lg" href="/shop" class="gap-2">
-					Explore Our Solutions
+					{m.aboutus_explore()}
 					<ArrowRightIcon class="size-4" />
 				</Button>
-				<Button href="/contact-us" size="lg" variant="outline">Contact Us</Button>
+				<Button href="/contact-us" size="lg" variant="outline">{m.nav_contact_us()}</Button>
 			</div>
 
 			<div class="flex flex-col items-center justify-between gap-4 border-t pt-8 md:flex-row">
-				<p class="text-sm text-foreground/70">Follow us on social media</p>
+				<p class="text-sm text-foreground/70">{m.footer_follow_us()}</p>
 				<div class="grid grid-cols-4 gap-3">
 					{#each socialLinks as social (social.url)}
 						<a
@@ -206,41 +199,36 @@
 				>
 					<img
 						src="/store.webp"
-						alt="Lalo Bakery Solution"
+						alt={m.brand_name()}
 						class="h-full w-full object-cover"
 					/>
 				</div>
 				<div
 					class="shadow-lg-lg absolute -right-2 -bottom-6 max-w-xs rounded-xl bg-primary p-6 text-primary-foreground lg:-right-6"
 				>
-					<p class="text-sm font-semibold">Trusted by bakeries across the region since 2011</p>
+					<p class="text-sm font-semibold">{m.aboutus_trusted_since()}</p>
 				</div>
 			</div>
 
 			<!-- Right side - Content -->
 			<div class="space-y-6">
 				<div>
-					<h2 class="mb-4 text-3xl font-bold sm:text-4xl">Our Journey</h2>
+					<h2 class="mb-4 text-3xl font-bold sm:text-4xl">{m.about_journey()}</h2>
 					<p class="mb-4 text-lg leading-relaxed text-foreground/70">
-						Lalo Bakery Solution was founded in 2011 as MasterChef under the esteemed Lalo General
-						Trading. In response to our evolving mission and growing capabilities, we recently
-						rebranded to better reflect our vision of delivering excellence in baking across every
-						stage of production.
+						{m.aboutus_journey_p1()}
 					</p>
 					<p class="text-lg leading-relaxed text-foreground/70">
-						Today, we are a trusted supplier of high-quality bakery ingredients, equipment, and
-						technical support tailored to the needs of both small-scale and industrial bakeries.
+						{m.aboutus_journey_p2()}
 					</p>
 				</div>
 
 				<Card class="border-primary/20 bg-primary/5">
 					<CardHeader>
-						<CardTitle class="text-lg">Our Mission</CardTitle>
+						<CardTitle class="text-lg">{m.aboutus_mission()}</CardTitle>
 					</CardHeader>
 					<CardContent>
 						<p class="text-foreground/70">
-							Guided by our core values of quality, reliability, and customer satisfaction, we
-							deliver comprehensive solutions that help our clients succeed in a competitive market.
+							{m.aboutus_mission_text()}
 						</p>
 					</CardContent>
 				</Card>
@@ -252,9 +240,9 @@
 <section class="bg-linear-to-b from-transparent via-primary/5 to-transparent px-4 py-20 sm:py-32">
 	<div class="mx-auto max-w-5xl">
 		<div class="mb-16 text-center">
-			<h2 class="mb-4 text-3xl font-bold sm:text-4xl">Our Core Values</h2>
+			<h2 class="mb-4 text-3xl font-bold sm:text-4xl">{m.aboutus_values()}</h2>
 			<p class="mx-auto max-w-2xl text-lg text-foreground/70">
-				These principles guide every decision we make and every product we deliver
+				{m.aboutus_values_sub()}
 			</p>
 		</div>
 
@@ -266,12 +254,11 @@
 					<div class="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
 						<CheckCircleIcon class="size-6 text-primary" />
 					</div>
-					<CardTitle>Quality</CardTitle>
+					<CardTitle>{m.aboutus_value_quality()}</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<p class="text-foreground/70">
-						We maintain the highest standards in every ingredient and equipment we supply, ensuring
-						consistent excellence in your baking operations.
+						{m.aboutus_value_quality_text()}
 					</p>
 				</CardContent>
 			</Card>
@@ -283,12 +270,11 @@
 					<div class="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
 						<ShieldCheckIcon class="size-6 text-primary" />
 					</div>
-					<CardTitle>Reliability</CardTitle>
+					<CardTitle>{m.aboutus_value_reliability()}</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<p class="text-foreground/70">
-						Our consistent supply chain and technical expertise ensure you can depend on us for all
-						your bakery needs, every single time.
+						{m.aboutus_value_reliability_text()}
 					</p>
 				</CardContent>
 			</Card>
@@ -300,12 +286,11 @@
 					<div class="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
 						<HeartHandshakeIcon class="size-6 text-primary" />
 					</div>
-					<CardTitle>Customer Satisfaction</CardTitle>
+					<CardTitle>{m.aboutus_value_satisfaction()}</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<p class="text-foreground/70">
-						Your success is our success. We provide dedicated support and tailored solutions to help
-						your bakery thrive and grow.
+						{m.aboutus_value_satisfaction_text()}
 					</p>
 				</CardContent>
 			</Card>
@@ -320,9 +305,9 @@
 	<div class="absolute inset-0 -z-1 bg-black/60"></div>
 	<div class="z-1 mx-auto max-w-5xl">
 		<div class="mb-16 text-center">
-			<h2 class="mb-4 text-3xl font-bold text-white sm:text-4xl">Our Product Portfolio</h2>
+			<h2 class="mb-4 text-3xl font-bold text-white sm:text-4xl">{m.about_portfolio()}</h2>
 			<p class="mx-auto max-w-2xl text-lg text-white/70">
-				Comprehensive solutions for every stage of your baking production
+				{m.aboutus_portfolio_sub()}
 			</p>
 		</div>
 
@@ -334,26 +319,26 @@
 					<div class="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
 						<WheatIcon class="size-6 text-primary" />
 					</div>
-					<CardTitle>Premium Ingredients</CardTitle>
+					<CardTitle>{m.aboutus_ingredients()}</CardTitle>
 				</CardHeader>
 				<CardContent class="space-y-3">
-					<p class="text-foreground/70">High-quality bakery ingredients including:</p>
+					<p class="text-foreground/70">{m.aboutus_ingredients_lead()}</p>
 					<ul class="flex flex-col gap-2 text-sm text-foreground/70">
 						<li class="flex gap-2">
 							<span class="font-bold text-primary">•</span>
-							<span>Flours and specialty flour blends</span>
+							<span>{m.aboutus_ing_flours()}</span>
 						</li>
 						<li class="flex gap-2">
 							<span class="font-bold text-primary">•</span>
-							<span>Yeasts and improvers</span>
+							<span>{m.aboutus_ing_yeasts()}</span>
 						</li>
 						<li class="flex gap-2">
 							<span class="font-bold text-primary">•</span>
-							<span>Mixes and specialty products</span>
+							<span>{m.aboutus_ing_mixes()}</span>
 						</li>
 						<li class="flex gap-2">
 							<span class="font-bold text-primary">•</span>
-							<span>Halal-certified options</span>
+							<span>{m.aboutus_ing_halal()}</span>
 						</li>
 					</ul>
 				</CardContent>
@@ -366,26 +351,26 @@
 					<div class="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
 						<ToolCase class="size-6 text-primary" />
 					</div>
-					<CardTitle>Bakery Equipment</CardTitle>
+					<CardTitle>{m.aboutus_equipment()}</CardTitle>
 				</CardHeader>
 				<CardContent class="space-y-3">
-					<p class="text-foreground/70">Durable, professional-grade equipment designed for:</p>
+					<p class="text-foreground/70">{m.aboutus_equipment_lead()}</p>
 					<ul class="flex flex-col gap-2 text-sm text-foreground/70">
 						<li class="flex gap-2">
 							<span class="font-bold text-accent">•</span>
-							<span>Small-scale bakeries</span>
+							<span>{m.aboutus_eq_small()}</span>
 						</li>
 						<li class="flex gap-2">
 							<span class="font-bold text-accent">•</span>
-							<span>Industrial production</span>
+							<span>{m.aboutus_eq_industrial()}</span>
 						</li>
 						<li class="flex gap-2">
 							<span class="font-bold text-accent">•</span>
-							<span>Consistent quality output</span>
+							<span>{m.aboutus_eq_consistent()}</span>
 						</li>
 						<li class="flex gap-2">
 							<span class="font-bold text-accent">•</span>
-							<span>Long-lasting performance</span>
+							<span>{m.aboutus_eq_long()}</span>
 						</li>
 					</ul>
 				</CardContent>
@@ -398,26 +383,26 @@
 					<div class="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
 						<BookOpenIcon class="size-6 text-primary" />
 					</div>
-					<CardTitle>Technical Support</CardTitle>
+					<CardTitle>{m.aboutus_support()}</CardTitle>
 				</CardHeader>
 				<CardContent class="space-y-3">
-					<p class="text-foreground/70">Expert guidance and support including:</p>
+					<p class="text-foreground/70">{m.aboutus_support_lead()}</p>
 					<ul class="flex flex-col gap-2 text-sm text-foreground/70">
 						<li class="flex gap-2">
 							<span class="font-bold text-primary">•</span>
-							<span>Product consultation</span>
+							<span>{m.aboutus_sup_consult()}</span>
 						</li>
 						<li class="flex gap-2">
 							<span class="font-bold text-primary">•</span>
-							<span>Production optimization</span>
+							<span>{m.aboutus_sup_optim()}</span>
 						</li>
 						<li class="flex gap-2">
 							<span class="font-bold text-primary">•</span>
-							<span>Quality assurance</span>
+							<span>{m.aboutus_sup_qa()}</span>
 						</li>
 						<li class="flex gap-2">
 							<span class="font-bold text-primary">•</span>
-							<span>Industry expertise</span>
+							<span>{m.aboutus_sup_expertise()}</span>
 						</li>
 					</ul>
 				</CardContent>
@@ -430,26 +415,26 @@
 					<div class="mb-4 inline-flex rounded-lg bg-primary/10 p-3">
 						<LeafIcon class="size-6 text-primary" />
 					</div>
-					<CardTitle>Dietary & Specialty Options</CardTitle>
+					<CardTitle>{m.aboutus_dietary()}</CardTitle>
 				</CardHeader>
 				<CardContent class="space-y-3">
-					<p class="text-foreground/70">Meet diverse consumer demands with:</p>
+					<p class="text-foreground/70">{m.aboutus_dietary_lead()}</p>
 					<ul class="flex flex-col gap-2 text-sm text-foreground/70">
 						<li class="flex gap-2">
 							<span class="font-bold text-accent">•</span>
-							<span>Gluten-free options</span>
+							<span>{m.aboutus_diet_gluten()}</span>
 						</li>
 						<li class="flex gap-2">
 							<span class="font-bold text-accent">•</span>
-							<span>Sugar-free alternatives</span>
+							<span>{m.aboutus_diet_sugar()}</span>
 						</li>
 						<li class="flex gap-2">
 							<span class="font-bold text-accent">•</span>
-							<span>Vegan-friendly products</span>
+							<span>{m.aboutus_diet_vegan()}</span>
 						</li>
 						<li class="flex gap-2">
 							<span class="font-bold text-accent">•</span>
-							<span>Health-conscious solutions</span>
+							<span>{m.aboutus_diet_health()}</span>
 						</li>
 					</ul>
 				</CardContent>
@@ -461,9 +446,9 @@
 <section class="bg-linear-to-b from-transparent via-accent/5 to-transparent px-4 py-20 sm:py-32">
 	<div class="mx-auto max-w-5xl">
 		<div class="mb-16 text-center">
-			<h2 class="mb-4 text-3xl font-bold sm:text-4xl">Certifications & Compliance</h2>
+			<h2 class="mb-4 text-3xl font-bold sm:text-4xl">{m.aboutus_cert()}</h2>
 			<p class="mx-auto max-w-2xl text-lg text-foreground/70">
-				Meeting the highest standards for quality and compliance
+				{m.aboutus_cert_sub()}
 			</p>
 		</div>
 
@@ -477,14 +462,13 @@
 							<BadgeCheckIcon class="size-6 text-primary" />
 						</div>
 						<div>
-							<CardTitle>Halal Certified</CardTitle>
+							<CardTitle>{m.about_hl_halal()}</CardTitle>
 						</div>
 					</div>
 				</CardHeader>
 				<CardContent>
 					<p class="text-foreground/70">
-						Our wide range of Halal-certified ingredients ensures your bakery can meet diverse
-						consumer demands while maintaining the highest standards of compliance and quality.
+						{m.aboutus_halal_text()}
 					</p>
 				</CardContent>
 			</Card>
@@ -498,14 +482,13 @@
 							<BadgeCheckIcon class="size-6 text-primary" />
 						</div>
 						<div>
-							<CardTitle>Quality Standards</CardTitle>
+							<CardTitle>{m.aboutus_quality_std()}</CardTitle>
 						</div>
 					</div>
 				</CardHeader>
 				<CardContent>
 					<p class="text-foreground/70">
-						All our products undergo rigorous quality testing and comply with international food
-						safety standards, ensuring excellence in every batch.
+						{m.aboutus_quality_std_text()}
 					</p>
 				</CardContent>
 			</Card>
@@ -523,7 +506,7 @@
 			<h3
 				class="mt-4 max-w-4xl text-4xl font-semibold tracking-tighter text-white sm:text-5xl lg:text-6xl"
 			>
-				Our <span class="text-primary">Varied Subsidiaries and Sister Companies</span>
+				{m.home_partners_title_lead()} <span class="text-primary">{m.aboutus_partners_accent()}</span>
 			</h3>
 		</div>
 
@@ -578,28 +561,27 @@
 		>
 			<div class="flex flex-col gap-4">
 				<h2 class="text-3xl font-bold text-primary-foreground sm:text-4xl">
-					Ready to Transform Your Bakery?
+					{m.aboutus_cta_title()}
 				</h2>
 				<p class="mx-auto max-w-2xl text-lg text-primary-foreground/90">
-					Let us help you achieve excellence with our premium ingredients, equipment, and expert
-					support.
+					{m.aboutus_cta_text()}
 				</p>
 			</div>
 
 			<div class="flex flex-col justify-center gap-4 sm:flex-row">
 				<Button href="/about" size="lg" variant="secondary" class="gap-2">
-					Get Started Today
+					{m.why_cta_button()}
 					<ArrowRightIcon class="size-4" />
 				</Button>
 				<Button href="tel:+251908454545" size="lg" variant="outline">
 					<PhoneIcon class="size-4" />
-					Call Us
+					{m.chat_call_us()}
 				</Button>
 			</div>
 
 			<div class="border-t border-primary-foreground/20 pt-4">
 				<p class="text-sm text-primary-foreground/80">
-					Have questions? Our team is ready to help you find the perfect solution.
+					{m.aboutus_cta_footer()}
 				</p>
 			</div>
 		</div>

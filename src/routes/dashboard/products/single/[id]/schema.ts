@@ -11,11 +11,17 @@ const ACCEPTED_FILE_TYPES = [
 
 export const edit = z.object({
 	productName: z.string().min(1, { message: 'Product Name is required.' }),
+	// Amharic, optional — left blank, the public site shows the English name.
+	productNameAm: z.string().max(255).optional(),
 	category: z.number('Category cannot be empty. Please select a Category'),
 
 	description: z
 		.string()
 		.max(500, { message: "Product description can't be more than 500 characters." })
+		.optional(),
+	descriptionAm: z
+		.string()
+		.max(1000, { message: "Amharic description can't be more than 1000 characters." })
 		.optional(),
 	// No `quantity`: stock only changes through the Adjust dialog, which keeps the
 	// ledger. Editing it here overwrote whatever deliveries had changed since the

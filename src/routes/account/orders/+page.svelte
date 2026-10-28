@@ -1,11 +1,14 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
+	import { orderStatusLabel } from '$lib/status-labels';
+
 	// Svelte 5 Runes
 	let { data } = $props();
 	let pendingOrders = $derived(data.pendingOrders || []);
 </script>
 
 <svelte:head>
-	<title>Live Order Tracking - Lalo Bakery Solutions</title>
+	<title>{m.acc_tracking_meta_title()}</title>
 </svelte:head>
 
 <div class="mx-auto min-h-screen max-w-5xl space-y-8 bg-background p-6 text-foreground">
@@ -17,10 +20,10 @@
 				></span>
 				<span class="relative inline-flex h-3 w-3 rounded-full bg-primary"></span>
 			</span>
-			<h1 class="text-3xl font-bold tracking-tight">Live Order Tracking</h1>
+			<h1 class="text-3xl font-bold tracking-tight">{m.acc_tracking_title()}</h1>
 		</div>
 		<p class="mt-1 text-muted-foreground">
-			Real-time status configurations of your open, processing receipts.
+			{m.acc_tracking_hint()}
 		</p>
 	</header>
 
@@ -41,9 +44,9 @@
 					stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="m16 10-4 4-2-2" /></svg
 				>
 			</div>
-			<h3 class="text-lg font-semibold">No active shipments</h3>
+			<h3 class="text-lg font-semibold">{m.acc_no_shipments()}</h3>
 			<p class="mt-1 max-w-sm text-sm text-muted-foreground">
-				You do not currently have any pending transactions requiring tracking parameters.
+				{m.acc_no_shipments_hint()}
 			</p>
 		</div>
 	{:else}
@@ -58,22 +61,22 @@
 						<div class="space-y-1">
 							<div class="flex items-center gap-2">
 								<span class="font-mono text-sm font-semibold text-muted-foreground"
-									>Order ID: #{order.id}</span
+									>{m.acc_order_id({ id: order.id })}</span
 								>
 								<span
 									class="inline-flex items-center rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary capitalize"
 								>
-									{order.status}
+									{orderStatusLabel(order.status)}
 								</span>
 							</div>
 							<p class="text-xs text-muted-foreground">
-								Initiated on {order.createdAt} • Updated {order.updatedAt}
+								{m.acc_initiated({ created: order.createdAt, updated: order.updatedAt })}
 							</p>
 						</div>
 						<div class="text-sm sm:text-right">
-							<p class="text-xs font-medium text-muted-foreground">Estimated Expenditure</p>
+							<p class="text-xs font-medium text-muted-foreground">{m.acc_estimated()}</p>
 							<p class="font-mono text-xl font-bold text-foreground">
-								ETB {order.orderTotal.toFixed(2)}
+								{m.price_etb({ amount: order.orderTotal.toFixed(2) })}
 							</p>
 						</div>
 					</div>
@@ -90,7 +93,7 @@
 
 					<div class="bg-muted/10 p-6">
 						<h4 class="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-							Shipment Manifest
+							{m.acc_manifest()}
 						</h4>
 						<ul
 							class="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background"
@@ -102,10 +105,12 @@
 									<div class="space-y-0.5">
 										<p class="font-medium text-foreground">{item.productName}</p>
 										<p class="font-mono text-xs text-muted-foreground">
-											Qty: {item.quantity} × ETB {item?.price}
+											{m.acc_qty_line({ quantity: item.quantity, price: m.price_etb({ amount: item?.price }) })}
 										</p>
 									</div>
-									<span class="font-mono font-medium text-foreground">ETB {item?.total} </span>
+									<span class="font-mono font-medium text-foreground"
+										>{m.price_etb({ amount: item?.total })}</span
+									>
 								</li>
 							{/each}
 						</ul>

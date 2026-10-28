@@ -1,3 +1,5 @@
+import { m } from '$lib/paraglide/messages.js';
+import { localized } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import { orders, customers, products, orderItems } from '$lib/server/db/schema';
 import { eq, sql, inArray } from 'drizzle-orm';
@@ -47,7 +49,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 					.select({
 						id: orderItems.id,
 						orderId: orderItems.orderId,
-						product: products.name,
+						product: localized(products.name, products.nameAm),
 						quantity: orderItems.quantity,
 						productId: orderItems.productId,
 						// A decimal comes back from mysql2 as a string; the page calls `.toFixed`
@@ -72,7 +74,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			customer: null,
 			form: null,
 			reciepts: [],
-			error: 'Failed to load customer dashboard.'
+			error: m.acc_load_failed()
 		};
 	}
 };

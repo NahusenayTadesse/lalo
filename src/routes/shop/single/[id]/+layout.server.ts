@@ -1,3 +1,5 @@
+import { m } from '$lib/paraglide/messages.js';
+import { localized, localizedOrNull } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import { productCategories, products, prices, productImages } from '$lib/server/db/schema';
 import { eq, sql, and, ne, asc } from 'drizzle-orm';
@@ -10,7 +12,7 @@ export const load: LayoutServerLoad = async ({ params }) => {
 	// and turned a mistyped or stale URL into a 500. Settle the id once, up front.
 	const productId = Number(params.id);
 	if (!Number.isInteger(productId) || productId <= 0) {
-		error(404, 'Product not found');
+		error(404, m.shop_product_not_found());
 	}
 
 	// No aggregate here, deliberately. With `min(prices.price)` in the select and
@@ -22,9 +24,9 @@ export const load: LayoutServerLoad = async ({ params }) => {
 	const product = await db
 		.select({
 			productId: products.id,
-			productName: products.name,
-			description: products.description,
-			category: productCategories.name,
+			productName: localized(products.name, products.nameAm),
+			description: localizedOrNull(products.description, products.descriptionAm),
+			category: localizedOrNull(productCategories.name, productCategories.nameAm),
 			image: products.featuredImage,
 			categoryId: products.categoryId
 		})
@@ -35,7 +37,7 @@ export const load: LayoutServerLoad = async ({ params }) => {
 		.then((rows) => rows[0]);
 
 	if (!product) {
-		error(404, 'Product not found');
+		error(404, m.shop_product_not_found());
 	}
 
 	const result = await db
@@ -65,12 +67,12 @@ export const load: LayoutServerLoad = async ({ params }) => {
 			: await db
 					.select({
 						productId: products.id,
-						productName: products.name,
+						productName: localized(products.name, products.nameAm),
 						priceId: prices.id,
 						price: prices.price,
 						amount: prices.amount,
 						image: products.featuredImage,
-						category: productCategories.name
+						category: localizedOrNull(productCategories.name, productCategories.nameAm)
 					})
 					.from(products)
 					.leftJoin(productCategories, eq(productCategories.id, products.categoryId))

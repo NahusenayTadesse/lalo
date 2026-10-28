@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { useCart } from '$lib/hooks/cart.svelte.js';
 
 	// Set app and cart hooks
@@ -25,51 +26,44 @@
 	let partners = [
 		{
 			name: 'Lalo Coffee Exports',
-			description:
-				'Global commodity supply chain coordination and international logistics management.',
+			description: m.home_partner_exp(),
 			icon: Coffee,
 			short: 'LAL_EXP'
 		},
 		{
 			name: 'Lalo Bakery',
-			description:
-				'A bakery experience focused on handcrafted pastries, expertly brewed coffee, and high-quality ingredients sourced with care.',
+			description: m.home_partner_bak(),
 			icon: Croissant,
 			short: 'LAL_BAK'
 		},
 
 		{
 			name: 'Lalo Laundry',
-			description:
-				'Commercial-scale linen and textile services for major hospitality and industrial clients.',
+			description: m.home_partner_lau(),
 			icon: WashingMachine,
 			short: 'LAL_LAU'
 		},
 		{
 			name: 'Lalo Fixtec',
-			description:
-				'Professional-grade mechanical tools and bulk supply solutions for infrastructure, industrial, and distribution operations.',
+			description: m.home_partner_fix(),
 			icon: Cog,
 			short: 'LAL_FIX'
 		},
 		{
 			name: 'Lalo Cafe',
-			description:
-				'Curated beverage and food services integrated within corporate and commercial environments.',
+			description: m.home_partner_caf(),
 			icon: Utensils,
 			short: 'LAL_CAF'
 		},
 		{
 			name: 'Lalo Apartments',
-			description:
-				'Comprehensive residential property management services encompassing leasing, maintenance, and daily administrative operations.',
+			description: m.home_partner_apt(),
 			icon: Building,
 			short: 'LAL_APT'
 		},
 		{
 			name: 'Fahem General Trading',
-			description:
-				'Diversified international trade operations across key industrial and material sectors.',
+			description: m.home_partner_fah(),
 			icon: Globe,
 			short: 'FAH_GEN'
 		}
@@ -77,10 +71,10 @@
 </script>
 
 <svelte:head>
-	<title>Lalo Bakery Solutions | Professional Bakery Supplies & Equipment</title>
+	<title>{m.home_meta_title()}</title>
 	<meta
 		name="description"
-		content="From MasterChef to Industry Leader. Lalo Bakery Solutions delivers excellence with a comprehensive portfolio of flours, yeasts, mixes, and equipment for professional bakeries."
+		content={m.home_meta_description()}
 	/>
 	<meta
 		name="keywords"
@@ -88,21 +82,21 @@
 	/>
 
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="Lalo Bakery Solutions: From MasterChef to Industry Leader" />
+	<meta property="og:title" content={m.home_og_title()} />
 	<meta
 		property="og:description"
-		content="Delivering excellence across every stage of production with premium ingredients and technical support."
+		content={m.home_og_description()}
 	/>
 	<meta property="og:image" content="/logo.webp" />
 
 	<meta property="twitter:card" content="summary_large_image" />
 	<meta
 		property="twitter:title"
-		content="Lalo Bakery Solutions | Industry-Leading Bakery Supplies"
+		content={m.home_twitter_title()}
 	/>
 	<meta
 		property="twitter:description"
-		content="Reliable supply chains and technical expertise for the modern bakery. Explore our journey from MasterChef to Lalo."
+		content={m.home_twitter_description()}
 	/>
 	<meta property="twitter:image" content="/logo.webp" />
 </svelte:head>
@@ -120,7 +114,8 @@
 			<h3
 				class="mt-4 max-w-4xl text-4xl font-semibold tracking-tighter text-white sm:text-5xl lg:text-6xl"
 			>
-				Our <span class="text-primary">Subsidiaries and Sister Companies</span>
+				{m.home_partners_title_lead()}
+				<span class="text-primary">{m.home_partners_title_accent()}</span>
 			</h3>
 		</div>
 
@@ -166,9 +161,9 @@
 	<main class="flex flex-col items-center justify-center px-4 py-12 md:py-20">
 		<!-- Section Header -->
 		<div class="mb-12 max-w-2xl text-center">
-			<h2 class="mb-4 text-3xl font-bold text-foreground md:text-4xl">What Our Customers Say</h2>
+			<h2 class="mb-4 text-3xl font-bold text-foreground md:text-4xl">{m.home_testimonials_title()}</h2>
 			<p class="text-lg text-muted-foreground">
-				Don't just take our word for it. Here's what people are saying about their experience.
+				{m.home_testimonials_subtitle()}
 			</p>
 		</div>
 

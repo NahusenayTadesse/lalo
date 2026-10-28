@@ -29,7 +29,7 @@
 		}
 	);
 	function addIng() {
-		$form.ingredients = [...$form.ingredients, { ingredient: '', amount: '1' }];
+		$form.ingredients = [...$form.ingredients, { ingredient: '', amount: '1', ingredientAm: '', amountAm: '' }];
 	}
 	export const snapshot: Snapshot = { capture, restore };
 
@@ -94,6 +94,33 @@
 			required
 		/>
 
+		<InputComp
+			{form}
+			{errors}
+			type="text"
+			name="titleAm"
+			label="Title (Amharic)"
+			placeholder="Optional — shown to visitors browsing in Amharic"
+		/>
+
+		<InputComp
+			{form}
+			{errors}
+			type="textarea"
+			name="descriptionAm"
+			label="Recipe Description (Amharic)"
+			placeholder="Optional — shown to visitors browsing in Amharic"
+		/>
+
+		<InputComp
+			{form}
+			{errors}
+			type="textarea"
+			name="instructionsAm"
+			label="Recipe Instructions (Amharic)"
+			placeholder="Optional — shown to visitors browsing in Amharic"
+		/>
+
 		<div class="mb-4 flex justify-end">
 			<Button type="button" size="sm" class="gap-2" onclick={() => addIng()}>
 				<Plus class="h-4 w-4" />
@@ -136,6 +163,14 @@
 					{#if $errors.ingredients?.[i]?.amount}
 						<p class="text-sm text-red-500">{$errors.ingredients[i].amount}</p>
 					{/if}
+				</div>
+				<div class={arrParts}>
+					<Label>Ingredient (Amharic)</Label>
+					<Input type="text" placeholder="Optional" bind:value={$form.ingredients[i].ingredientAm} />
+				</div>
+				<div class={arrParts}>
+					<Label>Amount (Amharic)</Label>
+					<Input type="text" placeholder="Optional" bind:value={$form.ingredients[i].amountAm} />
 				</div>
 				<Button
 					type="button"

@@ -1,3 +1,4 @@
+import { localized, localizedOrNull } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import { testimonials as paymentMethods } from '$lib/server/db/schema';
 import type { PageServerLoad } from './$types.js';
@@ -7,9 +8,9 @@ export const load: PageServerLoad = async () => {
 		.select({
 			id: paymentMethods.id,
 			name: paymentMethods.name,
-			position: paymentMethods.position,
+			position: localizedOrNull(paymentMethods.position, paymentMethods.positionAm),
 			avatar: paymentMethods.avatar,
-			testimonial: paymentMethods.message
+			testimonial: localized(paymentMethods.message, paymentMethods.messageAm)
 		})
 		.from(paymentMethods);
 

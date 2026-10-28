@@ -26,6 +26,7 @@
 				return renderComponent(Edit, {
 					id: row.original.id,
 					name: row.original.name,
+					nameAm: row.original.nameAm,
 					fee: row.original.fee,
 					action: '?/edit',
 					data: data?.editForm,
@@ -63,6 +64,7 @@
 				return renderComponent(Edit, {
 					id: row.original.id,
 					name: row.original.name,
+					nameAm: row.original.nameAm,
 					description: row.original.description,
 					action: '?/edit',
 					data: data?.editForm,
@@ -104,6 +106,14 @@
 		<DialogComp IconComp={Plus} title="Add New Delivery Address" variant="default">
 			<form action="?/add" use:enhance id="main" class="flex flex-col gap-4" method="post">
 				<InputComp {form} {errors} label="Place Name" type="text" name="name" required={true} />
+				<InputComp
+					{form}
+					{errors}
+					label="Place Name (Amharic)"
+					type="text"
+					name="nameAm"
+					placeholder="Optional — shown to visitors browsing in Amharic"
+				/>
 
 				<InputComp
 					{form}

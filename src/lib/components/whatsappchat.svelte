@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { X, Send, Phone } from '@lucide/svelte';
@@ -8,14 +9,10 @@
 		phones = ["+251908454545","+251911234567"],
 		email,
 		countryCode = '251',
-		businessName = 'Lalo Bakery Solutions',
-		greeting = 'Hello! 👋 How can we help you today? Send us a message and our team will reply on WhatsApp.',
-		replyTime = 'Typically replies within an hour',
-		quickReplies = [
-			'I would like to place an order',
-			'I need a price quote',
-			'Where are you located?'
-		],
+		businessName = m.brand_name(),
+		greeting = m.chat_greeting(),
+		replyTime = m.chat_reply_time(),
+		quickReplies = [m.chat_quick_order(), m.chat_quick_quote(), m.chat_quick_location()],
 		/** Appends the page the visitor was on, so staff have context. */
 		includePageContext = true
 	}: {
@@ -64,7 +61,7 @@
 		if (!active) return '#';
 
 		const body = includePageContext
-			? `${message.trim()}\n\n— sent from ${page.url.origin}${page.url.pathname}`
+			? `${message.trim()}\n\n— ${m.chat_sent_from({ url: page.url.origin + page.url.pathname })}`
 			: message.trim();
 
 		return `https://wa.me/${active.number}?text=${encodeURIComponent(body)}`;
@@ -144,7 +141,7 @@
 					<Button
 						type="button"
 						onclick={() => (open = false)}
-						aria-label="Close chat"
+						aria-label={m.chat_close()}
 						class="-ml-1 shrink-0 p-1 text-primary-foreground/70 transition-colors hover:text-primary-foreground"
 					>
 						<X class="size-4" />
@@ -179,7 +176,7 @@
 				{#if lines.length > 1}
 					<div class="flex flex-wrap items-center gap-1.5 border-t border-border px-4 py-3">
 						<span class="mr-1 text-[0.65rem] tracking-widest text-muted-foreground uppercase">
-							Send to
+							{m.chat_send_to()}
 						</span>
 						{#each lines as line, i (line.number)}
 							<Button
@@ -203,8 +200,8 @@
 						onkeydown={onComposerKeydown}
 						rows="3"
 						maxlength="1000"
-						placeholder="Type your message…"
-						aria-label="Your message"
+						placeholder={m.chat_placeholder()}
+						aria-label={m.chat_your_message()}
 						class="w-full resize-none border border-input bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
 					></textarea>
 
@@ -218,11 +215,11 @@
 						class="mt-2 flex h-11 w-full items-center justify-center gap-2 bg-[#25D366] text-xs font-semibold tracking-widest text-white uppercase transition-all hover:bg-[#1eb355] aria-disabled:pointer-events-none aria-disabled:opacity-50"
 					>
 						<Send class="size-3.5" />
-						Send via WhatsApp
+						{m.chat_send_whatsapp()}
 					</a>
 
 					<p class="mt-2 text-center text-[0.65rem] text-muted-foreground">
-						Opens WhatsApp with your message ready to send.
+						{m.chat_opens_hint()}
 					</p>
 				</div>
 
@@ -234,7 +231,7 @@
 						class="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-primary"
 					>
 						<Phone class="size-3" />
-						Call us
+						{m.chat_call_us()}
 					</a>
 					{#if email}
 						<span class="text-border">|</span>
@@ -242,7 +239,7 @@
 							href="mailto:{email}"
 							class="text-muted-foreground transition-colors hover:text-primary"
 						>
-							Email us
+							{m.chat_email_us()}
 						</a>
 					{/if}
 				</div>
@@ -254,7 +251,7 @@
 			type="button"
 			onclick={toggle}
 			aria-expanded={open}
-			aria-label={open ? 'Close chat' : 'Chat with us on WhatsApp'}
+			aria-label={open ? m.chat_close() : m.chat_open()}
 			class="lift flex size-14 items-center justify-center bg-primary text-primary-foreground shadow-xl transition-colors hover:bg-primary/90"
 		>
 			{#if open}

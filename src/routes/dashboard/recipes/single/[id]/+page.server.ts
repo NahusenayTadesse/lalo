@@ -3,6 +3,7 @@ import { zod4 } from 'sveltekit-superforms/adapters';
 
 import { edit } from './schema';
 
+import { translation } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import { user, recipeIngredients, recipes } from '$lib/server/db/schema';
 
@@ -24,7 +25,18 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: 'Please check your form data.' });
 		}
 
-		const { title, cookTime, prepTime, description, ingredients, instructions, image } = form.data;
+		const {
+			title,
+			cookTime,
+			prepTime,
+			description,
+			ingredients,
+			instructions,
+			titleAm,
+			descriptionAm,
+			instructionsAm,
+			image
+		} = form.data;
 
 		try {
 			await db.transaction(async (tx) => {
@@ -42,6 +54,9 @@ export const actions: Actions = {
 							prepTime,
 							description,
 							instructions,
+							titleAm: translation(titleAm),
+							descriptionAm: translation(descriptionAm),
+							instructionsAm: translation(instructionsAm),
 							featuredImage
 						})
 						.where(eq(recipes.id, Number(id)));
@@ -53,7 +68,10 @@ export const actions: Actions = {
 							cookTime,
 							prepTime,
 							description,
-							instructions
+							instructions,
+							titleAm: translation(titleAm),
+							descriptionAm: translation(descriptionAm),
+							instructionsAm: translation(instructionsAm)
 						})
 						.where(eq(recipes.id, Number(id)));
 				}
@@ -66,7 +84,9 @@ export const actions: Actions = {
 						ingredients.map((item) => ({
 							recipeId: Number(id),
 							name: item.ingredient,
-							amount: item.amount
+							amount: item.amount,
+							nameAm: translation(item.ingredientAm),
+							amountAm: translation(item.amountAm)
 						}))
 					);
 				}

@@ -16,6 +16,11 @@ export const add = z.object({
 
 	instructions: z.string('Instructions are required.'),
 
+	// Amharic, optional — left blank, the public site shows the English text.
+	titleAm: z.string().max(255).optional(),
+	descriptionAm: z.string().optional(),
+	instructionsAm: z.string().optional(),
+
 	prepTime: z.number('Prep Time is required').positive('Prep Time must be a positive number.'),
 
 	cookTime: z.number('Cook Time is required').positive('Cook Time must be a positive number.'),
@@ -23,7 +28,9 @@ export const add = z.object({
 	ingredients: z
 		.object({
 			ingredient: z.string('Ingredients are required.'),
-			amount: z.string('Amount are required.')
+			amount: z.string('Amount are required.'),
+			ingredientAm: z.string().max(255).optional(),
+			amountAm: z.string().max(100).optional()
 		})
 		.array(),
 

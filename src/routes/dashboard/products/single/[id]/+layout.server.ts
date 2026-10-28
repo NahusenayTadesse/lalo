@@ -70,7 +70,9 @@ export const load: LayoutServerLoad = async ({ params, locals }) => {
 		.select({
 			id: products.id,
 			name: products.name,
+			nameAm: products.nameAm,
 			description: products.description,
+			descriptionAm: products.descriptionAm,
 			category: productCategories.name,
 			categoryId: productCategories.id,
 			quantity: products.quantity,

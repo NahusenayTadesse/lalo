@@ -2,6 +2,7 @@ import { superValidate, message } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 
 import { add } from './schema';
+import { translation } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import { recipeIngredients, recipes } from '$lib/server/db/schema';
 import type { Actions } from './$types';
@@ -29,7 +30,18 @@ export const actions: Actions = {
 			return message(form, { type: 'error', text: 'Please check your form data.' });
 		}
 
-		const { title, cookTime, prepTime, description, ingredients, instructions, image } = form.data;
+		const {
+			title,
+			cookTime,
+			prepTime,
+			description,
+			ingredients,
+			instructions,
+			titleAm,
+			descriptionAm,
+			instructionsAm,
+			image
+		} = form.data;
 
 		try {
 			await db.transaction(async (tx) => {
@@ -46,6 +58,9 @@ export const actions: Actions = {
 						prepTime,
 						description,
 						instructions,
+						titleAm: translation(titleAm),
+						descriptionAm: translation(descriptionAm),
+						instructionsAm: translation(instructionsAm),
 						featuredImage
 					})
 					.$returningId();
@@ -57,7 +72,9 @@ export const actions: Actions = {
 					const imageRecords = ingredients.map((url) => ({
 						recipeId: newRecipeId,
 						name: url.ingredient,
-						amount: url.amount
+						amount: url.amount,
+						nameAm: translation(url.ingredientAm),
+						amountAm: translation(url.amountAm)
 					}));
 
 					await tx.insert(recipeIngredients).values(imageRecords);

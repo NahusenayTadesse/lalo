@@ -26,6 +26,9 @@ export const freeDelivery = mysqlTable('free_delivery', {
 export const placeNames = mysqlTable('place_names', {
 	id: int('id').primaryKey().autoincrement(),
 	name: varchar('name', { length: 100 }).notNull().unique(),
+	// Amharic translation, shown on the public site when the visitor picks Amharic.
+	// Optional: an empty value falls back to the English column.
+	nameAm: varchar('name_am', { length: 100 }),
 	fee: decimal('fee', { precision: 10, scale: 2 }).notNull(),
 	...secureFields
 });
@@ -35,6 +38,10 @@ export const products = mysqlTable('products', {
 	name: varchar('name', { length: 50 }).notNull(),
 	featuredImage: varchar('featured_image', { length: 255 }),
 	description: varchar('description', { length: 255 }),
+	// Amharic translation, shown on the public site when the visitor picks Amharic.
+	// Optional: an empty value falls back to the English column.
+	nameAm: varchar('name_am', { length: 255 }),
+	descriptionAm: text('description_am'),
 	categoryId: int('category_id').references(() => productCategories.id, { onDelete: 'set null' }),
 	quantity: int('quantity').notNull().default(0),
 	commissionAmount: decimal('commission_amount', { precision: 10, scale: 2 }).notNull(),
@@ -75,6 +82,10 @@ export const discounts = mysqlTable('discounts', {
 	productId: int('product_id').references(() => products.id, { onDelete: 'cascade' }),
 	name: varchar('name', { length: 50 }).notNull().unique(),
 	description: varchar('description', { length: 255 }),
+	// Amharic translation, shown on the public site when the visitor picks Amharic.
+	// Optional: an empty value falls back to the English column.
+	nameAm: varchar('name_am', { length: 255 }),
+	descriptionAm: text('description_am'),
 	...secureFields
 });
 
@@ -82,6 +93,10 @@ export const productCategories = mysqlTable('product_categories', {
 	id: int('id').autoincrement().primaryKey(),
 	name: varchar('name', { length: 50 }).notNull().unique(),
 	description: varchar('description', { length: 255 }),
+	// Amharic translation, shown on the public site when the visitor picks Amharic.
+	// Optional: an empty value falls back to the English column.
+	nameAm: varchar('name_am', { length: 255 }),
+	descriptionAm: text('description_am'),
 	...secureFields
 });
 
@@ -170,6 +185,11 @@ export const recipes = mysqlTable('recipes', {
 	title: varchar('title', { length: 255 }).notNull(),
 	description: text('description'),
 	instructions: text('instructions').notNull(), // Can store markdown or JSON steps
+	// Amharic translation, shown on the public site when the visitor picks Amharic.
+	// Optional: an empty value falls back to the English column.
+	titleAm: varchar('title_am', { length: 255 }),
+	descriptionAm: text('description_am'),
+	instructionsAm: text('instructions_am'),
 	prepTime: int('prep_time'), // in minutes
 	cookTime: int('cook_time'), // in minutes
 	featuredImage: varchar('featured_image', { length: 255 }),
@@ -185,7 +205,11 @@ export const recipeIngredients = mysqlTable('recipe_ingredients', {
 	id: int('id').primaryKey().autoincrement(),
 	recipeId: int('recipe_id').references(() => recipes.id),
 	name: varchar('name', { length: 255 }).notNull(),
-	amount: varchar('amount', { length: 100 })
+	amount: varchar('amount', { length: 100 }),
+	// Amharic translation, shown on the public site when the visitor picks Amharic.
+	// Optional: an empty value falls back to the English column.
+	nameAm: varchar('name_am', { length: 255 }),
+	amountAm: varchar('amount_am', { length: 100 })
 });
 
 export const contactMessages = mysqlTable('contact_messages', {
@@ -205,6 +229,10 @@ export const testimonials = mysqlTable('testimonials', {
 	name: varchar('name', { length: 255 }).notNull(),
 	position: varchar('position', { length: 255 }),
 	message: text('message').notNull(),
+	// Amharic translation, shown on the public site when the visitor picks Amharic.
+	// Optional: an empty value falls back to the English column.
+	positionAm: varchar('position_am', { length: 255 }),
+	messageAm: text('message_am'),
 	avatar: varchar('avatar', { length: 255 }),
 	...secureFields
 });

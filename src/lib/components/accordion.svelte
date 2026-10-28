@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import {
 		Accordion,
 		AccordionItem,
@@ -21,65 +22,56 @@
 	const features = [
 		{
 			id: 'halal',
-			title: '100% Halal Certified Products',
-			description:
-				'Fully halal-certified ingredients and products, catering to diverse markets with uncompromised integrity.',
+			title: m.why_halal_title(),
+			description: m.why_halal_desc(),
 			icon: CheckCircleIcon
 		},
 		{
 			id: 'multi-diet',
-			title: 'Multi-Diet Ingredients',
-			description:
-				'Carefully selected ingredients suitable for various dietary needs, including gluten-free, vegan, and allergen-friendly options.',
+			title: m.why_multi_diet_title(),
+			description: m.why_multi_diet_desc(),
 			icon: CookingPotIcon
 		},
 		{
 			id: 'imported',
-			title: 'Refined Imported Ingredients',
-			description:
-				'Finest imported ingredients, refined for consistent taste and superior baking performance.',
+			title: m.why_imported_title(),
+			description: m.why_imported_desc(),
 			icon: SparklesIcon
 		},
 		{
 			id: 'tailored',
-			title: 'Tailored Bakery Solutions',
-			description:
-				'Customized solutions designed to meet your unique baking and business requirements.',
+			title: m.why_tailored_title(),
+			description: m.why_tailored_desc(),
 			icon: HeartHandshakeIcon
 		},
 		{
 			id: 'delivery',
-			title: 'Reliable Delivery',
-			description:
-				'Timely and secure delivery ensuring fresh products reach you without compromise.',
+			title: m.why_delivery_title(),
+			description: m.why_delivery_desc(),
 			icon: TruckIcon
 		},
 		{
 			id: 'affordable',
-			title: 'Affordable and Accessible',
-			description:
-				'High-quality bakery solutions offered at competitive prices, making exceptional standards accessible to all.',
+			title: m.why_affordable_title(),
+			description: m.why_affordable_desc(),
 			icon: ShoppingBagIcon
 		},
 		{
 			id: 'support',
-			title: 'Hands-On Support',
-			description:
-				'Dedicated expert assistance available whenever you need guidance or troubleshooting.',
+			title: m.why_support_title(),
+			description: m.why_support_desc(),
 			icon: UsersIcon
 		},
 		{
 			id: 'network',
-			title: 'Sister Company Network',
-			description:
-				'Lalo and Fahem General Trading handle imports and exports across coffee, agriculture, veterinary, tires, wire mesh, and tools.',
+			title: m.why_network_title(),
+			description: m.why_network_desc(),
 			icon: NetworkIcon
 		},
 		{
 			id: 'onestop',
-			title: 'One Stop Shop',
-			description:
-				'All your bakery needs met under one roof, from ingredients to equipment to delivery.',
+			title: m.why_onestop_title(),
+			description: m.why_onestop_desc(),
 			icon: PackageIcon
 		}
 	];
@@ -91,9 +83,9 @@
 	<div class="mx-auto w-full">
 		<!-- Header -->
 		<div class="mb-12 text-center">
-			<h1 class="mb-4 text-4xl font-bold text-foreground sm:text-5xl">Why Us</h1>
+			<h1 class="mb-4 text-4xl font-bold text-foreground sm:text-5xl">{m.why_title()}</h1>
 			<p class="text-lg text-muted-foreground">
-				Discover what makes our bakery solutions exceptional
+				{m.why_subtitle()}
 			</p>
 		</div>
 
@@ -127,8 +119,8 @@
 
 		<!-- Footer CTA -->
 		<div class="mt-12 text-center">
-			<p class="mb-4 text-muted-foreground">Ready to elevate your bakery business?</p>
-			<Button href="/contact-us">Get Started Today</Button>
+			<p class="mb-4 text-muted-foreground">{m.why_cta_text()}</p>
+			<Button href="/contact-us">{m.why_cta_button()}</Button>
 		</div>
 	</div>
 </div>

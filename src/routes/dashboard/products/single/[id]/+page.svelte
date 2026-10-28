@@ -81,8 +81,10 @@
 		if (!product) return;
 		untrack(() => {
 			$form.productName = product.name;
+			$form.productNameAm = product.nameAm ?? '';
 			$form.category = product.categoryId;
 			$form.description = product.description;
+			$form.descriptionAm = product.descriptionAm ?? '';
 			$form.reorderLevel = product.reorderLevel;
 			$form.supplier = product.supplierId;
 		});
@@ -269,6 +271,14 @@
 				<InputComp
 					{form}
 					{errors}
+					type="text"
+					name="productNameAm"
+					label="Product Name (Amharic)"
+					placeholder="Optional — shown to visitors browsing in Amharic"
+				/>
+				<InputComp
+					{form}
+					{errors}
 					type="select"
 					name="category"
 					label="Product Category"
@@ -285,6 +295,14 @@
 					label="Product Discription"
 					placeholder="Enter Product Description"
 					required
+				/>
+				<InputComp
+					{form}
+					{errors}
+					type="textarea"
+					name="descriptionAm"
+					label="Product Description (Amharic)"
+					placeholder="Optional — shown to visitors browsing in Amharic"
 				/>
 
 				<InputComp

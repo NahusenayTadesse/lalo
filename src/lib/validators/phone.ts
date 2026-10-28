@@ -1,3 +1,4 @@
+import { m } from '$lib/paraglide/messages.js';
 import { z } from 'zod/v4';
 
 /**
@@ -39,8 +40,11 @@ export function isEthiopianPhone(value: string | null | undefined): boolean {
 	return normalizeEthiopianPhone(value) !== undefined;
 }
 
-export const INVALID_PHONE_MESSAGE =
-	'Enter a valid Ethiopian phone number, e.g. 0912345678 or 0111234567';
+/**
+ * A function, not a string: schemas are built once at module load, before any
+ * request has a locale, so the message has to be looked up when it is raised.
+ */
+export const INVALID_PHONE_MESSAGE = () => m.phone_invalid();
 
 /**
  * A required Ethiopian phone field.
@@ -51,6 +55,6 @@ export const INVALID_PHONE_MESSAGE =
  * back as `{}` with no type, so it loses its `''` default. Normalising is the
  * action's job instead — call `normalizeEthiopianPhone` there before storing.
  */
-export function ethiopianPhone(message: string = INVALID_PHONE_MESSAGE) {
-	return z.string(message).trim().refine(isEthiopianPhone, message);
+export function ethiopianPhone(message: () => string = INVALID_PHONE_MESSAGE) {
+	return z.string({ error: message }).trim().refine(isEthiopianPhone, { error: message });
 }

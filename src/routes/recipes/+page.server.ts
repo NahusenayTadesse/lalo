@@ -1,3 +1,4 @@
+import { localized, localizedOrNull } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import { recipes, recipeIngredients } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
@@ -7,9 +8,9 @@ export const load: PageServerLoad = async () => {
 	const recipeList = await db
 		.select({
 			id: recipes.id,
-			title: recipes.title,
-			description: recipes.description,
-			instructions: recipes.instructions,
+			title: localized(recipes.title, recipes.titleAm),
+			description: localizedOrNull(recipes.description, recipes.descriptionAm),
+			instructions: localized(recipes.instructions, recipes.instructionsAm),
 			prepTime: recipes.prepTime,
 			cookTime: recipes.cookTime,
 			image: recipes.featuredImage,
@@ -22,8 +23,8 @@ export const load: PageServerLoad = async () => {
 		.select({
 			id: recipeIngredients.id,
 			recipeId: recipeIngredients.recipeId,
-			ingredient: recipeIngredients.name,
-			amount: recipeIngredients.amount
+			ingredient: localized(recipeIngredients.name, recipeIngredients.nameAm),
+			amount: localizedOrNull(recipeIngredients.amount, recipeIngredients.amountAm)
 		})
 		.from(recipeIngredients);
 

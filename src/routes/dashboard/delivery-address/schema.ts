@@ -3,6 +3,8 @@ import { z } from 'zod/v4';
 // A negative fee would *subtract* from every order delivered to that area.
 export const add = z.object({
 	name: z.string('Name of the delivery area is required').min(2).max(50),
+	// Amharic display name, optional. Orders still store and match on `name`.
+	nameAm: z.string().max(100).optional(),
 	fee: z.number('Number is required').nonnegative('Fee cannot be negative').default(0),
 	status: z.boolean('Status is required').default(true)
 });
@@ -10,6 +12,8 @@ export const add = z.object({
 export const edit = z.object({
 	id: z.coerce.string(),
 	name: z.string('Name of the delivery area is required').min(2).max(50),
+	// Amharic display name, optional. Orders still store and match on `name`.
+	nameAm: z.string().max(100).optional(),
 	fee: z.number('Number is required').nonnegative('Fee cannot be negative').default(0),
 	status: z.boolean('Status is required').default(true)
 });

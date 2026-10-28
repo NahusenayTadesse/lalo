@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { page } from '$app/stores';
 	import { authClient } from '$lib/auth-client';
 	import * as Card from '$lib/components/ui/card';
@@ -38,7 +39,7 @@
 		isLoading = false;
 
 		if (error) {
-			errorMessage = error.message || 'Failed to reset password. The link may have expired.';
+			errorMessage = error.message || m.reset_failed();
 		} else {
 			isSuccess = true;
 			// Automatically send them to login after 3 seconds
@@ -52,9 +53,9 @@
 <div class="container flex h-screen w-screen flex-col items-center justify-center">
 	<Card.Root class="w-full max-w-md border-border bg-card text-card-foreground shadow-lg">
 		<Card.Header class="space-y-1">
-			<Card.Title class="text-2xl font-bold tracking-tight">Reset password</Card.Title>
+			<Card.Title class="text-2xl font-bold tracking-tight">{m.reset_title()}</Card.Title>
 			<Card.Description class="text-muted-foreground">
-				Enter a secure new password for your account.
+				{m.reset_description()}
 			</Card.Description>
 		</Card.Header>
 		<Card.Content>
@@ -64,17 +65,16 @@
 				>
 					<AlertCircle class="h-5 w-5 shrink-0" />
 					<p>
-						<strong>Missing token:</strong> This password reset link is invalid or broken. Please request
-						a new one.
+						<strong>{m.reset_missing_token_label()}</strong> {m.reset_missing_token()}
 					</p>
 				</div>
 			{:else if isSuccess}
 				<div class="flex items-start gap-3 rounded-lg bg-primary/10 p-4 text-sm text-primary">
 					<CheckCircle2 class="h-5 w-5 shrink-0" />
 					<div>
-						<p class="font-medium">Password updated!</p>
+						<p class="font-medium">{m.reset_updated()}</p>
 						<p class="mt-1 text-muted-foreground">
-							Your password has been changed. Redirecting you to sign in...
+							{m.reset_redirecting()}
 						</p>
 					</div>
 				</div>
@@ -90,7 +90,7 @@
 					{/if}
 
 					<div class="space-y-2">
-						<Label for="password" class="text-foreground">New Password</Label>
+						<Label for="password" class="text-foreground">{m.reset_new_password()}</Label>
 						<Input
 							id="password"
 							type="password"
@@ -100,12 +100,12 @@
 							class="border-input bg-background text-foreground"
 						/>
 						{#if password && !isPasswordValid}
-							<p class="text-xs text-destructive">Password must be at least 8 characters long.</p>
+							<p class="text-xs text-destructive">{m.reset_password_min()}</p>
 						{/if}
 					</div>
 
 					<div class="space-y-2">
-						<Label for="confirmPassword" class="text-foreground">Confirm New Password</Label>
+						<Label for="confirmPassword" class="text-foreground">{m.reset_confirm_password()}</Label>
 						<Input
 							id="confirmPassword"
 							type="password"
@@ -115,7 +115,7 @@
 							class="border-input bg-background text-foreground"
 						/>
 						{#if confirmPassword && !passwordsMatch}
-							<p class="text-xs text-destructive">Passwords do not match.</p>
+							<p class="text-xs text-destructive">{m.form_passwords_mismatch()}</p>
 						{/if}
 					</div>
 
@@ -126,9 +126,10 @@
 					>
 						{#if isLoading}
 							<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-							Updating password...
+							{m.reset_updating()}
 						{:else}
-							Reset Password
+														{m.reset_submit()}
+
 						{/if}
 					</Button>
 				</form>

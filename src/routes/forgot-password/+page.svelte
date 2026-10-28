@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { authClient } from '$lib/auth-client';
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
@@ -27,7 +28,7 @@
 		isLoading = false;
 
 		if (error) {
-			errorMessage = error.message || 'Something went wrong. Please try again.';
+			errorMessage = error.message || m.common_something_wrong();
 		} else {
 			isSuccess = true;
 		}
@@ -37,9 +38,9 @@
 <div class="container flex h-screen w-screen flex-col items-center justify-center">
 	<Card.Root class="w-full max-w-md border-border bg-card text-card-foreground shadow-lg">
 		<Card.Header class="space-y-1">
-			<Card.Title class="text-2xl font-bold tracking-tight">Forgot password?</Card.Title>
+			<Card.Title class="text-2xl font-bold tracking-tight">{m.forgot_title()}</Card.Title>
 			<Card.Description class="text-muted-foreground">
-				Enter your email address and we'll send you a link to reset your password.
+				{m.forgot_description()}
 			</Card.Description>
 		</Card.Header>
 		<Card.Content>
@@ -47,9 +48,9 @@
 				<div class="flex items-start gap-3 rounded-lg bg-primary/10 p-4 text-sm text-primary">
 					<CheckCircle2 class="h-5 w-5 shrink-0" />
 					<div>
-						<p class="font-medium">Check your email</p>
+						<p class="font-medium">{m.forgot_check_email()}</p>
 						<p class="mt-1 text-muted-foreground">
-							We have sent a password reset link to <strong>{email}</strong>.
+							{m.forgot_sent_before()} <strong>{email}</strong>{m.forgot_sent_after()}
 						</p>
 					</div>
 				</div>
@@ -65,7 +66,7 @@
 					{/if}
 
 					<div class="space-y-2">
-						<Label for="email" class="text-foreground">Email address</Label>
+						<Label for="email" class="text-foreground">{m.forgot_email_label()}</Label>
 						<Input
 							id="email"
 							type="email"
@@ -84,9 +85,9 @@
 					>
 						{#if isLoading}
 							<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-							Sending link...
+							{m.forgot_sending()}
 						{:else}
-							Send reset link
+							{m.forgot_send()}
 						{/if}
 					</Button>
 				</form>
@@ -94,7 +95,7 @@
 		</Card.Content>
 		<Card.Footer class="flex justify-center border-t border-border pt-4">
 			<a href="/login" class="text-sm text-muted-foreground transition-colors hover:text-primary">
-				Back to sign in
+				{m.forgot_back()}
 			</a>
 		</Card.Footer>
 	</Card.Root>

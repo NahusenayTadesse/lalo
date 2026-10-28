@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import {
 		LayoutDashboard,
 		PackageCheck,
@@ -23,23 +24,23 @@
 	// Restructured navigation focusing on clear, immediate customer goals
 	const navItems = [
 		{
-			title: 'Overview',
+			title: m.account_nav_overview(),
 			url: '/account',
 			icon: LayoutDashboard
 		},
 
 		{
-			title: 'Track Orders',
+			title: m.account_nav_track_orders(),
 			url: '/account/orders',
 			icon: Truck
 		},
 		{
-			title: 'Order History',
+			title: m.account_nav_order_history(),
 			url: '/account/history',
 			icon: History
 		},
 		{
-			title: 'Profile',
+			title: m.account_nav_profile(),
 			url: '/account/settings',
 			icon: User
 		}
@@ -54,11 +55,11 @@
 <Sidebar.Root collapsible="offcanvas" {...restProps}>
 	<Sidebar.Content class="lg:pt-16">
 		<div class="z-10 border-b border-border/60 bg-sidebar px-5 py-4">
-			<a href="/account" title="Go to Dashboard Home" class="flex items-center gap-3">
+			<a href="/account" title={m.account_nav_home_title()} class="flex items-center gap-3">
 				<div>
 					<div class="text-4xl! font-bold tracking-tight text-foreground">{name}</div>
 					<div class="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
-						Customer Portal
+						{m.account_nav_portal()}
 					</div>
 				</div>
 			</a>

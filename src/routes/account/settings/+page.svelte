@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { untrack } from 'svelte';
 	import { editUserSchema } from './schema';
+	import { getLocale } from '$lib/paraglide/runtime.js';
 
 	let { data } = $props();
 
@@ -24,23 +26,35 @@
 		data?.orderCounts?.find((item) => item.status === status)?.count ?? 0;
 
 	let singleTable = $derived([
-		{ name: 'Name', value: data.singleUser?.name },
-		{ name: 'Email', value: data.singleUser?.email },
-		{ name: 'Phone', value: data.singleUser?.phone },
-		{ name: 'General Address', value: data.singleUser?.address ?? 'N/A' },
-		{ name: 'Delivery Address', value: data.singleUser?.deliveryAddress ?? 'N/A' },
+		{ name: m.form_name(), value: data.singleUser?.name },
+		{ name: m.contact_email_label(), value: data.singleUser?.email },
+		{ name: m.settings_phone(), value: data.singleUser?.phone, kind: 'phone' as const },
+		{ name: m.form_general_address(), value: data.singleUser?.address ?? m.common_na() },
+		{ name: m.settings_delivery_address(), value: data.singleUser?.deliveryAddress ?? m.common_na() },
 
 		// `{ … } + 'Orders'` added a string to the object, which put the text
 		// "[object Object]Orders" in the table instead of a row. And `count ?? 0 + ' Orders'`
 		// parses as `count ?? (0 + ' Orders')`, so only a zero got the suffix.
-		{ name: 'Life Time Orders', value: `${data.singleUser?.numberOfOrders ?? 0} Orders` },
-		{ name: 'Number of Pending Orders', value: `${countFor('pending')} Orders` },
-		{ name: 'Number of Delivered Orders', value: `${countFor('delivered')} Orders` },
-		{ name: 'Number of Cancelled Orders', value: `${countFor('cancelled')} Orders` },
+		{
+			name: m.settings_lifetime_orders(),
+			value: m.settings_orders_count({ count: data.singleUser?.numberOfOrders ?? 0 })
+		},
+		{
+			name: m.settings_pending_orders(),
+			value: m.settings_orders_count({ count: countFor('pending') })
+		},
+		{
+			name: m.settings_delivered_orders(),
+			value: m.settings_orders_count({ count: countFor('delivered') })
+		},
+		{
+			name: m.settings_cancelled_orders(),
+			value: m.settings_orders_count({ count: countFor('cancelled') })
+		},
 
 		{
-			name: 'Joined',
-			value: data.singleUser?.createdAt.toLocaleString('en-ca', {
+			name: m.settings_joined(),
+			value: data.singleUser?.createdAt.toLocaleString(getLocale() === 'am' ? 'am-ET' : 'en-ca', {
 				weekday: 'short',
 				month: 'short',
 				day: 'numeric',
@@ -91,18 +105,18 @@
 </script>
 
 <svelte:head>
-	<title>My Account Details</title>
+	<title>{m.settings_title()}</title>
 </svelte:head>
-<SingleView title="My Account Details" class="my-8 justify-self-center">
+<SingleView title={m.settings_title()} class="my-8 justify-self-center">
 	<div class="mt-4 flex w-full flex-row items-start justify-start gap-2 pl-4">
 		<Button onclick={() => (edit = !edit)}>
 			{#if !edit}
 				<Pencil class="h-4 w-4" />
-				Edit Account
+				{m.settings_edit()}
 			{:else}
 				<ArrowLeft class="h-4 w-4" />
 
-				Back
+				{m.common_back()}
 			{/if}
 		</Button>
 	</div>
@@ -114,56 +128,56 @@
 			<form action="?/editUser" use:enhance class="flex flex-col gap-4" id="edit" method="post">
 				<Errors allErrors={$allErrors} />
 				<InputComp
-					label="Your Name"
+					label={m.settings_your_name()}
 					{form}
 					{errors}
 					type="text"
 					name="name"
-					placeholder="Enter the name of new user"
+					placeholder={m.form_name_placeholder()}
 					required
 				/>
 				<InputComp
-					label="Phone"
+					label={m.settings_phone()}
 					{form}
 					{errors}
 					type="tel"
 					name="phone"
-					placeholder="Enter your phone number"
+					placeholder={m.settings_phone_placeholder()}
 				/>
 				<InputComp
-					label="Email"
+					label={m.contact_email_label()}
 					{form}
 					type="email"
 					{errors}
 					name="email"
-					placeholder="Enter the email of new admin user"
+					placeholder={m.settings_email_placeholder()}
 					required
 				/>
 
 				<InputComp
-					label="General Address"
+					label={m.form_general_address()}
 					name="address"
 					type="select"
 					{form}
 					{errors}
-					placeholder="+251 9-11-00-00-00"
+					placeholder={m.form_area_placeholder()}
 					items={data?.placeList}
 				/>
 				<InputComp
-					label="Specific Delivery Address"
+					label={m.form_delivery_address()}
 					name="deliveryAddress"
 					type="text"
 					{form}
 					{errors}
-					placeholder="Mexico, Edna Mall, 2nd Floor, Apt 201"
+					placeholder={m.form_delivery_address_placeholder()}
 				/>
 
 				<Button form="edit" type="submit" class="mt-4">
 					{#if $delayed}
-						<LoadingBtn name="Saving Changes" />
+						<LoadingBtn name={m.settings_saving()} />
 					{:else}
 						<Save class="h-4 w-4" />
-						Save Changes
+						{m.settings_save()}
 					{/if}
 				</Button>
 			</form>

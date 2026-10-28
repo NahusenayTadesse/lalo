@@ -42,7 +42,7 @@
 	{:else if type === 'gallery'}
 		<GalleryUpload {name} {form} {errors} title={placeholder} bind:images />
 	{:else if type === 'select'}
-		<SelectComp {name} bind:value={$form[name]} {items} />
+		<SelectComp {name} bind:value={$form[name]} {items} {placeholder} />
 	{:else if type === 'date'}
 		<DatePicker2 bind:data={$form[name]} {oldDays} {year} {futureDays} />
 		<input type="hidden" {name} bind:value={$form[name]} />

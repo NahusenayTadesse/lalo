@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { Card, CardContent } from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Clock, ChefHat } from '@lucide/svelte';
@@ -34,11 +35,11 @@
 		<div class="flex gap-4 text-sm text-muted-foreground">
 			<div class="flex items-center gap-1">
 				<Clock class="size-4" />
-				<span>{recipe.prepTime}m prep</span>
+				<span>{m.recipes_prep_short({ minutes: recipe.prepTime })}</span>
 			</div>
 			<div class="flex items-center gap-1">
 				<ChefHat class="size-4" />
-				<span>{recipe.cookTime}m cook</span>
+				<span>{m.recipes_cook_short({ minutes: recipe.cookTime })}</span>
 			</div>
 		</div>
 	</CardContent>

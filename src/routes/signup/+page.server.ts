@@ -1,3 +1,4 @@
+import { m } from '$lib/paraglide/messages.js';
 // import { encodeBase32LowerCase } from '@oslojs/encoding';
 
 import type { Actions, PageServerLoad } from './$types';
@@ -10,6 +11,7 @@ import { auth } from '$lib/server/auth';
 import { eq, and, sql } from 'drizzle-orm';
 import { customerWelcomeTemplate, sendEmail } from '$lib/server/email';
 
+import { localized } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import { APIError } from 'better-auth';
 import { roles, user, customers, placeNames } from '$lib/server/db/schema';
@@ -32,7 +34,7 @@ export const load: PageServerLoad = async (event) => {
 	const placeList = await db
 		.select({
 			value: placeNames.name,
-			name: placeNames.name
+			name: localized(placeNames.name, placeNames.nameAm)
 		})
 		.from(placeNames)
 		.where(eq(placeNames.isActive, true));
@@ -48,7 +50,7 @@ export const actions: Actions = {
 				form,
 				{
 					type: 'error',
-					text: 'Please check the form for errors'
+					text: m.form_check_errors()
 				},
 				{
 					status: 400
@@ -88,7 +90,7 @@ export const actions: Actions = {
 			sendEmail(email, subject, html).catch((err) => console.error('Email Error (Welcome):', err));
 			return message(form, {
 				type: 'success',
-				text: 'Sign Up Successful!'
+				text: m.signup_success()
 			});
 		} catch (error) {
 			if (error instanceof APIError) {
@@ -107,7 +109,7 @@ export const actions: Actions = {
 				form,
 				{
 					type: 'error',
-					text: 'Registration Failed'
+					text: m.signup_failed()
 				},
 				{
 					status: 500

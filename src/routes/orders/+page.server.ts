@@ -1,9 +1,11 @@
+import { m } from '$lib/paraglide/messages.js';
 import { superValidate, message } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { eq, and, sql, or, inArray } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
 
 import { add, edit } from './schema';
+import { localized } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import { orders, orderItems, products, customers, prices } from '$lib/server/db/schema';
 import type { PageServerLoad, Actions } from './$types';
@@ -37,7 +39,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const fetchedProducts = await db
 		.select({
 			value: products.id,
-			name: products.name
+			name: localized(products.name, products.nameAm)
 		})
 		.from(products)
 		.where(eq(products.isActive, true));
@@ -106,7 +108,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				.select({
 					id: orderItems.id,
 					orderId: orderItems.orderId,
-					product: products.name,
+					product: localized(products.name, products.nameAm),
 					amount: orderItems.amount,
 					quantity: orderItems.quantity,
 					productId: orderItems.productId,
@@ -137,16 +139,16 @@ export const actions: Actions = {
 		// `load` cannot protect this: actions run *before* any load, so the guard above
 		// only ever affects the re-render. Each action has to check for itself.
 		if (!locals.user) {
-			return message(form, { type: 'error', text: 'Please sign in' }, { status: 401 });
+			return message(form, { type: 'error', text: m.orders_sign_in() }, { status: 401 });
 		}
 
 		if (!form.valid) {
-			return message(form, { type: 'error', text: 'Please check the form for Errors' });
+			return message(form, { type: 'error', text: m.form_check_errors() });
 		}
 
 		const ownCustomerId = await getOwnCustomerId(locals.user.id);
 		if (ownCustomerId === undefined) {
-			return message(form, { type: 'error', text: 'No customer profile found' }, { status: 403 });
+			return message(form, { type: 'error', text: m.orders_no_profile() }, { status: 403 });
 		}
 
 		const { selectedProducts } = form.data;
@@ -174,10 +176,10 @@ export const actions: Actions = {
 				}
 			});
 
-			return message(form, { type: 'success', text: 'Order Successfully Added' });
+			return message(form, { type: 'success', text: m.orders_added() });
 		} catch (err) {
 			console.error('Failed to add order:', err);
-			return message(form, { type: 'error', text: 'Could not add the order' }, { status: 500 });
+			return message(form, { type: 'error', text: m.orders_add_failed() }, { status: 500 });
 		}
 	},
 
@@ -185,16 +187,16 @@ export const actions: Actions = {
 		const form = await superValidate(request, zod4(edit));
 
 		if (!locals.user) {
-			return message(form, { type: 'error', text: 'Please sign in' }, { status: 401 });
+			return message(form, { type: 'error', text: m.orders_sign_in() }, { status: 401 });
 		}
 
 		if (!form.valid) {
-			return message(form, { type: 'error', text: 'Please check the form for Errors' });
+			return message(form, { type: 'error', text: m.form_check_errors() });
 		}
 
 		const ownCustomerId = await getOwnCustomerId(locals.user.id);
 		if (ownCustomerId === undefined) {
-			return message(form, { type: 'error', text: 'No customer profile found' }, { status: 403 });
+			return message(form, { type: 'error', text: m.orders_no_profile() }, { status: 403 });
 		}
 
 		const { id, selectedProducts } = form.data;
@@ -218,7 +220,7 @@ export const actions: Actions = {
 				.then((rows) => rows[0]);
 
 			if (!existing) {
-				return message(form, { type: 'error', text: 'Order not found' }, { status: 404 });
+				return message(form, { type: 'error', text: m.orders_not_found() }, { status: 404 });
 			}
 
 			await db.transaction(async (tx) => {
@@ -239,10 +241,10 @@ export const actions: Actions = {
 				}
 			});
 
-			return message(form, { type: 'success', text: 'Order Successfully Updated' });
+			return message(form, { type: 'success', text: m.orders_updated() });
 		} catch (err) {
 			console.error('Failed to update order:', err);
-			return message(form, { type: 'error', text: 'Could not update the order' }, { status: 500 });
+			return message(form, { type: 'error', text: m.orders_update_failed() }, { status: 500 });
 		}
 	}
 };

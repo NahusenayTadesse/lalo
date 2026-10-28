@@ -1,3 +1,4 @@
+import { m } from '$lib/paraglide/messages.js';
 import { superValidate, message, setError } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { eq, and, inArray } from 'drizzle-orm';
@@ -14,6 +15,7 @@ import { addUser as signupSchema, loginSchema } from '$lib/ZodSchema';
 import { addGuest } from './schema';
 import { PICKUP_LABEL } from '$lib/delivery';
 import { INVALID_PHONE_MESSAGE, normalizeEthiopianPhone } from '$lib/validators/phone';
+import { localized } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import { orders, orderItems, customers, placeNames, prices, products } from '$lib/server/db/schema';
 import { resolveDeliveryFee } from '$lib/server/delivery';
@@ -25,7 +27,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const placeList = await db
 		.select({
 			value: placeNames.name,
-			name: placeNames.name,
+			// The label only: `value` stays the English name, which the order stores and
+			// the fee lookup matches on.
+			name: localized(placeNames.name, placeNames.nameAm),
 			fee: placeNames.fee
 		})
 		.from(placeNames)
@@ -69,7 +73,7 @@ export const actions: Actions = {
 		form.data.guest = isGuest;
 
 		if (!form.valid) {
-			return message(form, { type: 'error', text: 'Please check the form for Errors' });
+			return message(form, { type: 'error', text: m.form_check_errors() });
 		}
 
 		// `fee` and each item's `price` are deliberately *not* read out of the form —
@@ -87,7 +91,7 @@ export const actions: Actions = {
 		// one returns a *success* result for a valid form, and the checkout page used to
 		// read that as "order placed" and empty the customer's cart.
 		if (!selectedProducts.length) {
-			return message(form, { type: 'error', text: 'Your cart is empty' }, { status: 400 });
+			return message(form, { type: 'error', text: m.cart_empty() }, { status: 400 });
 		}
 
 		// A guest's contact details are validated here but the `customers` row is
@@ -106,9 +110,9 @@ export const actions: Actions = {
 			// row is in one shape no matter which form was typed.
 			const phone = normalizeEthiopianPhone(form.data.guestPhone);
 
-			if (name.length < 2) return setError(form, 'guestName', 'Your name is required');
+			if (name.length < 2) return setError(form, 'guestName', m.form_name_required());
 			if (!email) return setError(form, 'guestEmail', 'A valid email is required');
-			if (!phone) return setError(form, 'guestPhone', INVALID_PHONE_MESSAGE);
+			if (!phone) return setError(form, 'guestPhone', INVALID_PHONE_MESSAGE());
 
 			guestDetails = { name, email, phone };
 		}
@@ -120,7 +124,7 @@ export const actions: Actions = {
 			console.error('Checkout: could not price the cart:', err);
 			return message(
 				form,
-				{ type: 'error', text: 'One of the items in your cart is no longer available' },
+				{ type: 'error', text: m.checkout_item_unavailable() },
 				{ status: 409 }
 			);
 		}
@@ -133,10 +137,10 @@ export const actions: Actions = {
 		const fee = await resolveDeliveryFee(address, subtotal);
 
 		if (fee === undefined) {
-			setError(form, 'address', 'We do not deliver to that area');
+			setError(form, 'address', m.checkout_no_delivery_area());
 			return message(
 				form,
-				{ type: 'error', text: 'We do not deliver to that area' },
+				{ type: 'error', text: m.checkout_no_delivery_area() },
 				{ status: 400 }
 			);
 		}
@@ -155,13 +159,13 @@ export const actions: Actions = {
 					return setError(
 						form,
 						'guestEmail',
-						'An account already uses this email. Please sign in to place your order.'
+						m.checkout_email_has_account()
 					);
 				}
 				console.error('Checkout: could not create a guest customer:', err);
 				return message(
 					form,
-					{ type: 'error', text: 'Could not save your details. Please try again.' },
+					{ type: 'error', text: m.checkout_save_details_failed() },
 					{ status: 500 }
 				);
 			}
@@ -175,7 +179,7 @@ export const actions: Actions = {
 		}
 
 		if (!customer) {
-			return message(form, { type: 'error', text: 'No customer profile found' }, { status: 403 });
+			return message(form, { type: 'error', text: m.orders_no_profile() }, { status: 403 });
 		}
 
 		const total = subtotal + Number(fee);
@@ -218,7 +222,7 @@ export const actions: Actions = {
 			});
 		} catch (err) {
 			console.error('Checkout: failed to place order:', err);
-			return message(form, { type: 'error', text: 'Could not place your order' }, { status: 500 });
+			return message(form, { type: 'error', text: m.checkout_place_failed() }, { status: 500 });
 		}
 
 		// Priced from `lineItems`, so the confirmation email can never quote a
@@ -250,7 +254,7 @@ export const actions: Actions = {
 
 		return message(form, {
 			type: 'success',
-			text: 'Order Successfully Added',
+			text: m.checkout_order_placed(),
 			// The client clears the cart only when this is present — see `+page.svelte`.
 			orderId: newOrderId
 		});

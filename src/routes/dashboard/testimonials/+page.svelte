@@ -47,6 +47,8 @@
 					name: row.original.name,
 					position: row.original.position,
 					testimonial: row.original.testimonial,
+					positionAm: row.original.positionAm,
+					testimonialAm: row.original.testimonialAm,
 					action: '?/edit',
 					avatar: row.original.avatar,
 					data: data.editForm,
@@ -101,6 +103,8 @@
 					name: row.original.name,
 					position: row.original.position,
 					testimonial: row.original.testimonial,
+					positionAm: row.original.positionAm,
+					testimonialAm: row.original.testimonialAm,
 					action: '?/edit',
 					data: data.editForm,
 					avatar: row.original.avatar,
@@ -158,6 +162,15 @@
 			<InputComp {form} {errors} label="Name of Customer" type="text" name="name" required={true} />
 			<InputComp {form} {errors} label="Position" type="text" name="position" />
 			<InputComp {form} {errors} label="Testimonial" type="textarea" name="testimonial" />
+			<InputComp {form} {errors} label="Position (Amharic)" type="text" name="positionAm" />
+			<InputComp
+				{form}
+				{errors}
+				label="Testimonial (Amharic)"
+				type="textarea"
+				name="testimonialAm"
+				placeholder="Optional — shown to visitors browsing in Amharic"
+			/>
 			<InputComp {form} {errors} label="Logo or Avatar" type="file" name="avatar" />
 
 			<Button type="submit" form="main">

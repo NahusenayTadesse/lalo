@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { MailIcon, PhoneIcon, MapPinIcon, MessageCircleIcon, MapPin } from '@lucide/svelte';
@@ -50,8 +51,8 @@
 		>
 			<!-- Company Info -->
 			<div>
-				<img src="/logo.webp" class="w-30" alt="Lalo Logo" />
-				<h4 class="mb-4 font-semibold">Lalo Bakery Solution</h4>
+				<img src="/logo.webp" class="w-30" alt={m.footer_logo_alt()} />
+				<h4 class="mb-4 font-semibold">{m.brand_name()}</h4>
 
 				<div class="flex flex-col gap-2 text-sm">
 					<a
@@ -61,7 +62,7 @@
 						class="flex items-center gap-2 text-foreground/70"
 					>
 						<MapPinIcon class="size-4 shrink-0" />
-						<span>Diplomat Building, Mozambique St, Addis Ababa</span>
+						<span>{m.footer_address()}</span>
 					</a>
 					<a
 						href="tel:+251908454545"
@@ -95,29 +96,29 @@
 
 			<!-- Quick Links -->
 			<div class="lg:w-lg">
-				<h4 class="mb-4 font-semibold">Quick Links</h4>
+				<h4 class="mb-4 font-semibold">{m.footer_quick_links()}</h4>
 				<ul class="flex flex-col gap-2 text-sm">
 					<li>
-						<a href="/" class="text-foreground/70 transition-colors hover:text-foreground">Home</a>
+						<a href="/" class="text-foreground/70 transition-colors hover:text-foreground">{m.nav_home()}</a>
 					</li>
 					<li>
 						<a href="/shop" class="text-foreground/70 transition-colors hover:text-foreground"
-							>Products</a
+							>{m.nav_products()}</a
 						>
 					</li>
 					<li>
 						<a href="/orders" class="text-foreground/70 transition-colors hover:text-foreground"
-							>Orders</a
+							>{m.nav_orders()}</a
 						>
 					</li>
 					<li>
 						<a href="/about-us" class="text-foreground/70 transition-colors hover:text-foreground"
-							>About Us</a
+							>{m.nav_about_us()}</a
 						>
 					</li>
 					<li>
 						<a href="#" class="text-foreground/70 transition-colors hover:text-foreground"
-							>Contact Us</a
+							>{m.nav_contact_us()}</a
 						>
 					</li>
 				</ul>
@@ -125,7 +126,7 @@
 
 			<!-- Customer Service -->
 			<div>
-				<h4 class="mb-4 flex gap-2 font-semibold"><MapPin /> Location</h4>
+				<h4 class="mb-4 flex gap-2 font-semibold"><MapPin /> {m.footer_location()}</h4>
 				<section class="relative h-32 w-full">
 					<iframe
 						src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3940.6989163918774!2d38.74450221007991!3d8.999827389408697!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b8513494db273%3A0x88235dbe171c4224!2sDiplomat%20Building!5e0!3m2!1sen!2set!4v1772532021053!5m2!1sen!2set"
@@ -133,7 +134,7 @@
 						class="w-full rounded-3xl"
 						loading="lazy"
 						referrerpolicy="no-referrer-when-downgrade"
-						title="Map"
+						title={m.footer_map()}
 					></iframe>
 				</section>
 			</div>
@@ -168,7 +169,7 @@
 
 			<!-- Social Links -->
 			<div class="flex flex-col items-center justify-between gap-4 border-t pt-8 md:flex-row">
-				<p class="text-sm text-foreground/70">Follow us on social media</p>
+				<p class="text-sm text-foreground/70">{m.footer_follow_us()}</p>
 				<div class="grid grid-cols-4 gap-3">
 					{#each socialLinks as social (social.url)}
 						<a
@@ -189,7 +190,7 @@
 
 			<!-- Copyright -->
 			<div class="mt-8 border-t pt-8 text-center text-sm text-foreground/70">
-				<p>&copy; {new Date().getFullYear()} Lalo Bakery. All rights reserved.</p>
+				<p>{m.footer_copyright({ year: new Date().getFullYear() })}</p>
 			</div>
 		</div>
 	</div>

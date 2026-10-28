@@ -1,7 +1,9 @@
+import { m } from '$lib/paraglide/messages.js';
 import { message, setError, superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 
 import { redirect, error } from '@sveltejs/kit';
+import { localized } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import { user, customers, orders } from '$lib/server/db/schema';
 import { eq, count, sql } from 'drizzle-orm';
@@ -18,7 +20,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const placeList = await db
 		.select({
 			value: placeNames.name,
-			name: placeNames.name
+			name: localized(placeNames.name, placeNames.nameAm)
 		})
 		.from(placeNames)
 		.where(eq(placeNames.isActive, true));
@@ -42,7 +44,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.then((rows) => rows[0]);
 
 	if (!singleUser) {
-		error(404, { message: 'User not found, It has been Deleted or does not exist' });
+		error(404, { message: m.settings_user_not_found() });
 	}
 
 	const orderCounts = await db
@@ -55,7 +57,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.groupBy(orders.status);
 
 	if (!singleUser) {
-		error(404, 'User with this ID not found');
+		error(404, m.settings_user_not_found());
 	}
 
 	return {
@@ -75,7 +77,7 @@ export const actions: Actions = {
 
 		if (!form.valid) {
 			// Stay on the same page and set a flash message
-			return message(form, { type: 'error', text: 'Please check your form data.' });
+			return message(form, { type: 'error', text: m.form_check_errors() });
 		}
 
 		const { name, email, address, deliveryAddress } = form.data;
@@ -91,12 +93,12 @@ export const actions: Actions = {
 
 			if (existingUser) {
 				if (existingUser.id !== id) {
-					setError(form, 'email', 'User with this email already exists, change your email.');
+					setError(form, 'email', m.settings_email_taken());
 					return message(
 						form,
 						{
 							type: 'error',
-							text: 'User with this email already exists, change your email.'
+							text: m.settings_email_taken()
 						},
 						{ status: 400 }
 					);
@@ -137,7 +139,7 @@ export const actions: Actions = {
 			// Client-side (to sync the changes)
 
 			// Stay on the same page and set a flash message
-			return message(form, { type: 'success', text: 'Your Details have Updated Successfully' });
+			return message(form, { type: 'success', text: m.settings_updated() });
 		} catch (err) {
 			console.error(err);
 
@@ -146,7 +148,7 @@ export const actions: Actions = {
 					form,
 					{
 						type: 'error',
-						text: 'User with this email already exists, change your email.'
+						text: m.settings_email_taken()
 					},
 					{ status: 400 }
 				);
@@ -155,7 +157,7 @@ export const actions: Actions = {
 				form,
 				{
 					type: 'error',
-					text: 'Update Failed: ' + err?.message
+					text: m.settings_update_failed({ reason: err?.message ?? '' })
 				},
 				{ status: 500 }
 			);

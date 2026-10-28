@@ -1,3 +1,4 @@
+import { localized, localizedOrNull } from '$lib/server/localize';
 import { db } from '$lib/server/db';
 import { products, productCategories, prices } from '$lib/server/db/schema';
 import type { PageServerLoad } from './$types';
@@ -6,6 +7,7 @@ import {
 	sql,
 	and,
 	like,
+	or,
 	asc,
 	countDistinct,
 	inArray,
@@ -40,7 +42,13 @@ export const load: PageServerLoad = async ({ url }) => {
 	// so that a product matches when *any* of its variants is in range.
 	const whereClause = and(
 		eq(products.isActive, true),
-		search ? like(products.name, `%${escapeLike(search)}%`) : undefined,
+		// Both languages are searched, whichever one the visitor is reading.
+		search
+			? or(
+					like(products.name, `%${escapeLike(search)}%`),
+					like(products.nameAm, `%${escapeLike(search)}%`)
+				)
+			: undefined,
 		selectedCats.length > 0 ? inArray(productCategories.name, selectedCats) : undefined
 	);
 
@@ -67,21 +75,26 @@ export const load: PageServerLoad = async ({ url }) => {
 	)`;
 
 	const categories = await db
-		.select({ name: productCategories.name })
+		// `name` stays English: it is the filter value in the URL. `label` is what
+		// the visitor reads.
+		.select({
+			name: productCategories.name,
+			label: localized(productCategories.name, productCategories.nameAm)
+		})
 		.from(productCategories)
-		.groupBy(productCategories.name);
+		.groupBy(productCategories.name, productCategories.nameAm);
 
 	const productsData = await db
 		.select({
 			productId: products.id,
-			productName: products.name,
+			productName: localized(products.name, products.nameAm),
 			// All three come from the same `prices` row, so the label and the
 			// price a customer sees always belong to the same variant.
 			priceId: prices.id,
 			price: prices.price,
 			amount: prices.amount,
 			image: products.featuredImage,
-			category: productCategories.name
+			category: localizedOrNull(productCategories.name, productCategories.nameAm)
 		})
 		.from(products)
 		.leftJoin(productCategories, eq(productCategories.id, products.categoryId))

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { ShareIcon, PlusIcon, CheckIcon, Plus, Minus, ShoppingCartIcon } from '@lucide/svelte';
@@ -75,10 +76,10 @@
 		);
 		justAdded = true;
 
-		toast.success(`${productName} added to cart`, {
+		toast.success(m.cart_added({ name: productName }), {
 			// `quantityInCart` is the value from before this add, so the new total is
 			// the two summed. The old `- 1` here was simply wrong.
-			description: `Total in cart: ${quantityInCart + safeQuantity}`
+			description: m.cart_total_in_cart({ count: quantityInCart + safeQuantity })
 		});
 
 		setTimeout(() => {
@@ -96,11 +97,11 @@
 				return;
 			}
 			await navigator.clipboard.writeText(url);
-			toast.success('Link copied to clipboard');
+			toast.success(m.shop_link_copied());
 		} catch (err) {
 			// The customer closing the share sheet is not an error worth reporting.
 			if ((err as DOMException)?.name === 'AbortError') return;
-			toast.error('Could not copy the link');
+			toast.error(m.shop_link_copy_failed());
 		}
 	};
 
@@ -165,12 +166,12 @@
 							displayImage
 								? 'border-primary'
 								: 'border-transparent'}"
-							aria-label="View image {i + 1}"
+							aria-label={m.shop_view_image({ number: i + 1 })}
 							onclick={() => (displayImage = thumb)}
 						>
 							<img
 								src="/files/{thumb}"
-								alt="Product thumbnail {i + 1}"
+								alt={m.shop_thumbnail({ number: i + 1 })}
 								class="h-full w-full object-cover"
 							/>
 						</button>
@@ -193,7 +194,7 @@
 								<span class="text-3xl font-bold text-primary">{formattedPrice}</span>
 							{:else}
 								<span class="text-lg font-medium text-muted-foreground">
-									Currently unavailable
+									{m.shop_unavailable_now()}
 								</span>
 							{/if}
 						</div>
@@ -209,7 +210,7 @@
 
 				<div class="max-w-xl p-4" class:hidden={!variants.length}>
 					<h3 class="mb-4 text-sm font-semibold tracking-wider text-gray-500 uppercase">
-						Select Package
+						{m.shop_select_package()}
 					</h3>
 
 					<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -238,14 +239,14 @@
 										? 'text-foreground'
 										: 'text-foreground/80'}"
 								>
-									{product.price} ETB
+									{m.price_etb({ amount: product.price })}
 								</span>
 
 								{#if isActive}
 									<Badge
 										class="absolute -top-2 px-4 text-[10px] font-bold tracking-widest  uppercase"
 									>
-										Selected
+										{m.shop_selected()}
 									</Badge>
 								{/if}
 							</button>
@@ -256,9 +257,9 @@
 				<div class="mt-8 flex flex-col gap-4">
 					<!-- Quantity Selector -->
 					<div class="flex items-center gap-4">
-						<span class="text-sm font-medium text-muted-foreground">Quantity</span>
+						<span class="text-sm font-medium text-muted-foreground">{m.shop_quantity()}</span>
 						<div class="flex items-center gap-2 rounded-lg border border-input bg-background p-1">
-							<Button onclick={decrementQuantity} size="icon" aria-label="Decrease quantity"
+							<Button onclick={decrementQuantity} size="icon" aria-label={m.shop_decrease_quantity()}
 								><Minus class="size-4" /></Button
 							>
 							<!-- <span class="w-8 text-center font-semibold">{quantity}</span> -->
@@ -270,9 +271,9 @@
 								bind:value={quantity}
 								onblur={() => (quantity = safeQuantity)}
 								min="1"
-								aria-label="Quantity"
+								aria-label={m.shop_quantity()}
 							/>
-							<Button onclick={incrementQuantity} size="icon" aria-label="Increase quantity"
+							<Button onclick={incrementQuantity} size="icon" aria-label={m.shop_increase_quantity()}
 								><Plus class="size-4" /></Button
 							>
 						</div>
@@ -290,12 +291,12 @@
 						>
 							{#if justAdded}
 								<CheckIcon class="mr-2 size-4 text-green-500" />
-								Added to Cart
+								{m.shop_added_to_cart()}
 							{:else if !selected}
-								Unavailable
+								{m.shop_unavailable()}
 							{:else}
 								<PlusIcon class="mr-2 size-4" />
-								Add to Cart
+								{m.shop_add_to_cart()}
 							{/if}
 						</Button>
 					</div>
@@ -303,7 +304,7 @@
 					<!-- Share Button -->
 					<Button variant="outline" class="w-full gap-2" onclick={handleShare}>
 						<ShareIcon size={18} />
-						Share Product
+						{m.shop_share()}
 					</Button>
 				</div>
 			</div>

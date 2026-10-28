@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import { orderStatusLabel, paymentStatusLabel } from '$lib/status-labels';
 
 	let { data } = $props();
 
@@ -32,48 +34,48 @@
 </script>
 
 <svelte:head>
-	<title>Account Overview - Lalo Bakery Solutions</title>
+	<title>{m.acc_meta_title()}</title>
 </svelte:head>
 
 <div class="mx-auto min-h-screen max-w-7xl space-y-8 bg-background p-6 text-foreground">
 	<header class="flex flex-col gap-1 border-b border-border pb-6">
-		<h1 class="text-3xl font-bold tracking-tight">Overview Dashboard</h1>
+		<h1 class="text-3xl font-bold tracking-tight">{m.acc_overview_title()}</h1>
 		<p class="text-muted-foreground">
-			Hello, {customer?.name ?? 'Valued Customer'}. Here is your current commercial account status.
+			{m.acc_hello({ name: customer?.name ?? m.acc_valued_customer() })}
 		</p>
 	</header>
 
 	<section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 		<div class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
-			<p class="text-sm font-medium text-muted-foreground">Settled Expenditures</p>
+			<p class="text-sm font-medium text-muted-foreground">{m.acc_settled()}</p>
 			<div class="mt-2 font-mono text-3xl font-bold tracking-tight text-primary">
-				ETB {metrics.totalSpent.toFixed(2)}
+				{m.price_etb({ amount: metrics.totalSpent.toFixed(2) })}
 			</div>
-			<p class="mt-1 text-xs text-muted-foreground">Successfully cleared payments</p>
+			<p class="mt-1 text-xs text-muted-foreground">{m.acc_settled_hint()}</p>
 		</div>
 
 		<div class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
-			<p class="text-sm font-medium text-muted-foreground">Outstanding Dues</p>
+			<p class="text-sm font-medium text-muted-foreground">{m.acc_outstanding()}</p>
 			<div
 				class="mt-2 font-mono text-3xl font-bold tracking-tight {metrics.totalOutstanding > 0
 					? 'text-destructive'
 					: 'text-muted-foreground'}"
 			>
-				ETB {metrics.totalOutstanding.toFixed(2)}
+				{m.price_etb({ amount: metrics.totalOutstanding.toFixed(2) })}
 			</div>
-			<p class="mt-1 text-xs text-muted-foreground">Orders not yet paid for, including delivery</p>
+			<p class="mt-1 text-xs text-muted-foreground">{m.acc_outstanding_hint()}</p>
 		</div>
 
 		<div class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
-			<p class="text-sm font-medium text-muted-foreground">Active Processing Orders</p>
+			<p class="text-sm font-medium text-muted-foreground">{m.acc_active()}</p>
 			<div class="mt-2 text-3xl font-bold tracking-tight">{pendingCount}</div>
-			<p class="mt-1 text-xs text-muted-foreground">Items currently being fulfilled</p>
+			<p class="mt-1 text-xs text-muted-foreground">{m.acc_active_hint()}</p>
 		</div>
 
 		<div class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm">
-			<p class="text-sm font-medium text-muted-foreground">Completed Deliveries</p>
+			<p class="text-sm font-medium text-muted-foreground">{m.acc_completed()}</p>
 			<div class="mt-2 text-3xl font-bold tracking-tight">{deliveredCount}</div>
-			<p class="mt-1 text-xs text-muted-foreground">Total orders received in past sessions</p>
+			<p class="mt-1 text-xs text-muted-foreground">{m.acc_completed_hint()}</p>
 		</div>
 	</section>
 
@@ -83,17 +85,17 @@
 		>
 			<div class="p-6">
 				<h2 class="text-lg leading-none font-semibold tracking-tight">
-					Recent Orders & Transactions
+					{m.acc_recent()}
 				</h2>
 				<p class="mt-1 text-sm text-muted-foreground">
-					A combined overview of product lines, shipping status, and payment linkages.
+					{m.acc_recent_hint()}
 				</p>
 			</div>
 
 			<div class="divide-y divide-border border-t border-border">
 				{#if recentActivity.length === 0}
 					<div class="p-8 text-center text-sm text-muted-foreground">
-						No recorded transactions found.
+						{m.acc_no_transactions()}
 					</div>
 				{:else}
 					{#each recentActivity as activity}
@@ -101,21 +103,21 @@
 						<div class="space-y-4 p-6 transition-colors hover:bg-muted/20">
 							<div class="flex flex-wrap items-center justify-between gap-2">
 								<div class="flex items-center gap-3">
-									<span class="font-mono text-sm font-semibold">Order #{activity.id}</span>
+									<span class="font-mono text-sm font-semibold">{m.acc_order_number({ id: activity.id })}</span>
 									<span
 										class="inline-flex items-center rounded-full border bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground uppercase"
 									>
-										Fulfillment: {activity.status}
+										{m.acc_fulfillment({ status: orderStatusLabel(activity.status) })}
 									</span>
 									<span
 										class={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase ${payStyle.bg} ${payStyle.text} ${payStyle.border}`}
 									>
-										Payment: {activity.paymentStatus}
+										{m.acc_payment({ status: paymentStatusLabel(activity.paymentStatus) })}
 									</span>
 								</div>
 
 								<div class="flex items-center gap-4">
-									<span class="font-mono text-base font-bold">ETB {activity.amount.toFixed(2)}</span
+									<span class="font-mono text-base font-bold">{m.price_etb({ amount: activity.amount.toFixed(2) })}</span
 									>
 									{#if activity.receiptLink}
 										<a
@@ -136,7 +138,8 @@
 													points="7 10 12 15 17 10"
 												/><line x1="12" x2="12" y1="15" y2="3" /></svg
 											>
-											Receipt
+																						{m.acc_receipt()}
+
 										</a>
 									{/if}
 								</div>
@@ -149,7 +152,7 @@
 											<span class="font-medium text-muted-foreground"
 												>{item.name} <span class="text-foreground/70">× {item.qty}</span></span
 											>
-											<span class="font-mono">ETB {(item.price * item.qty).toFixed(2)}</span>
+											<span class="font-mono">{m.price_etb({ amount: (item.price * item.qty).toFixed(2) })}</span>
 										</li>
 									{/each}
 								</ul>
@@ -164,17 +167,17 @@
 			<div class="rounded-xl border border-border bg-card text-card-foreground shadow-sm">
 				<div class="p-6">
 					<h2 class="text-lg leading-none font-semibold tracking-tight">
-						Active Offers & Discounts
+						{m.acc_offers()}
 					</h2>
 					<p class="mt-1 text-sm text-muted-foreground">
-						Exclusive custom balance rollbacks available right now.
+						{m.acc_offers_hint()}
 					</p>
 				</div>
 
 				<div class="space-y-4 p-6 pt-0">
 					{#if activeDiscounts.length === 0}
 						<p class="py-4 text-center text-xs text-muted-foreground">
-							No public promotional events active.
+							{m.acc_no_offers()}
 						</p>
 					{:else}
 						{#each activeDiscounts as discount}
@@ -189,18 +192,18 @@
 										<span
 											class="inline-flex items-center rounded bg-primary px-1.5 py-0.5 font-mono text-xs font-bold text-primary-foreground"
 										>
-											-ETB{Number(discount.amount).toFixed(0)}
+											-{m.price_etb({ amount: Number(discount.amount).toFixed(0) })}
 										</span>
 									</div>
 									<p class="text-xs leading-relaxed text-muted-foreground">
-										{discount.description ?? 'No details provided.'}
+										{discount.description ?? m.acc_no_details()}
 									</p>
 								</div>
 								{#if discount.productName}
 									<div
 										class="w-fit rounded border border-border bg-background px-2 py-1 text-[11px] text-muted-foreground"
 									>
-										Applies to: <span class="font-medium text-foreground"
+										{m.acc_applies_to()} <span class="font-medium text-foreground"
 											>{discount.productName}</span
 										>
 									</div>
@@ -212,13 +215,12 @@
 			</div>
 
 			<div class="space-y-2 rounded-xl border border-border bg-muted/40 p-6 text-card-foreground">
-				<h3 class="text-sm font-semibold">Need Assistance?</h3>
+				<h3 class="text-sm font-semibold">{m.acc_need_help()}</h3>
 				<p class="text-xs leading-normal text-muted-foreground">
-					If you have open inquiries or notice discrepancies regarding pending order adjustments or
-					payments, please reach out via our internal tickets portal.
+					{m.acc_need_help_text()}
 				</p>
 				<div class="pt-2">
-					<Button href="/contact-us" variant="link">Contact Support Representative &rarr;</Button>
+					<Button href="/contact-us" variant="link">{m.acc_contact_support()}</Button>
 				</div>
 			</div>
 		</div>

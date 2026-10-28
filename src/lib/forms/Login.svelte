@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
@@ -39,11 +40,11 @@
 <Card.Root class="mx-auto flex w-full max-w-md flex-col justify-center justify-self-center ">
 	<Card.Header>
 		<div class="flex w-full flex-col items-center justify-center">
-			<img src="/logo.webp" class="block h-24 w-24 dark:hidden" alt="Logo" />
-			<img src="/logoWhite.webp" class="hidden h-24 w-24 dark:block" alt="Logo" />
+			<img src="/logo.webp" class="block h-24 w-24 dark:hidden" alt={m.footer_logo_alt()} />
+			<img src="/logoWhite.webp" class="hidden h-24 w-24 dark:block" alt={m.footer_logo_alt()} />
 		</div>
-		<Card.Title class="flex flex-row justify-between text-2xl">Login <DarkMode /></Card.Title>
-		<Card.Description>Enter your email below to login to your account</Card.Description>
+		<Card.Title class="flex flex-row justify-between text-2xl">{m.login_title()} <DarkMode /></Card.Title>
+		<Card.Description>{m.login_description()}</Card.Description>
 	</Card.Header>
 	<Card.Content>
 		<form method="POST" {action} use:enhance>
@@ -51,7 +52,7 @@
 
 			<div class="grid gap-4">
 				<div class="grid gap-2">
-					<Label for="{formId}-email">Email</Label>
+					<Label for="{formId}-email">{m.contact_email_label()}</Label>
 					<Input
 						id="{formId}-email"
 						name="email"
@@ -64,9 +65,9 @@
 				</div>
 				<div class="grid gap-2">
 					<div class="flex items-center">
-						<Label for="{formId}-password">Password</Label>
+						<Label for="{formId}-password">{m.form_password()}</Label>
 						<a href="/forgot-password" class="ml-auto inline-block text-sm underline">
-							Forgot your password?
+							{m.login_forgot()}
 						</a>
 					</div>
 					<div class="relative">
@@ -77,7 +78,7 @@
 							bind:value={$form.password}
 							required
 						/>
-						<button type="button" onclick={() => (eye = !eye)} title="Make Password Visible">
+						<button type="button" onclick={() => (eye = !eye)} title={m.form_toggle_password()}>
 							<EyeIcon
 								class="absolute top-0.5 right-2 h-6 w-6 transition-transform duration-300 ease-in-out"
 							/>
@@ -85,7 +86,7 @@
 						{#if $errors.password}<span class="text-red-500">{$errors.password}</span>{/if}
 					</div>
 				</div>
-				<Button type="submit" class="w-full">Login</Button>
+				<Button type="submit" class="w-full">{m.login_title()}</Button>
 			</div>
 		</form>
 	</Card.Content>
